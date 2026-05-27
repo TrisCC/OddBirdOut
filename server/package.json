@@ -1,0 +1,15 @@
+{
+  "name": "oddbirdout-server",
+  "version": "1.0.0",
+  "description": "Odd Bird Out game server — a three-player cyber ostracism installation",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "socket.io": "^4.7.0",
+    "socket.io-client": "^4.8.3",
+    "uuid": "^10.0.0"
+  }
+}

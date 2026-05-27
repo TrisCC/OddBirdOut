@@ -1,0 +1,150 @@
+const { RoundResolver } = require('./RoundResolver');
+
+const VALID_ROLES = ['A', 'B', 'C'];
+
+class GameRoom {
+
+    constructor(io) {
+        this.io = io;
+        this.players = {};
+        this.readyPlayers = new Set();
+        this.roundResolver = null;
+        this.reconnectTimers = {};
+    }
+
+    handleConnection(socket) {
+        const playerId = (socket.handshake.query.player || '').toUpperCase();
+
+        if (!VALID_ROLES.includes(playerId)) {
+            socket.emit('errorMessage', { message: 'Invalid role. Use ?player=A, B, or C' });
+            socket.disconnect(true);
+            return;
+        }
+
+        if (this.players[playerId]) {
+            if (this.reconnectTimers[playerId]) {
+                this.handleReconnect(socket, playerId);
+                return;
+            }
+            socket.emit('errorMessage', { message: `Role ${playerId} is already taken` });
+            socket.disconnect(true);
+            return;
+        }
+
+        this.players[playerId] = socket.id;
+
+        socket.on('playerReady', () => this.onPlayerReady(playerId));
+        socket.on('playerAction', (data) => this.onPlayerAction(playerId, data));
+        socket.on('disconnect', () => this.onDisconnect(socket, playerId));
+
+        this.broadcastLobbyUpdate();
+    }
+
+    handleReconnect(socket, playerId) {
+        clearTimeout(this.reconnectTimers[playerId]);
+        delete this.reconnectTimers[playerId];
+
+        this.players[playerId] = socket.id;
+
+        socket.on('playerReady', () => {
+            this.readyPlayers.add(playerId);
+            if (this.roundResolver) {
+                this.roundResolver.handleReconnect(playerId);
+            }
+        });
+        socket.on('playerAction', (data) => this.onPlayerAction(playerId, data));
+        socket.on('disconnect', () => this.onDisconnect(socket, playerId));
+
+        this.broadcastLobbyUpdate();
+
+        if (this.roundResolver) {
+            this.roundResolver.handleReconnect(playerId);
+        }
+    }
+
+    onPlayerReady(playerId) {
+        this.readyPlayers.add(playerId);
+        this.broadcastLobbyUpdate();
+
+        if (
+            VALID_ROLES.every(r => this.players[r] && this.readyPlayers.has(r))
+        ) {
+            this.startGame();
+        }
+    }
+
+    onPlayerAction(playerId, data) {
+        if (!this.roundResolver) return;
+
+        const { action, target } = data;
+        this.roundResolver.submitPlayerAction(playerId, action, target);
+    }
+
+    onDisconnect(socket, playerId) {
+        delete this.players[playerId];
+        this.readyPlayers.delete(playerId);
+
+        if (this.roundResolver) {
+            this.roundResolver.handleDisconnect(playerId);
+        }
+
+        this.reconnectTimers[playerId] = setTimeout(() => {
+            delete this.reconnectTimers[playerId];
+            if (this.roundResolver) {
+                this.endGameDueToDisconnect(playerId);
+            }
+            this.broadcastLobbyUpdate();
+        }, 60000);
+
+        this.broadcastLobbyUpdate();
+    }
+
+    startGame() {
+        this.roundResolver = new RoundResolver(this.io, { ...this.players });
+
+        for (const playerId of VALID_ROLES) {
+            const socketId = this.players[playerId];
+            if (socketId) {
+                this.io.to(socketId).emit('gameStart', {
+                    playerId,
+                    totalRounds: 12,
+                });
+            }
+        }
+
+        this.roundResolver.startGame();
+    }
+
+    endGameDueToDisconnect(playerId) {
+        this.broadcastToAll('gameAborted', {
+            reason: `Player ${playerId} disconnected and did not reconnect.`,
+        });
+        this.reset();
+    }
+
+    broadcastToAll(event, data) {
+        this.io.emit(event, data);
+    }
+
+    broadcastLobbyUpdate() {
+        const connected = VALID_ROLES.filter(r => this.players[r]);
+        this.io.emit('lobbyUpdate', {
+            connected,
+            ready: this.readyPlayers.size,
+            total: 3,
+        });
+    }
+
+    reset() {
+        this.roundResolver = null;
+        this.readyPlayers.clear();
+        this.players = {};
+        for (const timer of Object.values(this.reconnectTimers)) {
+            clearTimeout(timer);
+        }
+        this.reconnectTimers = {};
+        this.broadcastLobbyUpdate();
+    }
+}
+
+module.exports = { GameRoom };

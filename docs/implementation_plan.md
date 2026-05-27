@@ -19,49 +19,49 @@ Clean up the scaffold before real development begins.
 The server is the backbone. Build it first so the frontend has something to connect to from day one.
 
 ### 1.1 Project Scaffolding
-- [ ] **1.1.1** Create `server/package.json` with dependencies: `express`, `socket.io`, `uuid`
-- [ ] **1.1.2** Create `server/config.js` with all tunable parameters from the tech spec
-- [ ] **1.1.3** Create `server/index.js` — Express server with Socket.IO, serving static files from `../OddBirdOut/`
-- [ ] **1.1.4** Create `server/data/sessions/` directory
+- [x] **1.1.1** Create `server/package.json` with dependencies: `express`, `socket.io`, `uuid`
+- [x] **1.1.2** Create `server/config.js` with all tunable parameters from the tech spec
+- [x] **1.1.3** Create `server/index.js` — Express server with Socket.IO, serving static files from `../OddBirdOut/`
+- [x] **1.1.4** Create `server/data/sessions/` directory
 
 ### 1.2 Room Management (`server/game/GameRoom.js`)
-- [ ] **1.2.1** On `connection`: extract `player` query param from handshake, validate it's A/B/C
-- [ ] **1.2.2** Reject duplicate role claims (emit error if role already taken)
-- [ ] **1.2.3** Track connected player socket IDs in a map: `{ A: socketId, B: socketId, C: socketId }`
-- [ ] **1.2.4** Broadcast `lobbyUpdate` to all clients when player connects/disconnects
-- [ ] **1.2.5** Listen for `playerReady` event per client
-- [ ] **1.2.6** When all 3 players are connected AND ready, emit `gameStart` to all
-- [ ] **1.2.7** Handle disconnection: pause game, 60s reconnection window, else abort
+- [x] **1.2.1** On `connection`: extract `player` query param from handshake, validate it's A/B/C
+- [x] **1.2.2** Reject duplicate role claims (emit error if role already taken)
+- [x] **1.2.3** Track connected player socket IDs in a map: `{ A: socketId, B: socketId, C: socketId }`
+- [x] **1.2.4** Broadcast `lobbyUpdate` to all clients when player connects/disconnects
+- [x] **1.2.5** Listen for `playerReady` event per client
+- [x] **1.2.6** When all 3 players are connected AND ready, emit `gameStart` to all
+- [x] **1.2.7** Handle disconnection: pause game, 60s reconnection window, else abort
 
 ### 1.3 Game State (`server/game/GameState.js`)
-- [ ] **1.3.1** Initialize true state: `{ scores: {A:0, B:0, C:0}, actions: [], round: 1, phase: 'trust' }`
-- [ ] **1.3.2** Initialize three illusion states (empty until Phase 2)
-- [ ] **1.3.3** Functions: `resetForNewRound()`, `applyAction(player, action, target)`, `resolveRound()`
-- [ ] **1.3.4** Head in Sand logic: mark player as blocking, skip Share/Peck targeting them
+- [x] **1.3.1** Initialize true state: `{ scores: {A:0, B:0, C:0}, actions: [], round: 1, phase: 'trust' }`
+- [x] **1.3.2** Initialize three illusion states (empty until Phase 2)
+- [x] **1.3.3** Functions: `resetForNewRound()`, `applyAction(player, action, target)`, `resolveRound()`
+- [x] **1.3.4** Head in Sand logic: mark player as blocking, skip Share/Peck targeting them
 
 ### 1.4 Round Resolver (`server/game/RoundResolver.js`)
-- [ ] **1.4.1** Start round: set a 20-second timer, enable action collection
-- [ ] **1.4.2** Collect actions from all three players via `playerAction` event
-- [ ] **1.4.3** On timer expiry: any unsubmitted player defaults to Head in Sand
-- [ ] **1.4.4** Resolve true state: apply actions, compute score deltas
-- [ ] **1.4.5** Call OstracismEngine for Phase 2, emit `roundResult` to each player
-- [ ] **1.4.6** After round 12: emit `gameEnd` with true state + all illusions
-- [ ] **1.4.7** Save game data as JSON to `server/data/sessions/`
+- [x] **1.4.1** Start round: set a 20-second timer, enable action collection
+- [x] **1.4.2** Collect actions from all three players via `playerAction` event
+- [x] **1.4.3** On timer expiry: any unsubmitted player defaults to Head in Sand
+- [x] **1.4.4** Resolve true state: apply actions, compute score deltas
+- [x] **1.4.5** Call OstracismEngine for Phase 2, emit `roundResult` to each player
+- [x] **1.4.6** After round 12: emit `gameEnd` with true state + all illusions
+- [x] **1.4.7** Save game data as JSON to `server/data/sessions/`
 
 ### 1.5 Ostracism Engine (`server/game/OstracismEngine.js`)
-- [ ] **1.5.1** Implement escalation mapping: `round 5-6 → low, 7-9 → medium, 10-12 → high`
-- [ ] **1.5.2** `fabricateForPlayer(playerId, trueState, escalationLevel)` — returns illusion payload
-- [ ] **1.5.3** Low: inject 1 fabricated share between the other two players, adjust score display
-- [ ] **1.5.4** Medium: fabricate mutual sharing between the other two, player's own action shown accurately
-- [ ] **1.5.5** High: full exclusion — other two exclusively cooperate, player's share actions shown as blocked
-- [ ] **1.5.6** Ensure illusion score deltas are consistent within each illusion (no impossible scores)
+- [x] **1.5.1** Implement escalation mapping: `round 5-6 → low, 7-9 → medium, 10-12 → high`
+- [x] **1.5.2** `fabricateForPlayer(playerId, trueState, escalationLevel)` — returns illusion payload
+- [x] **1.5.3** Low: inject 1 fabricated share between the other two players, adjust score display
+- [x] **1.5.4** Medium: fabricate mutual sharing between the other two, player's own action shown accurately
+- [x] **1.5.5** High: full exclusion — other two exclusively cooperate, player's share actions shown as blocked
+- [x] **1.5.6** Ensure illusion score deltas are consistent within each illusion (no impossible scores)
 
 ### 1.6 Testing
-- [ ] **1.6.1** Manual test: 3 browser tabs (`?player=A`, `?player=B`, `?player=C`), verify lobby → game start
-- [ ] **1.6.2** Test Phase 1: verify true actions resolve correctly, scores add up
-- [ ] **1.6.3** Test Phase 2: verify each tab sees a different reality, exclusion feedback present
-- [ ] **1.6.4** Test edge cases: disconnect, timer expiry, 0-seed peck, Head in Sand blocking
-- [ ] **1.6.5** Verify JSON session file is saved correctly after game end
+- [x] **1.6.1** Manual test: 3 browser tabs (`?player=A`, `?player=B`, `?player=C`), verify lobby → game start
+- [x] **1.6.2** Test Phase 1: verify true actions resolve correctly, scores add up
+- [x] **1.6.3** Test Phase 2: verify each tab sees a different reality, exclusion feedback present
+- [x] **1.6.4** Test edge cases: disconnect, timer expiry, 0-seed peck, Head in Sand blocking
+- [x] **1.6.5** Verify JSON session file is saved correctly after game end
 
 ---
 
