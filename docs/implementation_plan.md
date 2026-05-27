@@ -8,9 +8,9 @@ This plan translates the [project description](project_description.md) and [tech
 
 Clean up the scaffold before real development begins.
 
-- [ ] **0.1** Fix `OddBirdOut/src/main.js`: change `title` from `'Overlord Rising'` to `'OddBirdOut'`, set `pixelArt: true`
-- [ ] **0.2** Delete unused boilerplate assets: `space.png`, `spaceship.png`, `phaser.png` from `OddBirdOut/assets/`
-- [ ] **0.3** Rename `src/scenes/Start.js` to `src/scenes/Boot.js` (or keep as placeholder; the scene gets rewritten later anyway)
+- [x] **0.1** Fix `OddBirdOut/src/main.js`: change `title` from `'Overlord Rising'` to `'OddBirdOut'`, set `pixelArt: true`
+- [x] **0.2** Delete unused boilerplate assets: `space.png`, `spaceship.png`, `phaser.png` from `OddBirdOut/assets/`
+- [x] **0.3** Rename `src/scenes/Start.js` to `src/scenes/Boot.js` (or keep as placeholder; the scene gets rewritten later anyway)
 
 ---
 

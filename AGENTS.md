@@ -105,7 +105,6 @@ No automated test framework. Manual testing via multiple browser tabs:
 
 ## Current Status (Phase 0 complete)
 
-- [x] `main.js` fixed (title, pixelArt flag)
-- [x] Boilerplate assets removed
+- [x] Phase 0 complete (main.js fixed, boilerplate removed, Start.js → Boot.js)
 - [ ] Phase 1: Backend not started
 - [ ] Phase 2: Frontend scenes not started
