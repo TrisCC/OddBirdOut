@@ -511,7 +511,7 @@ export class Game extends Phaser.Scene {
         vignetteGfx.fillStyle(0x000000, 0);
         vignetteGfx.fillEllipse(w / 2, h / 2, w * 0.75, h * 0.75);
 
-        const maskShape = this.add.graphics();
+        const maskShape = this.make.graphics({ add: false });
         maskShape.fillStyle(0xffffff);
         maskShape.fillEllipse(w / 2, h / 2, w * 0.75, h * 0.75);
 
