@@ -70,75 +70,75 @@ The server is the backbone. Build it first so the frontend has something to conn
 Build all four scenes top-to-bottom, connecting to the (now working) backend.
 
 ### 2.1 Boot Scene (`src/scenes/Boot.js`)
-- [ ] **2.1.1** Initiate Socket.IO connection to `http://{serverIP}:3000` with `?player={A|B|C}` query
-- [ ] **2.1.2** Create placeholder assets programmatically via `PlaceholderAssets.js` (colored rectangles, circles)
-- [ ] **2.1.3** Show a "Loading..." text with a simple progress bar
-- [ ] **2.1.4** On preload complete, transition to Lobby scene, pass SocketManager reference
+- [x] **2.1.1** Initiate Socket.IO connection to `http://{serverIP}:3000` with `?player={A|B|C}` query
+- [x] **2.1.2** Create placeholder assets programmatically via `PlaceholderAssets.js` (colored rectangles, circles)
+- [x] **2.1.3** Show a "Loading..." text with a simple progress bar
+- [x] **2.1.4** On preload complete, transition to Lobby scene, pass SocketManager reference
 
 ### 2.2 Lobby Scene (`src/scenes/Lobby.js`)
-- [ ] **2.2.1** Display "Waiting for players..." header
-- [ ] **2.2.2** Show connected player count (e.g., "2/3 players connected")
-- [ ] **2.2.3** Show this tablet's assigned role (A/B/C)
-- [ ] **2.2.4** Listen for `lobbyUpdate` to update display
-- [ ] **2.2.5** On `gameStart` event, store `playerId` and transition to Game scene
+- [x] **2.2.1** Display "Waiting for players..." header
+- [x] **2.2.2** Show connected player count (e.g., "2/3 players connected")
+- [x] **2.2.3** Show this tablet's assigned role (A/B/C)
+- [x] **2.2.4** Listen for `lobbyUpdate` to update display
+- [x] **2.2.5** On `gameStart` event, store `playerId` and transition to Game scene
 
 ### 2.3 Game Scene (`src/scenes/Game.js`) — The Core
 
 #### 2.3.1 HUD
-- [ ] **2.3.1.1** Top bar: round counter (`Round 3 / 12`), phase label, timer countdown bar
-- [ ] **2.3.1.2** Golden Egg: center-top, fills proportionally to leading score / max possible
-- [ ] **2.3.1.3** Three ostrich placeholder avatars: green (A), blue (B), orange (C)
-- [ ] **2.3.1.4** "You" label under self, seed count number under each ostrich
-- [ ] **2.3.1.5** 3 hearts per player, shown as red rectangles
+- [x] **2.3.1.1** Top bar: round counter (`Round 3 / 12`), phase label, timer countdown bar
+- [x] **2.3.1.2** Golden Egg: center-top, fills proportionally to leading score / max possible
+- [x] **2.3.1.3** Three ostrich placeholder avatars: green (A), blue (B), orange (C)
+- [x] **2.3.1.4** "You" label under self, seed count number under each ostrich
+- [x] **2.3.1.5** 3 hearts per player, shown as red rectangles
 
 #### 2.3.2 Action Buttons
-- [ ] **2.3.2.1** Three large buttons in bottom panel: Share (green), Peck (red), Head in Sand (blue)
-- [ ] **2.3.2.2** Share/Peck: on tap, show target selector (two smaller buttons for other players)
-- [ ] **2.3.2.3** Head in Sand: on tap, immediately submit (no target needed)
-- [ ] **2.3.2.4** After submission: grey out all buttons, show "Waiting..." text
-- [ ] **2.3.2.5** Timer expiry: auto-submit Head in Sand if no action selected
+- [x] **2.3.2.1** Three large buttons in bottom panel: Share (green), Peck (red), Head in Sand (blue)
+- [x] **2.3.2.2** Share/Peck: on tap, show target selector (two smaller buttons for other players)
+- [x] **2.3.2.3** Head in Sand: on tap, immediately submit (no target needed)
+- [x] **2.3.2.4** After submission: grey out all buttons, show "Waiting..." text
+- [x] **2.3.2.5** Timer expiry: auto-submit Head in Sand if no action selected
 
 #### 2.3.3 Round Resolution & Animations
-- [ ] **2.3.3.1** On `roundResult`: play action animations (~3 seconds)
-- [ ] **2.3.3.2** Share animation: seed sprite flies from giver to receiver
-- [ ] **2.3.3.3** Peck animation: peck sprite swipes at target ostrich
-- [ ] **2.3.3.4** Head in Sand animation: ostrich burrows/ducks down
-- [ ] **2.3.3.5** Score update: count-up or count-down tween next to each ostrich
-- [ ] **2.3.3.6** Broken heart: grey heart replaces red heart on exclusion event
-- [ ] **2.3.3.7** After animation completes, unlock buttons for next round
+- [x] **2.3.3.1** On `roundResult`: play action animations (~3 seconds)
+- [x] **2.3.3.2** Share animation: seed sprite flies from giver to receiver
+- [x] **2.3.3.3** Peck animation: peck sprite swipes at target ostrich
+- [x] **2.3.3.4** Head in Sand animation: ostrich burrows/ducks down
+- [x] **2.3.3.5** Score update: count-up or count-down tween next to each ostrich
+- [x] **2.3.3.6** Broken heart: grey heart replaces red heart on exclusion event
+- [x] **2.3.3.7** After animation completes, unlock buttons for next round
 
 #### 2.3.4 Phase 2 Visuals
-- [ ] **2.3.4.1** Phase label changes from "Trust" to "Ostracism" in round 5
-- [ ] **2.3.4.2** Subtle vignette darkening on screen edges as escalation increases
-- [ ] **2.3.4.3** Excluded ostrich shows "sad eyes" variant (drawn via Graphics)
+- [x] **2.3.4.1** Phase label changes from "Trust" to "Ostracism" in round 5
+- [x] **2.3.4.2** Subtle vignette darkening on screen edges as escalation increases
+- [x] **2.3.4.3** Excluded ostrich shows "sad eyes" variant (drawn via Graphics)
 
 ### 2.4 Reveal Scene (`src/scenes/Reveal.js`)
-- [ ] **2.4.1** On `gameEnd`: transition to Reveal scene
-- [ ] **2.4.2** Animate "The Truth..." text appearing in large retro font
-- [ ] **2.4.3** Show true final scores with a count-up reveal animation
-- [ ] **2.4.4** Golden Egg cracks and hatches, awarded to winner(s)
-- [ ] **2.4.5** Show message: "You were all manipulated. Nobody was truly excluded."
-- [ ] **2.4.6** Show a summary of what each player was made to see (optional, visual)
-- [ ] **2.4.7** "Restart" prompt after 30 seconds (or manual operator restart)
+- [x] **2.4.1** On `gameEnd`: transition to Reveal scene
+- [x] **2.4.2** Animate "The Truth..." text appearing in large retro font
+- [x] **2.4.3** Show true final scores with a count-up reveal animation
+- [x] **2.4.4** Golden Egg cracks and hatches, awarded to winner(s)
+- [x] **2.4.5** Show message: "You were all manipulated. Nobody was truly excluded."
+- [x] **2.4.6** Show a summary of what each player was made to see (optional, visual)
+- [x] **2.4.7** "Restart" prompt after 30 seconds (or manual operator restart)
 
 ### 2.5 SocketManager Utility (`src/SocketManager.js`)
-- [ ] **2.5.1** Initialize Socket.IO client with server URL + player query param
-- [ ] **2.5.2** Expose `emitPlayerReady()`, `emitPlayerAction(action, target)`
-- [ ] **2.5.3** Accept callback registrations for: `lobbyUpdate`, `gameStart`, `roundResult`, `gameEnd`
-- [ ] **2.5.4** Handle `disconnect` / `reconnect` events
-- [ ] **2.5.5** Store `this.playerId` (parsed from URL `?player=`)
+- [x] **2.5.1** Initialize Socket.IO client with server URL + player query param
+- [x] **2.5.2** Expose `emitPlayerReady()`, `emitPlayerAction(action, target)`
+- [x] **2.5.3** Accept callback registrations for: `lobbyUpdate`, `gameStart`, `roundResult`, `gameEnd`
+- [x] **2.5.4** Handle `disconnect` / `reconnect` events
+- [x] **2.5.5** Store `this.playerId` (parsed from URL `?player=`)
 
 ### 2.6 Placeholder Assets (`src/PlaceholderAssets.js`)
-- [ ] **2.6.1** `generateOstrichTexture(scene, color)` — colored rectangle with simple face
-- [ ] **2.6.2** `generateSeedTexture(scene)` — small yellow circle
-- [ ] **2.6.3** `generateEggTexture(scene)` — gold ellipse
-- [ ] **2.6.4** `generateHeartTexture(scene, broken)` — red or grey heart shape
-- [ ] **2.6.5** `generateButtonTexture(scene, label, color)` — rounded rect with text
-- [ ] **2.6.6** All textures created in Boot scene via `scene.add.graphics()` → `generateTexture()`
+- [x] **2.6.1** `generateOstrichTexture(scene, color)` — colored rectangle with simple face
+- [x] **2.6.2** `generateSeedTexture(scene)` — small yellow circle
+- [x] **2.6.3** `generateEggTexture(scene)` — gold ellipse
+- [x] **2.6.4** `generateHeartTexture(scene, broken)` — red or grey heart shape
+- [x] **2.6.5** `generateButtonTexture(scene, label, color)` — rounded rect with text
+- [x] **2.6.6** All textures created in Boot scene via `scene.add.graphics()` → `generateTexture()`
 
 ### 2.7 Main Game Config Update (`src/main.js`)
-- [ ] **2.7.1** Register all 4 scenes: `[Boot, Lobby, Game, Reveal]`
-- [ ] **2.7.2** Remove old `Start` scene import
+- [x] **2.7.1** Register all 4 scenes: `[Boot, Lobby, Game, Reveal]`
+- [x] **2.7.2** Remove old `Start` scene import
 
 ---
 

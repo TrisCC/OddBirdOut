@@ -103,8 +103,9 @@ No automated test framework. Manual testing via multiple browser tabs:
 3. If creating a new file, match the directory structure defined in the tech spec Section 3.2 and 4.4.
 4. If adding a Socket.IO event, update the event schema in the tech spec Section 5.
 
-## Current Status (Phase 1 complete)
+## Current Status (Phase 2 complete)
 
 - [x] Phase 0 complete (main.js fixed, boilerplate removed, Start.js → Boot.js)
 - [x] Phase 1 complete (backend: Express + Socket.IO server, GameRoom, GameState, RoundResolver, OstracismEngine, session persistence)
-- [ ] Phase 2: Frontend scenes not started
+- [x] Phase 2 complete (frontend: Boot, Lobby, Game, Reveal scenes; SocketManager, PlaceholderAssets; all 4 scenes registered)
+- [ ] Phase 3: Integration & Polish not started

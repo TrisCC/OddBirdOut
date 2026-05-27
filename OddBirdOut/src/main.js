@@ -1,4 +1,7 @@
 import { Boot } from './scenes/Boot.js';
+import { Lobby } from './scenes/Lobby.js';
+import { Game } from './scenes/Game.js';
+import { Reveal } from './scenes/Reveal.js';
 
 const config = {
     type: Phaser.AUTO,
@@ -7,10 +10,13 @@ const config = {
     parent: 'game-container',
     width: 1280,
     height: 720,
-    backgroundColor: '#000000',
+    backgroundColor: '#2B1E10',
     pixelArt: true,
     scene: [
-        Boot
+        Boot,
+        Lobby,
+        Game,
+        Reveal,
     ],
     scale: {
         mode: Phaser.Scale.FIT,
