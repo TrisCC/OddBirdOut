@@ -92,6 +92,12 @@ class RoundResolver {
         this.gameState.markRoundResolved();
         const trueActions = resolveResult.actions;
         const trueScores = { ...this.gameState.scores };
+        const trueDeltas = { ...resolveResult.deltas };
+
+        const preScores = {};
+        for (const p of ['A', 'B', 'C']) {
+            preScores[p] = trueScores[p] - trueDeltas[p];
+        }
 
         this.updateIllusionCumulativeScores(trueScores);
 
@@ -123,7 +129,7 @@ class RoundResolver {
                 const illusion = fabricateForPlayer(
                     playerId,
                     trueActions,
-                    trueScores,
+                    preScores,
                     this.gameState.round,
                     exclusionCount
                 );

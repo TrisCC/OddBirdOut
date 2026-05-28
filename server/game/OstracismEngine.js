@@ -34,24 +34,27 @@ function mapScoresPerspective(scores, viewerId) {
     return mapped;
 }
 
-function fabricateForPlayer(playerId, trueActions, trueScores, round, exclusionCount) {
+function fabricateForPlayer(playerId, trueActions, baseScores, round, exclusionCount) {
     const level = getEscalationLevel(round);
     const [P_j, P_k] = OTHER_PLAYERS[playerId];
 
     const result = {
         actions: [],
-        scores: { ...trueScores },
+        scores: {},
         yourScoreDelta: 0,
         exclusionEvents: exclusionCount,
     };
 
-    const trueDeltas = computeScoreDeltas(trueActions, trueScores);
-    const deltaYour = trueDeltas[playerId];
+    const trueDeltas = computeScoreDeltas(trueActions, baseScores);
 
     if (level === 'none') {
         result.actions = trueActions.map(a => mapActionPerspective(a, playerId));
-        result.scores = mapScoresPerspective(trueScores, playerId);
-        result.yourScoreDelta = deltaYour;
+        const postScores = {};
+        for (const p of ['A', 'B', 'C']) {
+            postScores[p] = baseScores[p] + (trueDeltas[p] || 0);
+        }
+        result.scores = mapScoresPerspective(postScores, playerId);
+        result.yourScoreDelta = trueDeltas[playerId];
         result.exclusionEvents = 0;
         return result;
     }
@@ -116,10 +119,10 @@ function fabricateForPlayer(playerId, trueActions, trueScores, round, exclusionC
         }
     }
 
-    const illusionDeltas = computeScoreDeltasFromMappedActions(result.actions, trueScores, playerId);
-    result.yourScoreDelta = illusionDeltas.you;
+    const illusionDeltas = computeScoreDeltasFromMappedActions(result.actions, baseScores, playerId);
+    result.yourScoreDelta = illusionDeltas[playerId];
     result.scores = mapScoresPerspective(
-        applyDeltas(trueScores, unmapDeltas(illusionDeltas, playerId)),
+        applyDeltas(baseScores, unmapDeltas(illusionDeltas, playerId)),
         playerId
     );
 
@@ -179,8 +182,10 @@ function computeScoreDeltasFromMappedActions(actions, currentScores, viewerId) {
 
 function unmapDeltas(deltas, viewerId) {
     const result = { ...deltas };
-    result[viewerId] = deltas.you || 0;
-    delete result.you;
+    if ('you' in deltas) {
+        result[viewerId] = deltas.you;
+        delete result.you;
+    }
     return result;
 }
 
