@@ -53,12 +53,6 @@ export class Game extends Phaser.Scene {
             color: '#FFD700',
         });
 
-        this.phaseText = this.add.text(20, 36, 'Trust', {
-            fontFamily: '"Press Start 2P"',
-            fontSize: '14px',
-            color: '#4CAF50',
-        });
-
         this.timerBarBg = this.add.rectangle(this.scale.width / 2, 18, this.scale.width - 40, 14, 0x333333);
         this.timerBarBg.setOrigin(0.5, 0);
         this.timerBar = this.add.rectangle(20, 18, 0, 14, 0x4CAF50);
@@ -91,7 +85,6 @@ export class Game extends Phaser.Scene {
 
         this.ostriches = {};
         this.seedCounts = {};
-        this.heartGroups = {};
 
         const positions = [
             { x: sideX[0], y: sideY, id: playerOrder[0], scale: 1.0 },
@@ -124,14 +117,6 @@ export class Game extends Phaser.Scene {
             }).setOrigin(0.5);
 
             this.add.image(pos.x, pos.y + 90, 'seed').setScale(0.8);
-
-            const hearts = [];
-            for (let i = 0; i < 3; i++) {
-                const heart = this.add.image(pos.x - 28 + i * 28, pos.y + 120, 'heart');
-                heart.setScale(0.6);
-                hearts.push(heart);
-            }
-            this.heartGroups[id] = hearts;
         }
     }
 
@@ -267,13 +252,6 @@ export class Game extends Phaser.Scene {
             this.submitted = false;
 
             this.roundText.setText(`Round ${data.round} / ${this.totalRounds}`);
-            if (data.phase === 'trust') {
-                this.phaseText.setText('Trust');
-                this.phaseText.setColor('#4CAF50');
-            } else {
-                this.phaseText.setText('Ostracism');
-                this.phaseText.setColor('#F44336');
-            }
 
             this.statusText.setText('');
             this.enableButtons();
@@ -288,7 +266,6 @@ export class Game extends Phaser.Scene {
             this.updateScores(data.scores);
 
             this.playActionAnimations(data.actions, () => {
-                this.updateHearts(data.exclusionEvents);
                 this.updateVignetteAlpha();
             });
         });
@@ -462,20 +439,6 @@ export class Game extends Phaser.Scene {
         });
     }
 
-    updateHearts(exclusionEvents) {
-        const maxBroken = Math.min(3, exclusionEvents || 0);
-        const hearts = this.heartGroups[this.playerId];
-        if (!hearts) return;
-
-        for (let i = 0; i < 3; i++) {
-            if (i < maxBroken) {
-                hearts[i].setTexture('broken_heart');
-            } else {
-                hearts[i].setTexture('heart');
-            }
-        }
-    }
-
     updateVignetteAlpha() {
         if (this.currentPhase !== 'ostracism') {
             this.vignette.setAlpha(0);
@@ -483,20 +446,12 @@ export class Game extends Phaser.Scene {
         }
         const maxRounds = 8;
         const current = this.currentRound - 4;
-        const alpha = Math.min(1, current / maxRounds) * 0.35;
+        const alpha = Math.min(1, current / maxRounds) * 0.08;
         this.tweens.add({
             targets: this.vignette,
             alpha,
             duration: 500,
         });
-
-        if (this.currentRound >= 10) {
-            for (const key of Object.keys(this.ostriches)) {
-                if (key !== this.playerId) {
-                    this.ostriches[key].setTexture(`ostrich_${key.toLowerCase()}_sad`);
-                }
-            }
-        }
     }
 
     setupVignette() {

@@ -7,10 +7,10 @@ Three players compete as ostriches collecting seeds to hatch a Golden Egg. But a
 ## How It Works
 
 1. **Phase 1 — Trust (Rounds 1–4):** The game plays normally. Players see real actions and build trust in the system.
-2. **Phase 2 — Ostracism (Rounds 5–12):** The server silently fabricates what each player sees. Player A sees B and C cooperating and ignoring them. Player B sees A and C cooperating and ignoring them. Player C sees A and B cooperating and ignoring them. The exclusion escalates gradually.
+2. **Phase 2 — Concealed Manipulation (Rounds 5–12):** The server silently fabricates what each player sees — but there are **no visible indicators of ostracism** during gameplay. No "Ostracism" label, no broken hearts, no sad ostrich expressions. The manipulation is entirely hidden from players.
 3. **Reveal:** After round 12, the truth comes out — nobody was actually excluded. The system manipulated everyone equally.
 
-Each round: choose **Share** (give a seed to another player), **Peck** (steal a seed), or **Head in Sand** (block all incoming actions). The player with the most seeds wins the Golden Egg.
+Each round: choose **Share** (give a seed to another player), **Peck** (steal a seed), or **Head in Sand** (block all incoming actions). Each player starts with **5 seeds**. The player with the most seeds wins the Golden Egg.
 
 ## Physical Setup
 
@@ -53,15 +53,31 @@ http://localhost:3000/?player=C
 
 Each tab plays as a different ostrich. Open all three, verify the lobby fills up, and play through 12 rounds.
 
+### Admin Dashboard
+
+```
+http://localhost:3000/admin
+```
+
+A real-time Socket.IO dashboard showing:
+- Player connections and readiness
+- Live round/phase with action submission status
+- **True scores vs what each player is actually being shown** (side-by-side)
+- Round history table
+- Reset button to force-end the game
+
 ## Project Status
 
 **Phase 0 (Housekeeping)**: Done
-- [x] Phaser scaffold with correct config
-- [x] Boilerplate assets cleaned
 
-**Phase 1 (Backend)**: Not started
+**Phase 1 (Backend)**: Done — Express + Socket.IO server, GameRoom, GameState, RoundResolver, OstracismEngine, session persistence
 
-**Phase 2 (Frontend)**: Not started
+**Phase 2 (Frontend)**: Done — Boot, Lobby, Game, Reveal scenes; action selection, animations, scoring display, ostracism concealment
+
+**Enhancements**:
+- [x] Starting seeds set to 5 (configurable)
+- [x] Ostracism elements hidden during gameplay (no hearts, phase labels, or sad expressions)
+- [x] Admin dashboard with real-time true/illusion score comparison
 
 See [implementation plan](docs/implementation_plan.md).
 
@@ -79,8 +95,10 @@ See [implementation plan](docs/implementation_plan.md).
 All tunable parameters live in `server/config.js`:
 
 - `TOTAL_ROUNDS` — 12 rounds
-- `ROUND_DURATION_MS` — 20,000 ms per round
+- `ROUND_DURATION_MS` — 10,000 ms per round
+- `ROUND_RESOLVE_ANIMATION_MS` — 3,000 ms pause between rounds
 - `PHASE1_ROUNDS` — 4 trust rounds before manipulation begins
+- `STARTING_SEEDS` — 5 seeds per player at game start
 - `RECONNECT_TIMEOUT_MS` — 60,000 ms before disconnected player is dropped
 
 ## License

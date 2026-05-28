@@ -10,9 +10,18 @@ class GameRoom {
         this.readyPlayers = new Set();
         this.roundResolver = null;
         this.reconnectTimers = {};
+        this.adminSockets = new Set();
     }
 
     handleConnection(socket) {
+        if (socket.handshake.query.admin === 'true') {
+            this.adminSockets.add(socket.id);
+            socket.on('adminReset', () => this.forceReset());
+            socket.on('disconnect', () => this.adminSockets.delete(socket.id));
+            socket.emit('adminState', this.getAdminState());
+            return;
+        }
+
         const playerId = (socket.handshake.query.player || '').toUpperCase();
 
         if (!VALID_ROLES.includes(playerId)) {
@@ -101,6 +110,9 @@ class GameRoom {
 
     startGame() {
         this.roundResolver = new RoundResolver(this.io, { ...this.players });
+        this.roundResolver.setAdminCallback((data) => {
+            this.broadcastToAdmins('adminRoundResult', data);
+        });
 
         for (const playerId of VALID_ROLES) {
             const socketId = this.players[playerId];
@@ -133,6 +145,7 @@ class GameRoom {
             ready: this.readyPlayers.size,
             total: 3,
         });
+        this.broadcastToAdmins('adminState', this.getAdminState());
     }
 
     reset() {
@@ -144,6 +157,43 @@ class GameRoom {
         }
         this.reconnectTimers = {};
         this.broadcastLobbyUpdate();
+    }
+
+    forceReset() {
+        if (this.roundResolver) {
+            this.roundResolver.forceEnd();
+        }
+        this.reset();
+    }
+
+    broadcastToAdmins(event, data) {
+        for (const socketId of this.adminSockets) {
+            this.io.to(socketId).emit(event, data);
+        }
+    }
+
+    getAdminState() {
+        const connected = VALID_ROLES.filter(r => this.players[r]);
+        const ready = [...this.readyPlayers];
+
+        let state = 'idle';
+        if (connected.length > 0 || this.roundResolver) {
+            state = this.roundResolver ? 'playing' : 'lobby';
+        }
+
+        const adminState = {
+            connected,
+            ready,
+            state,
+            totalRounds: 12,
+            game: null,
+        };
+
+        if (this.roundResolver) {
+            adminState.game = this.roundResolver.getAdminState();
+        }
+
+        return adminState;
     }
 }
 

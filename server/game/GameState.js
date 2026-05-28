@@ -1,9 +1,11 @@
+const { STARTING_SEEDS } = require('../config');
+
 class GameState {
 
     constructor() {
         this.round = 1;
         this.phase = 'trust';
-        this.scores = { A: 0, B: 0, C: 0 };
+        this.scores = { A: STARTING_SEEDS, B: STARTING_SEEDS, C: STARTING_SEEDS };
         this.currentActions = [];
         this.actionSubmitted = { A: false, B: false, C: false };
         this.roundHistory = [];
@@ -127,6 +129,22 @@ class GameState {
             round: this.round,
             phase: this.phase,
             scores: { ...this.scores },
+        };
+    }
+
+    getFullState() {
+        return {
+            round: this.round,
+            phase: this.phase,
+            scores: { ...this.scores },
+            actionSubmitted: { ...this.actionSubmitted },
+            currentActions: this.currentActions.map(a => ({ ...a })),
+            roundHistory: this.roundHistory.map(r => ({
+                round: r.round,
+                phase: r.phase,
+                scores: { ...r.scores },
+                deltas: { ...r.deltas },
+            })),
         };
     }
 }

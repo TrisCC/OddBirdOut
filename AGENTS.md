@@ -2,7 +2,9 @@
 
 ## Project Summary
 
-Odd Bird Out is a **three-player interactive game installation** about cyber ostracism. A Node.js/Socket.IO server manipulates what each player sees on their tablet, fabricating social exclusion in a Phaser 3 pixel-art web game. Each session: 12 rounds (4 trust + 8 ostracism), 20s per round. Player with most seeds wins the Golden Egg.
+Odd Bird Out is a **three-player interactive game installation** about cyber ostracism. A Node.js/Socket.IO server manipulates what each player sees on their tablet, fabricating social exclusion in a Phaser 3 pixel-art web game. Each session: 12 rounds (4 trust + 8 ostracism). Each player starts with 5 seeds. Player with most seeds wins the Golden Egg.
+
+The manipulation is **concealed during gameplay** — no hearts, no "ostracism" label, no sad expressions. The ostracism is only revealed at game end.
 
 ## Tech Stack
 
@@ -26,23 +28,26 @@ OddBirdOut/                    # Phaser frontend
   src/
     main.js                    # Phaser config & game launch
     scenes/
-      Start.js                 # TEMPORARY placeholder scene (will be replaced)
-    SocketManager.js           # Socket.IO client singleton (TO BE CREATED)
-    PlaceholderAssets.js       # Procedural sprite generator (TO BE CREATED)
+      Boot.js                  # Socket connection + asset loading
+      Lobby.js                 # Player ready screen
+      Game.js                  # Main gameplay scene
+      Reveal.js                # Post-game truth reveal
+    SocketManager.js           # Socket.IO client singleton
+    PlaceholderAssets.js       # Procedural sprite generator
   index.html                   # HTML shell, loads Phaser + main.js
   phaser.js                    # Phaser 3.88.2 (7.8 MB, do not modify)
   assets/                      # Static assets (no pixel art yet)
 
-server/                        # Backend (NOT YET CREATED)
+server/                        # Backend
   index.js                     # Express + Socket.IO entry
   config.js                    # All tunable parameters
+  admin.html                   # Admin dashboard (Socket.IO-based)
   game/
-    GameRoom.js                # Connection/role/disconnect management
-    GameState.js               # True state + 3 illusion states
+    GameRoom.js                # Connection/role/disconnect + admin socket management
+    GameState.js               # True state + scoring engine
     OstracismEngine.js         # Fabrication algorithm
-    RoundResolver.js           # Round lifecycle
+    RoundResolver.js           # Round lifecycle + admin callback hooks
   data/sessions/               # Saved game results
-  public/ -> ../OddBirdOut/    # Served static files
 ```
 
 ## Key Conventions
@@ -61,8 +66,34 @@ server/                        # Backend (NOT YET CREATED)
 ### State ownership
 The server owns **all** game state. The frontend is a dumb renderer — it sends actions, receives round results, plays animations. Never compute game logic on the client.
 
-### Ostracism (Phase 2)
-The server computes **one true state** and **three separate illusion payloads**. Each player receives `roundResult` via individual `socket.emit()`, never broadcast during Phase 2. The OstracismEngine pseudocode is in the tech spec Section 3.4.
+## Scoring System
+
+- All players start with **5 seeds** (configurable via `STARTING_SEEDS` in `config.js`).
+- Each round: **Share** (give 1 seed), **Peck** (steal 1 seed), or **Head in Sand** (block all).
+- If a player has 0 seeds, they cannot share or be pecked (nothing to give/steal).
+- All actions resolve in parallel — hide effects computed first, then share/peck deltas applied atomically.
+- After round 12, player(s) with most seeds win the Golden Egg. Ties allowed.
+
+### Ostracism Concealment (Phase 2)
+
+The ostracism is **hidden from players during gameplay**. The frontend does NOT display:
+- Phase labels ("Trust" / "Ostracism")
+- Broken hearts
+- Sad ostrich expressions
+- Heavy vignette darkening (only a subtle 0.08 max-alpha vignette remains)
+
+The manipulation is only revealed at game end in the **Reveal** scene.
+
+### Admin Dashboard
+
+A real-time admin dashboard is available at `http://localhost:3000/admin`. It connects via Socket.IO with `query: { admin: 'true' }` and receives dedicated admin-only events (`adminState`, `adminRoundResult`). The dashboard shows:
+- Connection status and player readiness
+- Live round/phase info and action submissions
+- True scores and per-player illusion comparison (side-by-side)
+- Round history table
+- Reset button to force-end the current game
+
+Admin socket handlers are `adminReset` (client → server) and `adminState` / `adminRoundResult` (server → client). See `GameRoom.js:16-23` and `RoundResolver.js:161-181`.
 
 ### Scene flow
 ```
@@ -83,6 +114,8 @@ node server/index.js
 #   http://localhost:3000/?player=A
 #   http://localhost:3000/?player=B
 #   http://localhost:3000/?player=C
+# Admin dashboard:
+#   http://localhost:3000/admin
 ```
 
 No build step — the Phaser frontend is served as-is by Express.
@@ -103,9 +136,12 @@ No automated test framework. Manual testing via multiple browser tabs:
 3. If creating a new file, match the directory structure defined in the tech spec Section 3.2 and 4.4.
 4. If adding a Socket.IO event, update the event schema in the tech spec Section 5.
 
-## Current Status (Phase 2 complete)
+## Current Status (Phase 2 complete + enhancements)
 
 - [x] Phase 0 complete (main.js fixed, boilerplate removed, Start.js → Boot.js)
 - [x] Phase 1 complete (backend: Express + Socket.IO server, GameRoom, GameState, RoundResolver, OstracismEngine, session persistence)
 - [x] Phase 2 complete (frontend: Boot, Lobby, Game, Reveal scenes; SocketManager, PlaceholderAssets; all 4 scenes registered)
+- [x] Scoring fix: players start with 5 seeds (configurable via `STARTING_SEEDS`)
+- [x] Ostracism concealment: phase label, broken hearts, and sad expressions removed; vignette minimized; reveal at game end only
+- [x] Admin dashboard: real-time Socket.IO dashboard at `/admin` with true/illusion score comparison and reset
 - [ ] Phase 3: Integration & Polish not started

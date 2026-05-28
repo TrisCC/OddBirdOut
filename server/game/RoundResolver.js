@@ -1,4 +1,4 @@
-const { fabricateForPlayer } = require('./OstracismEngine');
+const { fabricateForPlayer, getEscalationLevel } = require('./OstracismEngine');
 const { GameState } = require('./GameState');
 const config = require('../config');
 const { v4: uuidv4 } = require('uuid');
@@ -13,6 +13,7 @@ class RoundResolver {
         this.gameState = new GameState();
         this.roundTimer = null;
         this.gameActive = false;
+        this.adminCallback = null;
         this.illusionCumulativeScores = {
             A: { A: 0, B: 0, C: 0 },
             B: { A: 0, B: 0, C: 0 },
@@ -157,6 +158,28 @@ class RoundResolver {
 
         this.sessionLog.rounds.push(roundLog);
 
+        if (this.adminCallback) {
+            const exclusionCounts = this._exclusionCount
+                ? { ...this._exclusionCount }
+                : { A: 0, B: 0, C: 0 };
+
+            const adminPayload = {
+                round: this.gameState.round,
+                phase: this.gameState.phase,
+                escalationLevel: this.gameState.phase === 'trust' ? 'none' : getEscalationLevel(this.gameState.round),
+                trueActions: roundLog.trueActions,
+                trueScores: roundLog.trueScores,
+                trueDeltas,
+                exclusionCounts,
+            };
+
+            if (this.gameState.phase === 'ostracism') {
+                adminPayload.illusions = roundLog.illusions;
+            }
+
+            this.adminCallback(adminPayload);
+        }
+
         if (this.gameState.round >= config.TOTAL_ROUNDS) {
             this.endGame();
         } else {
@@ -198,6 +221,15 @@ class RoundResolver {
         }
 
         this.saveSessionLog();
+
+        if (this.adminCallback) {
+            this.adminCallback({
+                round: this.gameState.round,
+                phase: 'ended',
+                trueScores: { ...this.gameState.scores },
+                winner: [...winner],
+            });
+        }
     }
 
     buildIllusionSummary(playerId) {
@@ -279,6 +311,34 @@ class RoundResolver {
                 this.onRoundTimeout();
             }, config.ROUND_DURATION_MS);
         }
+    }
+
+    setAdminCallback(cb) {
+        this.adminCallback = cb;
+    }
+
+    getAdminState() {
+        const state = this.gameState.getFullState();
+        return {
+            round: state.round,
+            phase: state.phase,
+            roundActive: this.gameState.isRoundActive(),
+            actionsSubmitted: state.actionSubmitted,
+            trueScores: state.scores,
+            escalationLevel: state.phase === 'trust' ? 'none' : getEscalationLevel(state.round),
+            exclusionCounts: this._exclusionCount
+                ? { ...this._exclusionCount }
+                : { A: 0, B: 0, C: 0 },
+            roundHistory: state.roundHistory,
+        };
+    }
+
+    forceEnd() {
+        if (this.roundTimer) {
+            clearTimeout(this.roundTimer);
+            this.roundTimer = null;
+        }
+        this.gameActive = false;
     }
 }
 
