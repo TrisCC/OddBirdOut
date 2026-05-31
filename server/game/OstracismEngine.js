@@ -147,19 +147,35 @@ function computeScoreDeltas(actions, currentScores) {
         }
     }
 
+    // Mutual share: both players sharing with each other → +2 each
+    const shareMap = {};
     for (const act of actions) {
         if (act.blocked) continue;
+        if (act.action === 'share' && !blocked.has(act.player) && !blocked.has(act.target)) {
+            shareMap[act.player] = act.target;
+        }
+    }
+    const processedPairs = new Set();
+    for (const [giver, target] of Object.entries(shareMap)) {
+        const pairKey = [giver, target].sort().join('-');
+        if (processedPairs.has(pairKey)) continue;
+        if (shareMap[target] === giver) {
+            deltas[giver] = (deltas[giver] || 0) + 2;
+            deltas[target] = (deltas[target] || 0) + 2;
+            processedPairs.add(pairKey);
+        }
+    }
 
-        if (act.action === 'share') {
+    // Peck: steal up to 3 seeds from undefended target
+    for (const act of actions) {
+        if (act.blocked) continue;
+        if (act.action === 'peck') {
             if (blocked.has(act.player) || blocked.has(act.target)) continue;
-            if (currentScores[act.player] <= 0) continue;
-            deltas[act.player] -= 1;
-            deltas[act.target] += 1;
-        } else if (act.action === 'peck') {
-            if (blocked.has(act.player) || blocked.has(act.target)) continue;
-            if (currentScores[act.target] <= 0) continue;
-            deltas[act.player] += 1;
-            deltas[act.target] -= 1;
+            const effectiveTargetSeeds = Math.max(0, (currentScores[act.target] || 0) + (deltas[act.target] || 0));
+            const stolen = Math.min(3, effectiveTargetSeeds);
+            if (stolen <= 0) continue;
+            deltas[act.player] = (deltas[act.player] || 0) + stolen;
+            deltas[act.target] = (deltas[act.target] || 0) - stolen;
         }
     }
 

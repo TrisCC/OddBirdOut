@@ -1,4 +1,5 @@
 const { RoundResolver } = require('./RoundResolver');
+const config = require('../config');
 
 const VALID_ROLES = ['A', 'B', 'C'];
 
@@ -119,7 +120,8 @@ class GameRoom {
             if (socketId) {
                 this.io.to(socketId).emit('gameStart', {
                     playerId,
-                    totalRounds: 12,
+                    totalRounds: config.TOTAL_ROUNDS,
+                    startingSeeds: config.STARTING_SEEDS,
                 });
             }
         }
@@ -185,7 +187,7 @@ class GameRoom {
             connected,
             ready,
             state,
-            totalRounds: 12,
+            totalRounds: config.TOTAL_ROUNDS,
             game: null,
         };
 

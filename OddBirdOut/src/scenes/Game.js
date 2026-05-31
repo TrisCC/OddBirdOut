@@ -4,10 +4,11 @@ const COLORS = {
     C: 0xFF9800,
 };
 
-const OTHER_PLAYERS = {
-    A: ['B', 'C'],
+// [left, right] from each player's physical perspective in the installation
+const SIDE_ORDER = {
+    A: ['C', 'B'],
     B: ['A', 'C'],
-    C: ['A', 'B'],
+    C: ['B', 'A'],
 };
 
 export class Game extends Phaser.Scene {
@@ -20,6 +21,7 @@ export class Game extends Phaser.Scene {
         this.socketManager = data.socketManager;
         this.playerId = data.playerId;
         this.totalRounds = data.totalRounds;
+        this.startingSeeds = data.startingSeeds || 10;
     }
 
     create() {
@@ -44,6 +46,7 @@ export class Game extends Phaser.Scene {
         this.currentPhase = 'trust';
         this.submitted = false;
         this.seedSprites = [];
+        this.currentScores = { A: this.startingSeeds, B: this.startingSeeds, C: this.startingSeeds };
     }
 
     buildHUD() {
@@ -80,11 +83,12 @@ export class Game extends Phaser.Scene {
         const sideX = [250, 1030];
         const sideY = 370;
 
-        const others = OTHER_PLAYERS[this.playerId];
+        const others = SIDE_ORDER[this.playerId];
         const playerOrder = [others[0], this.playerId, others[1]];
 
         this.ostriches = {};
         this.seedCounts = {};
+        this.ostrichPositions = {};
 
         const positions = [
             { x: sideX[0], y: sideY, id: playerOrder[0], scale: 1.0 },
@@ -100,6 +104,7 @@ export class Game extends Phaser.Scene {
             const sprite = this.add.image(pos.x, pos.y, textureKey);
             sprite.setScale(pos.scale);
             this.ostriches[id] = sprite;
+            this.ostrichPositions[id] = { x: pos.x, y: pos.y };
 
             const label = isSelf ? 'You' : `Player ${id}`;
             const labelColor = isSelf ? '#FFD700' : '#CCCCCC';
@@ -110,7 +115,7 @@ export class Game extends Phaser.Scene {
                 color: labelColor,
             }).setOrigin(0.5);
 
-            this.seedCounts[id] = this.add.text(pos.x, pos.y + 65, '0', {
+            this.seedCounts[id] = this.add.text(pos.x, pos.y + 65, String(this.startingSeeds), {
                 fontFamily: '"Press Start 2P"',
                 fontSize: '14px',
                 color: '#FFD700',
@@ -169,7 +174,7 @@ export class Game extends Phaser.Scene {
     }
 
     showTargetSelector(action) {
-        const others = OTHER_PLAYERS[this.playerId];
+        const others = SIDE_ORDER[this.playerId];
         const sideX = [250, 1030];
 
         this.targetContainer.removeAll(true);
@@ -255,18 +260,34 @@ export class Game extends Phaser.Scene {
 
             this.statusText.setText('');
             this.enableButtons();
-            this.startTimer(data.roundDurationMs);
+
+            if (data.debugMode) {
+                const barWidth = this.scale.width - 40;
+                this.timerBar.width = barWidth;
+                this.timerBar.fillColor = 0x2196F3;
+            } else {
+                this.startTimer(data.roundDurationMs);
+            }
         });
 
         this.socketManager.on('roundResult', (data) => {
+            // Capture deltas before scores update
+            const deltas = {};
+            for (const [key, newVal] of Object.entries(data.scores)) {
+                const id = key === 'You' ? this.playerId : key;
+                deltas[id] = newVal - (this.currentScores[id] ?? this.startingSeeds);
+            }
+
             this.tweens.killAll();
             this.timerBar.width = 0;
             this.statusText.setText('');
 
-            this.updateScores(data.scores);
-
             this.playActionAnimations(data.actions, () => {
+                this.updateScores(data.scores);
                 this.updateVignetteAlpha();
+                for (const [id, delta] of Object.entries(deltas)) {
+                    if (delta !== 0) this.showSeedDelta(id, delta);
+                }
             });
         });
 
@@ -307,14 +328,40 @@ export class Game extends Phaser.Scene {
             const id = key === 'You' ? this.playerId : key;
             if (this.seedCounts[id]) {
                 this.seedCounts[id].setText(scores[key].toString());
+                this.currentScores[id] = scores[key];
             }
         }
+    }
+
+    showSeedDelta(playerId, delta) {
+        const pos = this.ostrichPositions[playerId];
+        if (!pos) return;
+
+        const color = delta > 0 ? '#44FF88' : '#FF4444';
+        const label = delta > 0 ? `+${delta}` : `${delta}`;
+
+        const popup = this.add.text(pos.x, pos.y + 50, label, {
+            fontFamily: '"Press Start 2P"',
+            fontSize: '18px',
+            color,
+            stroke: '#000000',
+            strokeThickness: 4,
+        }).setOrigin(0.5).setDepth(20);
+
+        this.tweens.add({
+            targets: popup,
+            y: pos.y - 20,
+            alpha: 0,
+            duration: 1400,
+            ease: 'Power2',
+            onComplete: () => popup.destroy(),
+        });
     }
 
     playActionAnimations(actions, onComplete) {
         const selfX = this.scale.width / 2;
         const selfY = 340;
-        const others = OTHER_PLAYERS[this.playerId];
+        const others = SIDE_ORDER[this.playerId];
         const sideX = {
             [others[0]]: 250,
             [others[1]]: 1030,

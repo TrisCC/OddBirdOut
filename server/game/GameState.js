@@ -69,32 +69,33 @@ class GameState {
 
         const deltas = { A: 0, B: 0, C: 0 };
 
+        // Mutual share: both players sharing with each other → +2 each (seeds from cooperation)
+        const shareMap = {};
         for (const act of this.currentActions) {
-            if (act.action === 'share') {
-                if (blocked.has(act.player)) {
-                    continue;
-                }
-                if (blocked.has(act.target)) {
-                    continue;
-                }
-                if (this.scores[act.player] <= 0) {
-                    continue;
-                }
-                deltas[act.player] -= 1;
-                deltas[act.target] += 1;
+            if (act.action === 'share' && !blocked.has(act.player) && !blocked.has(act.target)) {
+                shareMap[act.player] = act.target;
+            }
+        }
+        const processedPairs = new Set();
+        for (const [giver, target] of Object.entries(shareMap)) {
+            const pairKey = [giver, target].sort().join('-');
+            if (processedPairs.has(pairKey)) continue;
+            if (shareMap[target] === giver) {
+                deltas[giver] += 2;
+                deltas[target] += 2;
+                processedPairs.add(pairKey);
+            }
+        }
 
-            } else if (act.action === 'peck') {
-                if (blocked.has(act.player)) {
-                    continue;
-                }
-                if (blocked.has(act.target)) {
-                    continue;
-                }
-                if (this.scores[act.target] <= 0) {
-                    continue;
-                }
-                deltas[act.player] += 1;
-                deltas[act.target] -= 1;
+        // Peck: steal up to 3 seeds from undefended target
+        for (const act of this.currentActions) {
+            if (act.action === 'peck') {
+                if (blocked.has(act.player) || blocked.has(act.target)) continue;
+                const effectiveTargetSeeds = Math.max(0, this.scores[act.target] + deltas[act.target]);
+                const stolen = Math.min(3, effectiveTargetSeeds);
+                if (stolen <= 0) continue;
+                deltas[act.player] += stolen;
+                deltas[act.target] -= stolen;
             }
         }
 

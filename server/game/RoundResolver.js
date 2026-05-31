@@ -49,13 +49,16 @@ class RoundResolver {
             round: this.gameState.round,
             phase: this.gameState.phase,
             roundDurationMs: config.ROUND_DURATION_MS,
+            debugMode: config.DEBUG_MODE,
         };
 
         this.broadcastToAll('roundStart', payload);
 
-        this.roundTimer = setTimeout(() => {
-            this.onRoundTimeout();
-        }, config.ROUND_DURATION_MS);
+        if (!config.DEBUG_MODE) {
+            this.roundTimer = setTimeout(() => {
+                this.onRoundTimeout();
+            }, config.ROUND_DURATION_MS);
+        }
     }
 
     onRoundTimeout() {
