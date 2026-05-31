@@ -10,4 +10,6 @@ module.exports = {
     SEEDS_PER_ROUND_DRAIN: 1,
     RECONNECT_TIMEOUT_MS: 60000,
     STATIC_DIR: path.join(__dirname, '..', 'OddBirdOut'),
+    // Set to true to disable the round timer — rounds only advance once all players have acted
+    DEBUG_MODE: true,
 };
