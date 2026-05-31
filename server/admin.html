@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Odd Bird Out — Admin</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    background: #1a1209;
+    color: #e0d6c8;
+    font-family: 'Courier New', monospace;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.hidden { display: none !important; }
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 20px;
+    background: #2B1E10;
+    border: 2px solid #5D4037;
+    border-radius: 6px;
+    margin-bottom: 16px;
+}
+
+.header h1 {
+    font-size: 20px;
+    color: #FFD700;
+    letter-spacing: 2px;
+}
+
+.status-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 6px;
+}
+
+.status-dot.online { background: #4CAF50; }
+.status-dot.offline { background: #F44336; }
+.status-dot.idle { background: #757575; }
+
+.btn {
+    padding: 8px 20px;
+    border: none;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    letter-spacing: 1px;
+}
+
+.btn-reset {
+    background: #F44336;
+    color: #fff;
+}
+
+.btn-reset:hover { background: #d32f2f; }
+
+.btn-confirm {
+    background: #FF5722;
+    color: #fff;
+    margin-left: 8px;
+}
+
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+
+.panel {
+    background: #2B1E10;
+    border: 2px solid #5D4037;
+    border-radius: 6px;
+    padding: 14px;
+}
+
+.panel h3 {
+    font-size: 13px;
+    color: #FFD700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #5D4037;
+    padding-bottom: 6px;
+}
+
+.panel-full { margin-bottom: 16px; }
+
+.row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 13px; }
+
+.tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: bold;
+}
+
+.tag-trust { background: #4CAF50; color: #fff; }
+.tag-ostracism { background: #F44336; color: #fff; }
+.tag-low { background: #FF9800; color: #fff; }
+.tag-medium { background: #E65100; color: #fff; }
+.tag-high { background: #B71C1C; color: #fff; }
+
+.submitted { color: #4CAF50; }
+.pending { color: #F44336; }
+
+.scores-row {
+    display: flex;
+    justify-content: space-around;
+    padding: 10px 0;
+}
+
+.score-card {
+    text-align: center;
+    padding: 10px 16px;
+    background: #1a1209;
+    border-radius: 4px;
+    min-width: 80px;
+}
+
+.score-card .label { font-size: 11px; color: #888; margin-bottom: 4px; }
+.score-card .value { font-size: 28px; font-weight: bold; color: #FFD700; }
+
+.illusions-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+.illusion-col {
+    background: #1a1209;
+    border-radius: 4px;
+    padding: 10px;
+}
+
+.illusion-col .col-header {
+    font-size: 12px;
+    color: #FFD700;
+    text-align: center;
+    margin-bottom: 8px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #5D4037;
+}
+
+.illusion-scores {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 8px;
+}
+
+.illusion-scores span {
+    font-size: 12px;
+    padding: 2px 6px;
+    background: #2B1E10;
+    border-radius: 3px;
+}
+
+.illusion-actions {
+    font-size: 11px;
+    color: #aaa;
+    line-height: 1.6;
+}
+
+.illusion-actions .blocked { color: #F44336; text-decoration: line-through; }
+
+.table-wrap {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+}
+
+th {
+    text-align: left;
+    padding: 6px 8px;
+    color: #FFD700;
+    border-bottom: 2px solid #5D4037;
+    position: sticky;
+    top: 0;
+    background: #2B1E10;
+}
+
+td {
+    padding: 5px 8px;
+    border-bottom: 1px solid #3D2B1A;
+}
+
+td.trust-phase { color: #4CAF50; }
+td.ostracism-phase { color: #F44336; }
+
+.empty-state {
+    text-align: center;
+    color: #666;
+    padding: 20px;
+    font-size: 13px;
+}
+
+#disconnectedOverlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+}
+
+#disconnectedOverlay .msg {
+    font-size: 22px;
+    color: #F44336;
+    text-align: center;
+}
+
+.reset-confirm { display: inline-block; }
+</style>
+</head>
+<body>
+
+<div class="header">
+    <div>
+        <h1>Odd Bird Out</h1>
+        <span style="font-size:11px;color:#888;">Admin Dashboard</span>
+    </div>
+    <div>
+        <span id="connectionDot" class="status-dot offline"></span>
+        <span id="connectionLabel" style="font-size:12px;color:#888;">Disconnected</span>
+        <button class="btn btn-reset" id="btnReset">RESET</button>
+        <span id="resetConfirm" class="reset-confirm hidden">
+            <span style="font-size:12px;color:#F44336;">Are you sure?</span>
+            <button class="btn btn-confirm" id="btnConfirmYes">YES</button>
+            <button class="btn" id="btnConfirmNo" style="background:#555;color:#fff;">NO</button>
+        </span>
+    </div>
+</div>
+
+<div class="grid-2">
+    <div class="panel">
+        <h3>Connections</h3>
+        <div id="connectionsContent" class="empty-state">No players connected</div>
+    </div>
+    <div class="panel">
+        <h3>Game State</h3>
+        <div id="gameStateContent" class="empty-state">Waiting for game...</div>
+    </div>
+</div>
+
+<div class="panel panel-full">
+    <h3>True Scores</h3>
+    <div class="scores-row" id="trueScores">
+        <div class="score-card"><div class="label">Player A</div><div class="value" id="scoreA">—</div></div>
+        <div class="score-card"><div class="label">Player B</div><div class="value" id="scoreB">—</div></div>
+        <div class="score-card"><div class="label">Player C</div><div class="value" id="scoreC">—</div></div>
+    </div>
+</div>
+
+<div class="panel panel-full">
+    <h3>What Each Player Sees <span style="font-size:11px;color:#666;">(Last completed round)</span></h3>
+    <div class="illusions-grid" id="illusionsGrid">
+        <div class="illusion-col"><div class="col-header">Player A</div><div class="empty-state">Waiting...</div></div>
+        <div class="illusion-col"><div class="col-header">Player B</div><div class="empty-state">Waiting...</div></div>
+        <div class="illusion-col"><div class="col-header">Player C</div><div class="empty-state">Waiting...</div></div>
+    </div>
+</div>
+
+<div class="panel panel-full">
+    <h3>Round History</h3>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Phase</th>
+                    <th>Actions</th>
+                    <th>A Score</th>
+                    <th>B Score</th>
+                    <th>C Score</th>
+                </tr>
+            </thead>
+            <tbody id="historyBody">
+                <tr><td colspan="6" class="empty-state">No rounds completed yet</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div id="disconnectedOverlay"><div class="msg">Disconnected from server<br><span style="font-size:14px;color:#888;">Attempting to reconnect...</span></div></div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+const socket = io('/', { query: { admin: 'true' } });
+
+const scoreA = document.getElementById('scoreA');
+const scoreB = document.getElementById('scoreB');
+const scoreC = document.getElementById('scoreC');
+const connectionsContent = document.getElementById('connectionsContent');
+const gameStateContent = document.getElementById('gameStateContent');
+const illusionsGrid = document.getElementById('illusionsGrid');
+const historyBody = document.getElementById('historyBody');
+const connectionDot = document.getElementById('connectionDot');
+const connectionLabel = document.getElementById('connectionLabel');
+const disconnectedOverlay = document.getElementById('disconnectedOverlay');
+const btnReset = document.getElementById('btnReset');
+const resetConfirm = document.getElementById('resetConfirm');
+const btnConfirmYes = document.getElementById('btnConfirmYes');
+const btnConfirmNo = document.getElementById('btnConfirmNo');
+
+let roundHistory = [];
+
+socket.on('connect', () => {
+    connectionDot.className = 'status-dot online';
+    connectionLabel.textContent = 'Connected';
+    disconnectedOverlay.classList.add('hidden');
+});
+
+socket.on('disconnect', () => {
+    connectionDot.className = 'status-dot offline';
+    connectionLabel.textContent = 'Disconnected';
+    disconnectedOverlay.classList.remove('hidden');
+});
+
+socket.on('adminState', (data) => {
+    renderConnections(data);
+    renderGameState(data);
+    renderTrueScores(data);
+});
+
+socket.on('adminRoundResult', (data) => {
+    if (data.phase === 'ended') {
+        renderGameEnded(data);
+        return;
+    }
+    roundHistory.push(data);
+    renderHistory();
+    renderIllusions(data);
+    renderTrueScoresFromHistory(data);
+});
+
+btnReset.addEventListener('click', () => {
+    resetConfirm.classList.remove('hidden');
+    btnReset.classList.add('hidden');
+});
+
+btnConfirmYes.addEventListener('click', () => {
+    socket.emit('adminReset');
+    resetConfirm.classList.add('hidden');
+    btnReset.classList.remove('hidden');
+    roundHistory = [];
+    renderHistory();
+    renderIllusions(null);
+});
+
+btnConfirmNo.addEventListener('click', () => {
+    resetConfirm.classList.add('hidden');
+    btnReset.classList.remove('hidden');
+});
+
+function renderConnections(data) {
+    const roles = ['A', 'B', 'C'];
+    const readySet = new Set(data.ready);
+    let html = '';
+    for (const r of roles) {
+        const connected = data.connected.includes(r);
+        const ready = readySet.has(r);
+        const dotClass = connected ? 'online' : 'offline';
+        html += `<div class="row">`;
+        html += `<span><span class="status-dot ${dotClass}"></span>Player ${r}</span>`;
+        html += `<span style="color:#888;">${connected ? (ready ? 'Ready' : 'Connected') : 'Offline'}</span>`;
+        html += `</div>`;
+    }
+    html += `<div class="row" style="margin-top:8px;border-top:1px solid #5D4037;padding-top:8px;">`;
+    html += `<span>State</span>`;
+    html += `<span style="color:#FFD700;">${data.state.toUpperCase()}</span>`;
+    html += `</div>`;
+    connectionsContent.innerHTML = html;
+}
+
+function renderGameState(data) {
+    if (!data.game) {
+        gameStateContent.innerHTML = `<div class="empty-state">No active game</div>`;
+        return;
+    }
+    const g = data.game;
+    const phaseColor = g.phase === 'trust' ? '#4CAF50' : '#F44336';
+    const escTag = g.escalationLevel !== 'none'
+        ? `<span class="tag tag-${g.escalationLevel}">${g.escalationLevel.toUpperCase()}</span>`
+        : '';
+
+    let html = '';
+    html += `<div class="row"><span>Round</span><span>${g.round} / ${data.totalRounds || 12}</span></div>`;
+    html += `<div class="row"><span>Phase</span><span style="color:${phaseColor};">${g.phase.toUpperCase()} ${escTag}</span></div>`;
+    html += `<div class="row"><span>Round Active</span><span>${g.roundActive ? 'Yes' : 'No'}</span></div>`;
+    html += `<div class="row" style="margin-top:4px;">`;
+    html += `<span>Submitted</span>`;
+    html += `<span>`;
+    for (const p of ['A', 'B', 'C']) {
+        const sub = g.actionsSubmitted[p];
+        html += `<span class="${sub ? 'submitted' : 'pending'}">${p}: ${sub ? '✓' : '✗'}</span> `;
+    }
+    html += `</span></div>`;
+    gameStateContent.innerHTML = html;
+}
+
+function renderGameEnded(data) {
+    const s = data.trueScores;
+    scoreA.textContent = s.A;
+    scoreB.textContent = s.B;
+    scoreC.textContent = s.C;
+
+    let html = '';
+    html += `<div class="row"><span>Status</span><span style="color:#FFD700;">GAME OVER</span></div>`;
+    html += `<div class="row"><span>Round</span><span>${data.round} / 12</span></div>`;
+    html += `<div class="row"><span>Winner</span><span style="color:#FFD700;">${data.winner.join(', ')}</span></div>`;
+    gameStateContent.innerHTML = html;
+
+    let illHtml = '';
+    for (const p of ['A', 'B', 'C']) {
+        illHtml += `<div class="illusion-col">`;
+        illHtml += `<div class="col-header">Player ${p}</div>`;
+        illHtml += `<div class="empty-state">Game finished — results on player screens</div>`;
+        illHtml += `</div>`;
+    }
+    illusionsGrid.innerHTML = illHtml;
+}
+
+function renderTrueScores(data) {
+    if (!data.game) {
+        scoreA.textContent = '—';
+        scoreB.textContent = '—';
+        scoreC.textContent = '—';
+        return;
+    }
+    const s = data.game.trueScores;
+    scoreA.textContent = s.A;
+    scoreB.textContent = s.B;
+    scoreC.textContent = s.C;
+}
+
+function renderTrueScoresFromHistory(data) {
+    const s = data.trueScores;
+    scoreA.textContent = s.A;
+    scoreB.textContent = s.B;
+    scoreC.textContent = s.C;
+}
+
+function renderIllusions(data) {
+    if (!data || !data.illusions) {
+        let html = '';
+        const phaseTag = data ? data.phase : '';
+        for (const p of ['A', 'B', 'C']) {
+            html += `<div class="illusion-col">`;
+            html += `<div class="col-header">Player ${p}</div>`;
+            html += `<div class="empty-state">Trust phase — all players see the same truth</div>`;
+            html += `</div>`;
+        }
+        illusionsGrid.innerHTML = html;
+        return;
+    }
+
+    let html = '';
+    for (const p of ['A', 'B', 'C']) {
+        const ill = data.illusions[p];
+        if (!ill) {
+            html += `<div class="illusion-col"><div class="col-header">Player ${p}</div><div class="empty-state">No data</div></div>`;
+            continue;
+        }
+        html += `<div class="illusion-col">`;
+        html += `<div class="col-header">Player ${p}</div>`;
+        html += `<div class="illusion-scores">`;
+        if (ill.scores) {
+            for (const [key, val] of Object.entries(ill.scores)) {
+                html += `<span style="color:#FFD700;">${key}: ${val}</span>`;
+            }
+        }
+        html += `</div>`;
+        html += `<div class="illusion-actions">`;
+        if (ill.actions && ill.actions.length) {
+            for (const act of ill.actions) {
+                const blocked = act.blocked ? ' blocked' : '';
+                const target = act.target ? ` → ${act.target}` : '';
+                html += `<div class="${blocked ? 'blocked' : ''}">${act.player} ${act.action}${target}${blocked ? ' (blocked)' : ''}</div>`;
+            }
+        } else {
+            html += `<div class="empty-state">No actions shown</div>`;
+        }
+        html += `</div>`;
+        html += `</div>`;
+    }
+    illusionsGrid.innerHTML = html;
+}
+
+function renderHistory() {
+    if (roundHistory.length === 0) {
+        historyBody.innerHTML = '<tr><td colspan="6" class="empty-state">No rounds completed yet</td></tr>';
+        return;
+    }
+
+    let html = '';
+    for (const r of roundHistory) {
+        const phaseClass = r.phase === 'trust' ? 'trust-phase' : 'ostracism-phase';
+        const actionNames = r.trueActions.map(a =>
+            `${a.player}:${a.action[0].toUpperCase()}${a.target ? '→' + a.target : ''}`
+        ).join(' ');
+
+        html += `<tr>`;
+        html += `<td>${r.round}</td>`;
+        html += `<td class="${phaseClass}">${r.phase}</td>`;
+        html += `<td style="font-size:10px;">${actionNames}</td>`;
+        html += `<td>${r.trueScores.A}</td>`;
+        html += `<td>${r.trueScores.B}</td>`;
+        html += `<td>${r.trueScores.C}</td>`;
+        html += `</tr>`;
+    }
+    historyBody.innerHTML = html;
+}
+
+disconnectedOverlay.classList.remove('hidden');
+</script>
+</body>
+</html>

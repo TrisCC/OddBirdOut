@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>OddBirdOut</title>
+        <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+        <style>
+            *, *::before, *::after {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            html, body {
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+
+            body {
+                line-height: 1;
+                font-family: Arial, sans-serif;
+                background-color: #040218;
+            }
+
+            ol, ul {
+                list-style: none;
+            }
+
+            img, video {
+                max-width: 100%;
+                height: auto;
+                display: block;
+            }
+
+            a {
+                text-decoration: none;
+                color: inherit;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="game-container"></div>
+        <script src="/socket.io/socket.io.js"></script>
+        <script src="./phaser.js"></script>
+        <script type="module" src="./src/main.js"></script>
+    </body>
+    </html>
