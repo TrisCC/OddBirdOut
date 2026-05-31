@@ -67,6 +67,7 @@ export class Lobby extends Phaser.Scene {
                 socketManager: this.socketManager,
                 playerId: data.playerId,
                 totalRounds: data.totalRounds,
+                startingSeeds: data.startingSeeds,
             });
         });
 

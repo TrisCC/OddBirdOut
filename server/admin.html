@@ -234,6 +234,7 @@ td.ostracism-phase { color: #F44336; }
     <div>
         <span id="connectionDot" class="status-dot offline"></span>
         <span id="connectionLabel" style="font-size:12px;color:#888;">Disconnected</span>
+        <button class="btn hidden" id="btnStart" style="background:#4CAF50;color:#fff;">START GAME</button>
         <button class="btn btn-reset" id="btnReset">RESET</button>
         <span id="resetConfirm" class="reset-confirm hidden">
             <span style="font-size:12px;color:#F44336;">Are you sure?</span>
@@ -284,10 +285,11 @@ td.ostracism-phase { color: #F44336; }
                     <th>A Score</th>
                     <th>B Score</th>
                     <th>C Score</th>
+                    <th>Dead</th>
                 </tr>
             </thead>
             <tbody id="historyBody">
-                <tr><td colspan="6" class="empty-state">No rounds completed yet</td></tr>
+                <tr><td colspan="7" class="empty-state">No rounds completed yet</td></tr>
             </tbody>
         </table>
     </div>
@@ -310,11 +312,14 @@ const connectionDot = document.getElementById('connectionDot');
 const connectionLabel = document.getElementById('connectionLabel');
 const disconnectedOverlay = document.getElementById('disconnectedOverlay');
 const btnReset = document.getElementById('btnReset');
+const btnStart = document.getElementById('btnStart');
 const resetConfirm = document.getElementById('resetConfirm');
 const btnConfirmYes = document.getElementById('btnConfirmYes');
 const btnConfirmNo = document.getElementById('btnConfirmNo');
 
 let roundHistory = [];
+
+btnStart.classList.add('hidden');
 
 socket.on('connect', () => {
     connectionDot.className = 'status-dot online';
@@ -332,6 +337,11 @@ socket.on('adminState', (data) => {
     renderConnections(data);
     renderGameState(data);
     renderTrueScores(data);
+    if (data.state === 'lobby' && data.allReady && !data.game) {
+        btnStart.classList.remove('hidden');
+    } else {
+        btnStart.classList.add('hidden');
+    }
 });
 
 socket.on('adminRoundResult', (data) => {
@@ -343,6 +353,10 @@ socket.on('adminRoundResult', (data) => {
     renderHistory();
     renderIllusions(data);
     renderTrueScoresFromHistory(data);
+});
+
+btnStart.addEventListener('click', () => {
+    socket.emit('adminStart');
 });
 
 btnReset.addEventListener('click', () => {
@@ -367,14 +381,16 @@ btnConfirmNo.addEventListener('click', () => {
 function renderConnections(data) {
     const roles = ['A', 'B', 'C'];
     const readySet = new Set(data.ready);
+    const alive = data.game ? data.game.alive : null;
     let html = '';
     for (const r of roles) {
         const connected = data.connected.includes(r);
         const ready = readySet.has(r);
         const dotClass = connected ? 'online' : 'offline';
+        const isDead = alive && alive[r] === false;
         html += `<div class="row">`;
         html += `<span><span class="status-dot ${dotClass}"></span>Player ${r}</span>`;
-        html += `<span style="color:#888;">${connected ? (ready ? 'Ready' : 'Connected') : 'Offline'}</span>`;
+        html += `<span style="color:#888;">${connected ? (ready ? 'Ready' : 'Connected') : 'Offline'}${isDead ? ' <span style="color:#F44336;">DEAD</span>' : ''}</span>`;
         html += `</div>`;
     }
     html += `<div class="row" style="margin-top:8px;border-top:1px solid #5D4037;padding-top:8px;">`;
@@ -399,12 +415,12 @@ function renderGameState(data) {
     html += `<div class="row"><span>Round</span><span>${g.round} / ${data.totalRounds || 12}</span></div>`;
     html += `<div class="row"><span>Phase</span><span style="color:${phaseColor};">${g.phase.toUpperCase()} ${escTag}</span></div>`;
     html += `<div class="row"><span>Round Active</span><span>${g.roundActive ? 'Yes' : 'No'}</span></div>`;
-    html += `<div class="row" style="margin-top:4px;">`;
-    html += `<span>Submitted</span>`;
+    html += `<div class="row"><span>Submitted</span>`;
     html += `<span>`;
     for (const p of ['A', 'B', 'C']) {
         const sub = g.actionsSubmitted[p];
-        html += `<span class="${sub ? 'submitted' : 'pending'}">${p}: ${sub ? '✓' : '✗'}</span> `;
+        const dead = g.alive && g.alive[p] === false;
+        html += `<span class="${sub ? 'submitted' : 'pending'}">${p}: ${sub ? '✓' : dead ? '☠' : '✗'}</span> `;
     }
     html += `</span></div>`;
     gameStateContent.innerHTML = html;
@@ -412,14 +428,16 @@ function renderGameState(data) {
 
 function renderGameEnded(data) {
     const s = data.trueScores;
-    scoreA.textContent = s.A;
-    scoreB.textContent = s.B;
-    scoreC.textContent = s.C;
+    const alive = data.alive || {};
+    scoreA.textContent = s.A + (alive.A === false ? ' ☠' : '');
+    scoreB.textContent = s.B + (alive.B === false ? ' ☠' : '');
+    scoreC.textContent = s.C + (alive.C === false ? ' ☠' : '');
 
     let html = '';
     html += `<div class="row"><span>Status</span><span style="color:#FFD700;">GAME OVER</span></div>`;
     html += `<div class="row"><span>Round</span><span>${data.round} / 12</span></div>`;
     html += `<div class="row"><span>Winner</span><span style="color:#FFD700;">${data.winner.join(', ')}</span></div>`;
+    html += `<div class="row"><span>Deaths</span><span style="color:#F44336;">${Object.entries(alive).filter(([,v]) => v === false).map(([k]) => k).join(', ') || 'None'}</span></div>`;
     gameStateContent.innerHTML = html;
 
     let illHtml = '';
@@ -455,7 +473,6 @@ function renderTrueScoresFromHistory(data) {
 function renderIllusions(data) {
     if (!data || !data.illusions) {
         let html = '';
-        const phaseTag = data ? data.phase : '';
         for (const p of ['A', 'B', 'C']) {
             html += `<div class="illusion-col">`;
             html += `<div class="col-header">Player ${p}</div>`;
@@ -466,6 +483,10 @@ function renderIllusions(data) {
         return;
     }
 
+    const trueA = data.trueScores ? data.trueScores.A : '—';
+    const trueB = data.trueScores ? data.trueScores.B : '—';
+    const trueC = data.trueScores ? data.trueScores.C : '—';
+
     let html = '';
     for (const p of ['A', 'B', 'C']) {
         const ill = data.illusions[p];
@@ -473,8 +494,15 @@ function renderIllusions(data) {
             html += `<div class="illusion-col"><div class="col-header">Player ${p}</div><div class="empty-state">No data</div></div>`;
             continue;
         }
+        const illScore = ill.illusionScoreAfter !== undefined ? ill.illusionScoreAfter : '—';
+        const trueScore = p === 'A' ? trueA : (p === 'B' ? trueB : trueC);
+
         html += `<div class="illusion-col">`;
-        html += `<div class="col-header">Player ${p}</div>`;
+        html += `<div class="col-header">Player ${p} sees</div>`;
+        html += `<div class="illusion-scores">`;
+        html += `<span style="color:#FFD700;">Illusion: ${illScore}</span>`;
+        html += `<span style="color:#888;">True: ${trueScore}</span>`;
+        html += `</div>`;
         html += `<div class="illusion-scores">`;
         if (ill.scores) {
             for (const [key, val] of Object.entries(ill.scores)) {
@@ -500,7 +528,7 @@ function renderIllusions(data) {
 
 function renderHistory() {
     if (roundHistory.length === 0) {
-        historyBody.innerHTML = '<tr><td colspan="6" class="empty-state">No rounds completed yet</td></tr>';
+        historyBody.innerHTML = '<tr><td colspan="7" class="empty-state">No rounds completed yet</td></tr>';
         return;
     }
 
@@ -511,13 +539,22 @@ function renderHistory() {
             `${a.player}:${a.action[0].toUpperCase()}${a.target ? '→' + a.target : ''}`
         ).join(' ');
 
+        const aliveStatus = r.alive
+            ? ['A', 'B', 'C'].map(p => r.alive[p] === false ? `${p}☠` : p).join(' ')
+            : '—';
+
+        const newlyDead = r.newlyDead && r.newlyDead.length > 0
+            ? ` (${r.newlyDead.join(',')} died!)`
+            : '';
+
         html += `<tr>`;
         html += `<td>${r.round}</td>`;
-        html += `<td class="${phaseClass}">${r.phase}</td>`;
+        html += `<td class="${phaseClass}">${r.phase}${newlyDead}</td>`;
         html += `<td style="font-size:10px;">${actionNames}</td>`;
         html += `<td>${r.trueScores.A}</td>`;
         html += `<td>${r.trueScores.B}</td>`;
         html += `<td>${r.trueScores.C}</td>`;
+        html += `<td style="font-size:9px;">${aliveStatus}</td>`;
         html += `</tr>`;
     }
     historyBody.innerHTML = html;

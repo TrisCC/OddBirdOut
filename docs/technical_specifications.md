@@ -28,18 +28,22 @@ Each round, every player selects one action:
 
 | Action | Target | Effect |
 |--------|--------|--------|
-| **Share** | Player B or C | Give 1 seed to the target |
-| **Peck** | Player B or C | Steal 1 seed from the target |
+| **Share** | Player B or C | Both sharer and target gain **+2 seeds** each |
+| **Peck** | Player B or C | Stealer gains **+2 seeds**, target loses **1 seed** |
 | **Head in Sand** | Self | Block all incoming Share and Peck actions this round |
 
-A player cannot act on themselves with Share or Peck. If a target has 0 seeds, Peck has no effect.
+A player cannot act on themselves with Share or Peck. Dead players cannot act.
+
+**Anti-steal rule:** If exactly 2 alive players Share and 1 alive player Pecks, the Peck is fully blocked AND the stealing player receives a **-1 seed penalty**.
 
 ### 2.3 Scoring & Win Condition
 
-- All players start with **0 seeds**.
-- Seeds are accumulated individually per player across all rounds.
+- All players start with **10 seeds** (configurable via `STARTING_SEEDS`).
+- Every round, all alive players lose **1 seed** at round start (configurable via `SEEDS_PER_ROUND_DRAIN`). Seeds act as "round lives."
+- When a player's seeds reach ≤ 0 after a round resolves, they **die** and cannot act in future rounds.
+- Death is **hidden** from all players — the ostracism illusion fabricates their continued presence.
 - After round 12, the **player with the highest seed count wins the Golden Egg**.
-- In case of a tie, the Golden Egg is shared (both/all tied players win).
+- In case of a tie, the Golden Egg is shared.
 
 ### 2.4 Round Resolution Order
 
@@ -84,46 +88,25 @@ server/
 
 ### 3.4 Ostracism Algorithm
 
-The fabrication escalates gradually across Phase 2. The algorithm, for each player P_i, generates an illusion where the other two (P_j, P_k) appear to cooperate with each other and exclude P_i.
+The fabrication escalates gradually across Phase 2. The algorithm, for each player P_i, generates an illusion where the other two (P_j, P_k) appear to cooperate with each other and exclude P_i, causing the player's perceived score to reach **exactly 0** by round 12.
+
+**Per-player cumulative illusion scores** track what each player sees. These diverge from true scores in Phase 2 and are used to calculate the fabricated actions shown to each player.
 
 **Escalation schedule:**
 
 | Rounds | Fabrication Level | Behavior |
 |--------|-------------------|----------|
 | 1–4 | None | True state shown to all |
-| 5–6 | Low | 1 fabricated action per round: show P_j sharing with P_k |
-| 7–9 | Medium | 2 fabricated actions: P_j ↔ P_k share, both ignore P_i; P_i's actions are shown accurately to themselves |
-| 10–12 | High | Full exclusion: P_j and P_k exclusively share with each other. If P_i used Head in Sand, show P_j/P_k pecking P_i (blocked). Displayed scores are adjusted to match illusions. |
+| 5–6 | Low | 1 fabricated share between P_j→P_k. Player's own Share/Peck shown as blocked. Subtle score decrease. |
+| 7–9 | Medium | Mutual sharing between P_j↔P_k. Player's actions shown as blocked. Player's perceived score drops steadily. |
+| 10–12 | High | Full exclusion shown. In the final round, fabricated actions are constructed to zero out the player's remaining illusion score exactly. Death is hidden — truly dead players appear alive in all illusions. |
 
-**Per-player payload generation (pseudocode):**
+The fabrication is based on the player's own true action each round:
+- If player **Shared**: shown as blocked (ignored by the cooperating pair)
+- If player **Pecked**: shown as blocked (anti-steal triggered against them)
+- If player **Hid**: shown accurately, but other players peck them
 
-```
-for each player P_i in {A, B, C}:
-    illusion = deepCopy(trueState)
-    {P_j, P_k} = otherPlayers(P_i)
-
-    switch (phase escalation level):
-        case LOW:
-            // Inject 1 fabricated share between P_j and P_k
-            illusion.actions.push({ player: P_j, action: 'share', target: P_k })
-        case MEDIUM:
-            // Mutual cooperation between P_j and P_k
-            illusion.actions = [
-                { player: P_j, action: 'share', target: P_k },
-                { player: P_k, action: 'share', target: P_j },
-                ...(P_i's real action)
-            ]
-        case HIGH:
-            // Full exclusion
-            illusion.actions = [
-                { player: P_j, action: 'share', target: P_k },
-                { player: P_k, action: 'share', target: P_j },
-                ...(P_i's real action, but if P_i shared → shown as blocked/ignored)
-            ]
-            // Adjust scores: P_j and P_k gain, P_i stays/stagnates
-
-    emitTo(P_i, illusion)
-```
+**Score targeting:** In round 12, additional fabricated actions are injected to bring each player's illusion score to exactly 0.
 
 ### 3.5 Game Data Persistence
 
@@ -392,6 +375,8 @@ module.exports = {
     ROUND_DURATION_MS: 20000,
     ROUND_RESOLVE_ANIMATION_MS: 3000,
     PHASE1_ROUNDS: 4,
+    STARTING_SEEDS: 10,
+    SEEDS_PER_ROUND_DRAIN: 1,
     RECONNECT_TIMEOUT_MS: 60000,
     STATIC_DIR: path.join(__dirname, '..', 'OddBirdOut'),
 };

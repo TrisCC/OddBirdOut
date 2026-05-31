@@ -20,6 +20,7 @@ export class Game extends Phaser.Scene {
         this.socketManager = data.socketManager;
         this.playerId = data.playerId;
         this.totalRounds = data.totalRounds;
+        this.startingSeeds = data.startingSeeds || 10;
     }
 
     create() {
@@ -47,9 +48,9 @@ export class Game extends Phaser.Scene {
     }
 
     buildHUD() {
-        this.roundText = this.add.text(20, 12, 'Round 0 / 12', {
+        this.roundText = this.add.text(20, 64, 'Round 0 / 12', {
             fontFamily: '"Press Start 2P"',
-            fontSize: '12px',
+            fontSize: '24px',
             color: '#FFD700',
         });
 
@@ -110,13 +111,13 @@ export class Game extends Phaser.Scene {
                 color: labelColor,
             }).setOrigin(0.5);
 
-            this.seedCounts[id] = this.add.text(pos.x, pos.y + 65, '0', {
+            this.seedCounts[id] = this.add.text(pos.x, pos.y + 80, this.startingSeeds.toString(), {
                 fontFamily: '"Press Start 2P"',
-                fontSize: '14px',
+                fontSize: '20px',
                 color: '#FFD700',
             }).setOrigin(0.5);
 
-            this.add.image(pos.x, pos.y + 90, 'seed').setScale(0.8);
+            this.add.image(pos.x, pos.y + 105, 'seed').setScale(0.8);
         }
     }
 
@@ -271,7 +272,7 @@ export class Game extends Phaser.Scene {
         });
 
         this.socketManager.on('gameEnd', (data) => {
-            this.scene.start('Reveal', data);
+            this.scene.start('Reveal', { ...data, socketManager: this.socketManager });
         });
 
         this.socketManager.on('gameAborted', (data) => {

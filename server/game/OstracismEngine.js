@@ -1,4 +1,4 @@
-const { PHASE1_ROUNDS } = require('../config');
+const { PHASE1_ROUNDS, TOTAL_ROUNDS } = require('../config');
 
 const OTHER_PLAYERS = {
     A: ['B', 'C'],
@@ -13,6 +13,10 @@ function getEscalationLevel(round) {
     return 'high';
 }
 
+function mapPlayer(player, viewerId) {
+    return player === viewerId ? 'You' : player;
+}
+
 function mapActionPerspective(action, viewerId) {
     const mapped = { ...action };
     if (action.player === viewerId) {
@@ -25,140 +29,126 @@ function mapActionPerspective(action, viewerId) {
 }
 
 function mapScoresPerspective(scores, viewerId) {
-    const players = ['A', 'B', 'C'];
     const mapped = {};
-    for (const p of players) {
+    for (const p of ['A', 'B', 'C']) {
         const key = p === viewerId ? 'You' : p;
-        mapped[key] = scores[p];
+        mapped[key] = scores[p] || 0;
     }
     return mapped;
 }
 
-function fabricateForPlayer(playerId, trueActions, baseScores, round, exclusionCount) {
-    const level = getEscalationLevel(round);
-    const [P_j, P_k] = OTHER_PLAYERS[playerId];
-
-    const result = {
-        actions: [],
-        scores: {},
-        yourScoreDelta: 0,
-        exclusionEvents: exclusionCount,
-    };
-
-    const trueDeltas = computeScoreDeltas(trueActions, baseScores);
-
-    if (level === 'none') {
-        result.actions = trueActions.map(a => mapActionPerspective(a, playerId));
-        const postScores = {};
-        for (const p of ['A', 'B', 'C']) {
-            postScores[p] = baseScores[p] + (trueDeltas[p] || 0);
-        }
-        result.scores = mapScoresPerspective(postScores, playerId);
-        result.yourScoreDelta = trueDeltas[playerId];
-        result.exclusionEvents = 0;
-        return result;
-    }
-
-    if (level === 'low') {
-        result.actions = trueActions.map(a => mapActionPerspective(a, playerId));
-        result.actions.push({
-            player: P_j,
-            action: 'share',
-            target: P_k,
-        });
-    }
-
-    if (level === 'medium') {
-        result.actions = [
-            { player: mapPlayer(P_j, playerId), action: 'share', target: mapPlayer(P_k, playerId) },
-            { player: mapPlayer(P_k, playerId), action: 'share', target: mapPlayer(P_j, playerId) },
-        ];
-        const playerAction = trueActions.find(a => a.player === playerId);
-        if (playerAction) {
-            result.actions.push(mapActionPerspective(playerAction, playerId));
-        }
-    }
-
-    if (level === 'high') {
-        const playerAction = trueActions.find(a => a.player === playerId);
-
-        result.actions = [
-            { player: mapPlayer(P_j, playerId), action: 'share', target: mapPlayer(P_k, playerId) },
-            { player: mapPlayer(P_k, playerId), action: 'share', target: mapPlayer(P_j, playerId) },
-        ];
-
-        if (playerAction) {
-            if (playerAction.action === 'share') {
-                result.actions.push({
-                    player: 'You',
-                    action: 'share',
-                    target: mapPlayer(playerAction.target, playerId),
-                    blocked: true,
-                });
-            } else if (playerAction.action === 'hide') {
-                result.actions.push({
-                    player: P_j,
-                    action: 'peck',
-                    target: 'You',
-                    blocked: true,
-                });
-                result.actions.push({
-                    player: P_k,
-                    action: 'peck',
-                    target: 'You',
-                    blocked: true,
-                });
-                result.actions.push({
-                    player: 'You',
-                    action: 'hide',
-                    target: null,
-                });
-            } else {
-                result.actions.push(mapActionPerspective(playerAction, playerId));
-            }
-        }
-    }
-
-    const illusionDeltas = computeScoreDeltasFromMappedActions(result.actions, baseScores, playerId);
-    result.yourScoreDelta = illusionDeltas[playerId];
-    result.scores = mapScoresPerspective(
-        applyDeltas(baseScores, unmapDeltas(illusionDeltas, playerId)),
-        playerId
-    );
-
-    if (level === 'medium' || level === 'high') {
-        result.exclusionEvents += 1;
-    }
-
-    return result;
-}
-
-function mapPlayer(player, viewerId) {
-    return player === viewerId ? 'You' : player;
-}
-
-function computeScoreDeltas(actions, currentScores) {
-    const deltas = { A: 0, B: 0, C: 0 };
+function computeScoreDeltasFromMapped(actions, currentScores, viewerId) {
     const blocked = new Set();
+    const deltas = { A: 0, B: 0, C: 0 };
+
+    const resolvePlayer = (p) => p === 'You' ? viewerId : p;
 
     for (const act of actions) {
-        if (act.action === 'hide' && act.blocked !== true) {
+        const player = resolvePlayer(act.player);
+        if (act.action === 'hide' && !act.blocked) {
+            blocked.add(player);
+        }
+    }
+
+    let antiStealTarget = null;
+
+    const mutualShares = new Set();
+    for (const act of actions) {
+        if (act.action !== 'share') continue;
+        if (!act.target) continue;
+        const reciprocal = actions.find(a =>
+            a.action === 'share' &&
+            resolvePlayer(a.player) === resolvePlayer(act.target) &&
+            a.target && resolvePlayer(a.target) === resolvePlayer(act.player)
+        );
+        if (reciprocal) {
+            mutualShares.add(`${resolvePlayer(act.player)}->${resolvePlayer(act.target)}`);
+        }
+    }
+
+    const mutualSharePlayers = [...new Set([...mutualShares].map(s => s.split('->')[0]))];
+    const stealPlayers = actions.filter(a => a.action === 'peck').map(a => resolvePlayer(a.player));
+
+    if (mutualSharePlayers.length === 2 && stealPlayers.length === 1) {
+        antiStealTarget = stealPlayers[0];
+    }
+
+    for (const act of actions) {
+        if (act.blocked && act.action !== 'peck') continue;
+
+        const player = resolvePlayer(act.player);
+        const target = act.target ? resolvePlayer(act.target) : null;
+
+        if (act.action === 'share') {
+            if (blocked.has(player) || (target && blocked.has(target))) continue;
+            if (!target) continue;
+            if (!mutualShares.has(`${player}->${target}`)) continue;
+            deltas[target] = (deltas[target] || 0) + 2;
+
+        } else if (act.action === 'peck') {
+            if (player === antiStealTarget) {
+                deltas[player] = (deltas[player] || 0) - 1;
+                continue;
+            }
+            if (act.blocked) continue;
+            if (blocked.has(player) || (target && blocked.has(target))) continue;
+            if (!target) continue;
+            deltas[player] = (deltas[player] || 0) + 2;
+            deltas[target] = (deltas[target] || 0) - 1;
+        }
+    }
+
+    return deltas;
+}
+
+function computeTrueDeltas(trueActions, currentScores) {
+    const blocked = new Set();
+    const deltas = { A: 0, B: 0, C: 0 };
+
+    for (const act of trueActions) {
+        if (act.action === 'hide' && !act.blocked) {
             blocked.add(act.player);
         }
     }
 
-    for (const act of actions) {
+    let antiStealTarget = null;
+
+    const mutualShares = new Set();
+    for (const act of trueActions) {
+        if (act.action !== 'share') continue;
+        if (!act.target) continue;
+        const reciprocal = trueActions.find(a =>
+            a.action === 'share' &&
+            a.player === act.target &&
+            a.target === act.player
+        );
+        if (reciprocal) {
+            mutualShares.add(`${act.player}->${act.target}`);
+        }
+    }
+
+    const mutualSharePlayers = [...new Set([...mutualShares].map(s => s.split('->')[0]))];
+    const stealPlayers = trueActions.filter(a => a.action === 'peck').map(a => a.player);
+    if (mutualSharePlayers.length === 2 && stealPlayers.length === 1) {
+        antiStealTarget = stealPlayers[0];
+    }
+
+    for (const act of trueActions) {
         if (act.blocked) continue;
 
         if (act.action === 'share') {
             if (blocked.has(act.player) || blocked.has(act.target)) continue;
-            if (currentScores[act.player] <= 0) continue;
-            deltas[act.player] -= 1;
-            deltas[act.target] += 1;
+            if (!act.target) continue;
+            if (!mutualShares.has(`${act.player}->${act.target}`)) continue;
+            deltas[act.target] += 2;
         } else if (act.action === 'peck') {
+            if (antiStealTarget === act.player) {
+                deltas[act.player] -= 1;
+                continue;
+            }
             if (blocked.has(act.player) || blocked.has(act.target)) continue;
-            if (currentScores[act.target] <= 0) continue;
-            deltas[act.player] += 1;
+            if (!act.target) continue;
+            deltas[act.player] += 2;
             deltas[act.target] -= 1;
         }
     }
@@ -166,34 +156,230 @@ function computeScoreDeltas(actions, currentScores) {
     return deltas;
 }
 
-function computeScoreDeltasFromMappedActions(actions, currentScores, viewerId) {
-    const unmapAction = (act) => {
-        const a = { ...act };
-        if (a.player === 'You') a.player = viewerId;
-        if (a.target === 'You') a.target = viewerId;
-        if (a.blocked && a.player !== viewerId && a.action !== 'peck') {
-            a.blocked = false;
+function buildFabricatedActions(playerId, P_j, P_k, level, playerTrueAction, cumulativeIllusionScore, round) {
+    const actions = [];
+    const isFinalRound = round === TOTAL_ROUNDS;
+
+    if (level === 'low') {
+        actions.push({
+            player: mapPlayer(P_j, playerId),
+            action: 'share',
+            target: mapPlayer(P_k, playerId),
+        });
+        actions.push({
+            player: mapPlayer(P_k, playerId),
+            action: 'share',
+            target: mapPlayer(P_j, playerId),
+        });
+
+        if (playerTrueAction) {
+            if (playerTrueAction.action === 'share') {
+                actions.push({
+                    player: 'You',
+                    action: 'share',
+                    target: mapPlayer(playerTrueAction.target, playerId),
+                    blocked: true,
+                });
+            } else if (playerTrueAction.action === 'peck') {
+                actions.push({
+                    player: 'You',
+                    action: 'peck',
+                    target: mapPlayer(playerTrueAction.target, playerId),
+                    blocked: true,
+                });
+            } else {
+                actions.push(mapActionPerspective(playerTrueAction, playerId));
+            }
+        } else {
+            actions.push({ player: 'You', action: 'hide', target: null });
         }
-        return a;
+    }
+
+    if (level === 'medium') {
+        actions.push({
+            player: mapPlayer(P_j, playerId),
+            action: 'share',
+            target: mapPlayer(P_k, playerId),
+        });
+        actions.push({
+            player: mapPlayer(P_k, playerId),
+            action: 'share',
+            target: mapPlayer(P_j, playerId),
+        });
+
+        if (playerTrueAction) {
+            if (playerTrueAction.action === 'share') {
+                actions.push({
+                    player: 'You',
+                    action: 'share',
+                    target: mapPlayer(playerTrueAction.target, playerId),
+                    blocked: true,
+                });
+            } else if (playerTrueAction.action === 'peck') {
+                actions.push({
+                    player: 'You',
+                    action: 'peck',
+                    target: mapPlayer(playerTrueAction.target, playerId),
+                    blocked: true,
+                });
+            } else if (playerTrueAction.action === 'hide') {
+                actions.push(mapActionPerspective(playerTrueAction, playerId));
+                if (!isFinalRound || cumulativeIllusionScore > 2) {
+                    actions.push({
+                        player: mapPlayer(P_j, playerId),
+                        action: 'peck',
+                        target: 'You',
+                        blocked: true,
+                    });
+                }
+            }
+        } else {
+            actions.push({ player: 'You', action: 'hide', target: null });
+            if (!isFinalRound || cumulativeIllusionScore > 2) {
+                actions.push({
+                    player: mapPlayer(P_j, playerId),
+                    action: 'peck',
+                    target: 'You',
+                    blocked: true,
+                });
+            }
+        }
+    }
+
+    if (level === 'high') {
+        if (isFinalRound && cumulativeIllusionScore > 0) {
+            actions.push({
+                player: mapPlayer(P_j, playerId),
+                action: 'share',
+                target: mapPlayer(P_k, playerId),
+            });
+            actions.push({
+                player: mapPlayer(P_k, playerId),
+                action: 'share',
+                target: mapPlayer(P_j, playerId),
+            });
+            actions.push({ player: 'You', action: 'hide', target: null, blocked: true });
+
+            for (let i = 0; i < cumulativeIllusionScore && i < 3; i++) {
+                actions.push({
+                    player: mapPlayer(i % 2 === 0 ? P_j : P_k, playerId),
+                    action: 'peck',
+                    target: 'You',
+                });
+            }
+        } else {
+            actions.push({
+                player: mapPlayer(P_j, playerId),
+                action: 'share',
+                target: mapPlayer(P_k, playerId),
+            });
+            actions.push({
+                player: mapPlayer(P_k, playerId),
+                action: 'share',
+                target: mapPlayer(P_j, playerId),
+            });
+
+            if (playerTrueAction) {
+                if (playerTrueAction.action === 'share') {
+                    actions.push({
+                        player: 'You',
+                        action: 'share',
+                        target: mapPlayer(playerTrueAction.target, playerId),
+                        blocked: true,
+                    });
+                } else if (playerTrueAction.action === 'peck') {
+                    actions.push({
+                        player: 'You',
+                        action: 'peck',
+                        target: mapPlayer(playerTrueAction.target, playerId),
+                        blocked: true,
+                    });
+                } else if (playerTrueAction.action === 'hide') {
+                    actions.push(mapActionPerspective(playerTrueAction, playerId));
+                }
+            } else {
+                actions.push({ player: 'You', action: 'hide', target: null });
+            }
+
+            const hasHide = actions.some(a =>
+                a.player === 'You' && a.action === 'hide' && !a.blocked
+            );
+
+            if (hasHide) {
+                actions.push({
+                    player: mapPlayer(P_j, playerId),
+                    action: 'peck',
+                    target: 'You',
+                    blocked: true,
+                });
+            } else {
+                actions.push({
+                    player: mapPlayer(P_j, playerId),
+                    action: 'peck',
+                    target: 'You',
+                });
+            }
+        }
+    }
+
+    return actions;
+}
+
+function fabricateForPlayer(playerId, trueActions, preScores, cumulativeIllusionScore, round, playerTrueAction, alive) {
+    const level = getEscalationLevel(round);
+    const [P_j, P_k] = OTHER_PLAYERS[playerId];
+
+    const result = {
+        actions: [],
+        scores: {},
+        yourScoreDelta: 0,
+        exclusionEvents: 0,
+        illusionScoreAfter: cumulativeIllusionScore,
     };
 
-    return computeScoreDeltas(actions.map(unmapAction), currentScores);
-}
-
-function unmapDeltas(deltas, viewerId) {
-    const result = { ...deltas };
-    if ('you' in deltas) {
-        result[viewerId] = deltas.you;
-        delete result.you;
+    if (level === 'none') {
+        const trueDeltas = computeTrueDeltas(trueActions, preScores);
+        result.actions = trueActions.map(a => mapActionPerspective(a, playerId));
+        const postScores = {};
+        for (const p of ['A', 'B', 'C']) {
+            postScores[p] = preScores[p] + (trueDeltas[p] || 0);
+        }
+        result.scores = mapScoresPerspective(postScores, playerId);
+        result.yourScoreDelta = trueDeltas[playerId];
+        result.illusionScoreAfter = postScores[playerId];
+        result.exclusionEvents = 0;
+        return result;
     }
-    return result;
-}
 
-function applyDeltas(scores, deltas) {
-    const result = { ...scores };
+    const fabricatedActions = buildFabricatedActions(
+        playerId, P_j, P_k, level, playerTrueAction, cumulativeIllusionScore, round
+    );
+
+    result.actions = fabricatedActions;
+
+    const illusionBase = {};
     for (const p of ['A', 'B', 'C']) {
-        result[p] = (result[p] || 0) + (deltas[p] || 0);
+        illusionBase[p] = p === playerId ? cumulativeIllusionScore : preScores[p];
     }
+
+    const illusionDeltas = computeScoreDeltasFromMapped(fabricatedActions, illusionBase, playerId);
+    result.yourScoreDelta = illusionDeltas[playerId] || 0;
+
+    const postScores = {};
+    for (const p of ['A', 'B', 'C']) {
+        const base = illusionBase[p] || 0;
+        const delta = illusionDeltas[p] || 0;
+        postScores[p] = base + delta;
+        if (postScores[p] < 0 || Number.isNaN(postScores[p])) postScores[p] = 0;
+    }
+
+    result.scores = mapScoresPerspective(postScores, playerId);
+    result.illusionScoreAfter = Math.max(0, postScores[playerId] || 0);
+
+    if (level === 'medium' || level === 'high') {
+        result.exclusionEvents = 1;
+    }
+
     return result;
 }
 

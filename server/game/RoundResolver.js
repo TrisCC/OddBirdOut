@@ -14,10 +14,10 @@ class RoundResolver {
         this.roundTimer = null;
         this.gameActive = false;
         this.adminCallback = null;
-        this.illusionCumulativeScores = {
-            A: { A: 0, B: 0, C: 0 },
-            B: { A: 0, B: 0, C: 0 },
-            C: { A: 0, B: 0, C: 0 },
+        this.perPlayerIllusionScores = {
+            A: config.STARTING_SEEDS,
+            B: config.STARTING_SEEDS,
+            C: config.STARTING_SEEDS,
         };
         this.sessionId = uuidv4();
         this.sessionLog = {
@@ -27,8 +27,11 @@ class RoundResolver {
                 totalRounds: config.TOTAL_ROUNDS,
                 roundDurationMs: config.ROUND_DURATION_MS,
                 phase1Rounds: config.PHASE1_ROUNDS,
+                startingSeeds: config.STARTING_SEEDS,
+                seedsPerRoundDrain: config.SEEDS_PER_ROUND_DRAIN,
             },
             rounds: [],
+            deaths: [],
         };
     }
 
@@ -39,6 +42,15 @@ class RoundResolver {
 
     startRound() {
         this.gameState.resetForNewRound();
+
+        for (const p of ['A', 'B', 'C']) {
+            if (this.gameState.alive[p]) {
+                this.perPlayerIllusionScores[p] -= config.SEEDS_PER_ROUND_DRAIN;
+                if (this.perPlayerIllusionScores[p] <= 0) {
+                    this.perPlayerIllusionScores[p] = 0;
+                }
+            }
+        }
 
         if (this.gameState.drainQueue()) {
             this.resolveRound();
@@ -69,6 +81,7 @@ class RoundResolver {
 
     submitPlayerAction(playerId, action, target) {
         if (!this.gameActive) return;
+        if (!action || !['share', 'peck', 'hide'].includes(action)) return;
 
         if (!this.gameState.isRoundActive()) {
             this.gameState.queueAction(playerId, action, target);
@@ -79,7 +92,7 @@ class RoundResolver {
 
         this.gameState.submitAction(playerId, action, target);
 
-        if (this.gameState.hasAllActions()) {
+        if (this.gameState.hasAllOrDead()) {
             if (this.roundTimer) {
                 clearTimeout(this.roundTimer);
                 this.roundTimer = null;
@@ -94,23 +107,38 @@ class RoundResolver {
         const trueActions = resolveResult.actions;
         const trueScores = { ...this.gameState.scores };
         const trueDeltas = { ...resolveResult.deltas };
+        const newlyDead = resolveResult.newlyDead || [];
+        const alive = { ...this.gameState.alive };
+
+        for (const playerId of newlyDead) {
+            this.sessionLog.deaths.push({
+                player: playerId,
+                round: this.gameState.round,
+                scoreAtDeath: trueScores[playerId],
+            });
+        }
 
         const preScores = {};
         for (const p of ['A', 'B', 'C']) {
             preScores[p] = trueScores[p] - trueDeltas[p];
         }
 
-        this.updateIllusionCumulativeScores(trueScores);
-
         const roundLog = {
             round: this.gameState.round,
             phase: this.gameState.phase,
             trueActions: trueActions.map(a => ({ ...a })),
             trueScores: { ...trueScores },
+            trueDeltas: { ...trueDeltas },
+            alive: { ...alive },
+            newlyDead: [...newlyDead],
             illusions: {},
         };
 
         if (this.gameState.phase === 'trust') {
+            for (const playerId of ['A', 'B', 'C']) {
+                this.perPlayerIllusionScores[playerId] = trueScores[playerId];
+            }
+
             const mappedActions = trueActions.map(a => ({ ...a }));
             const mappedScores = { ...trueScores };
 
@@ -126,16 +154,20 @@ class RoundResolver {
             this.broadcastToAll('roundResult', payload);
         } else {
             for (const playerId of ['A', 'B', 'C']) {
-                const exclusionCount = this.getExclusionCount(playerId);
+                const cumulativeIllusionScore = this.perPlayerIllusionScores[playerId];
+                const playerTrueAction = trueActions.find(a => a.player === playerId) || null;
+
                 const illusion = fabricateForPlayer(
                     playerId,
                     trueActions,
                     preScores,
+                    cumulativeIllusionScore,
                     this.gameState.round,
-                    exclusionCount
+                    playerTrueAction,
+                    alive
                 );
 
-                this.setExclusionCount(playerId, illusion.exclusionEvents);
+                this.perPlayerIllusionScores[playerId] = illusion.illusionScoreAfter;
 
                 const socketId = this.playerSockets[playerId];
                 if (socketId) {
@@ -152,6 +184,7 @@ class RoundResolver {
                 roundLog.illusions[playerId] = {
                     actions: illusion.actions,
                     scores: illusion.scores,
+                    illusionScoreAfter: illusion.illusionScoreAfter,
                 };
             }
         }
@@ -159,10 +192,6 @@ class RoundResolver {
         this.sessionLog.rounds.push(roundLog);
 
         if (this.adminCallback) {
-            const exclusionCounts = this._exclusionCount
-                ? { ...this._exclusionCount }
-                : { A: 0, B: 0, C: 0 };
-
             const adminPayload = {
                 round: this.gameState.round,
                 phase: this.gameState.phase,
@@ -170,7 +199,9 @@ class RoundResolver {
                 trueActions: roundLog.trueActions,
                 trueScores: roundLog.trueScores,
                 trueDeltas,
-                exclusionCounts,
+                alive: { ...alive },
+                newlyDead: [...newlyDead],
+                perPlayerIllusionScores: { ...this.perPlayerIllusionScores },
             };
 
             if (this.gameState.phase === 'ostracism') {
@@ -203,11 +234,13 @@ class RoundResolver {
         const trueState = {
             finalScores: { ...this.gameState.scores },
             winner,
+            alive: { ...this.gameState.alive },
         };
 
         this.sessionLog.endedAt = new Date().toISOString();
         this.sessionLog.finalScores = { ...this.gameState.scores };
         this.sessionLog.winner = winner;
+        this.sessionLog.alive = { ...this.gameState.alive };
 
         for (const playerId of ['A', 'B', 'C']) {
             const socketId = this.playerSockets[playerId];
@@ -228,6 +261,7 @@ class RoundResolver {
                 phase: 'ended',
                 trueScores: { ...this.gameState.scores },
                 winner: [...winner],
+                alive: { ...this.gameState.alive },
             });
         }
     }
@@ -248,29 +282,11 @@ class RoundResolver {
                 message: 'The system manipulated what every player saw.',
                 trueWinner: this.sessionLog.winner,
                 trueFinalScores: this.sessionLog.finalScores,
+                trueAlive: this.sessionLog.alive,
+                deaths: this.sessionLog.deaths,
             },
             whatYouWereShown: illusionRounds,
         };
-    }
-
-    updateIllusionCumulativeScores(trueScores) {
-        for (const p of ['A', 'B', 'C']) {
-            this.illusionCumulativeScores[p] = { ...trueScores };
-        }
-    }
-
-    getExclusionCount(playerId) {
-        if (!this._exclusionCount) {
-            this._exclusionCount = { A: 0, B: 0, C: 0 };
-        }
-        return this._exclusionCount[playerId];
-    }
-
-    setExclusionCount(playerId, count) {
-        if (!this._exclusionCount) {
-            this._exclusionCount = { A: 0, B: 0, C: 0 };
-        }
-        this._exclusionCount[playerId] = count;
     }
 
     saveSessionLog() {
@@ -323,12 +339,11 @@ class RoundResolver {
             round: state.round,
             phase: state.phase,
             roundActive: this.gameState.isRoundActive(),
+            alive: { ...this.gameState.alive },
             actionsSubmitted: state.actionSubmitted,
             trueScores: state.scores,
             escalationLevel: state.phase === 'trust' ? 'none' : getEscalationLevel(state.round),
-            exclusionCounts: this._exclusionCount
-                ? { ...this._exclusionCount }
-                : { A: 0, B: 0, C: 0 },
+            perPlayerIllusionScores: { ...this.perPlayerIllusionScores },
             roundHistory: state.roundHistory,
         };
     }

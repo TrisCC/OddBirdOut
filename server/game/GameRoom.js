@@ -1,3 +1,4 @@
+const config = require('../config');
 const { RoundResolver } = require('./RoundResolver');
 
 const VALID_ROLES = ['A', 'B', 'C'];
@@ -17,6 +18,7 @@ class GameRoom {
         if (socket.handshake.query.admin === 'true') {
             this.adminSockets.add(socket.id);
             socket.on('adminReset', () => this.forceReset());
+            socket.on('adminStart', () => this.adminStartGame());
             socket.on('disconnect', () => this.adminSockets.delete(socket.id));
             socket.emit('adminState', this.getAdminState());
             return;
@@ -30,11 +32,12 @@ class GameRoom {
             return;
         }
 
+        if (this.reconnectTimers[playerId]) {
+            this.handleReconnect(socket, playerId);
+            return;
+        }
+
         if (this.players[playerId]) {
-            if (this.reconnectTimers[playerId]) {
-                this.handleReconnect(socket, playerId);
-                return;
-            }
             socket.emit('errorMessage', { message: `Role ${playerId} is already taken` });
             socket.disconnect(true);
             return;
@@ -74,17 +77,11 @@ class GameRoom {
     onPlayerReady(playerId) {
         this.readyPlayers.add(playerId);
         this.broadcastLobbyUpdate();
-
-        if (
-            VALID_ROLES.every(r => this.players[r] && this.readyPlayers.has(r))
-        ) {
-            this.startGame();
-        }
     }
 
     onPlayerAction(playerId, data) {
         if (!this.roundResolver) return;
-
+        if (!data || typeof data.action !== 'string') return;
         const { action, target } = data;
         this.roundResolver.submitPlayerAction(playerId, action, target);
     }
@@ -119,7 +116,8 @@ class GameRoom {
             if (socketId) {
                 this.io.to(socketId).emit('gameStart', {
                     playerId,
-                    totalRounds: 12,
+                    totalRounds: config.TOTAL_ROUNDS,
+                    startingSeeds: config.STARTING_SEEDS,
                 });
             }
         }
@@ -163,7 +161,20 @@ class GameRoom {
         if (this.roundResolver) {
             this.roundResolver.forceEnd();
         }
+        this.broadcastToAll('gameAborted', {
+            reason: 'Game reset by admin.',
+        });
         this.reset();
+    }
+
+    adminStartGame() {
+        if (this.roundResolver) return;
+        if (!this.allPlayersReady()) return;
+        this.startGame();
+    }
+
+    allPlayersReady() {
+        return VALID_ROLES.every(r => this.players[r] && this.readyPlayers.has(r));
     }
 
     broadcastToAdmins(event, data) {
@@ -185,7 +196,8 @@ class GameRoom {
             connected,
             ready,
             state,
-            totalRounds: 12,
+            allReady: this.allPlayersReady(),
+            totalRounds: config.TOTAL_ROUNDS,
             game: null,
         };
 
