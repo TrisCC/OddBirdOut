@@ -31,12 +31,10 @@ function getMockGameEndData(playerId) {
     return {
         trueState: {
             finalScores: { A: 5, B: 8, C: 3 },
-            winner: ['B'],
             alive: { A: true, B: true, C: false },
         },
         revelation: {
             message: 'The system manipulated what every player saw.',
-            trueWinner: ['B'],
             trueFinalScores: { A: 5, B: 8, C: 3 },
             trueAlive: { A: true, B: true, C: false },
             deaths: [

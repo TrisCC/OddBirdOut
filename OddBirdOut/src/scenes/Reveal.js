@@ -1,7 +1,7 @@
 const PLAYER_COLORS = {
-    A: { win: '#4CAF50', lose: '#7DA87D' },
-    B: { win: '#42A5F5', lose: '#7DA0C0' },
-    C: { win: '#FF9800', lose: '#C0A07D' },
+    A: '#7CB87C',
+    B: '#7CB0D8',
+    C: '#D8A87C',
 };
 
 const SIDE_ORDER = {
@@ -88,7 +88,6 @@ export class Reveal extends Phaser.Scene {
 
         const scores = trueState.finalScores;
         const alive = trueState.alive || {};
-        const winner = trueState.winner || [];
 
         this.add.text(w / 2, 145, 'Final Scores', {
             fontFamily: '"Press Start 2P"',
@@ -116,27 +115,18 @@ export class Reveal extends Phaser.Scene {
 
             const pos = positions[playerId];
             const isDead = alive[playerId] === false;
-            const isWinner = winner.includes(playerId);
             const isSelf = playerId === myId;
             const label = isSelf ? `You (${playerId})` : `Player ${playerId}`;
-            const palette = PLAYER_COLORS[playerId];
-            const color = isWinner ? palette.win : palette.lose;
+            const color = PLAYER_COLORS[playerId];
 
-            if (isWinner) {
-                this.add.text(pos.x, pos.y - 50, 'Winner', {
-                    fontFamily: '"Press Start 2P"',
-                    fontSize: '10px',
-                    color: '#FFD700',
-                }).setOrigin(0.5);
-            }
+            const statusText = isDead ? 'Died' : 'Survived';
+            const statusColor = isDead ? '#F44336' : '#4CAF50';
 
-            if (isDead) {
-                this.add.text(pos.x, pos.y - 28, '(Died)', {
-                    fontFamily: '"Press Start 2P"',
-                    fontSize: '8px',
-                    color: '#F44336',
-                }).setOrigin(0.5);
-            }
+            this.add.text(pos.x, pos.y - 42, statusText, {
+                fontFamily: '"Press Start 2P"',
+                fontSize: '9px',
+                color: statusColor,
+            }).setOrigin(0.5);
 
             this.add.text(pos.x, pos.y, label, {
                 fontFamily: '"Press Start 2P"',
