@@ -54,6 +54,27 @@ http://localhost:3000/?player=C
 
 Each tab plays as a different ostrich. Open all three, verify the lobby fills up, and play through 12 rounds.
 
+### Preview Routes
+
+Add `&preview=` to jump directly into any screen with mock data:
+
+```
+http://localhost:3000/?player=A&preview=lobby
+http://localhost:3000/?player=A&preview=game
+http://localhost:3000/?player=A&preview=reveal
+```
+
+Change `player` to `B` or `C` to see each screen from that player's perspective.
+
+| Route | Shows |
+|-------|-------|
+| `preview=lobby` | Lobby with 3/3 connected |
+| `preview=game` | Game scene at round 5, then animates an ostracism round |
+| `preview=reveal` | End screen with triangle scoreboard and mock winner |
+| `preview=boot` | Normal boot sequence (connects to server) |
+
+No server connection is required for preview modes — textures are generated client-side and events are mocked.
+
 ### Admin Dashboard
 
 To begin in debug mode (no round timer)
