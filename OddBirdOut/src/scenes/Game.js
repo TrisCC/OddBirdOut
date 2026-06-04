@@ -79,9 +79,9 @@ export class Game extends Phaser.Scene {
 
     buildOstriches() {
         const selfX = this.scale.width / 2;
-        const selfY = 340;
+        const selfY = 390;
         const sideX = [250, 1030];
-        const sideY = 370;
+        const sideY = 280;
 
         const others = SIDE_ORDER[this.playerId];
         const playerOrder = [others[0], this.playerId, others[1]];
@@ -186,7 +186,7 @@ export class Game extends Phaser.Scene {
 
         for (let i = 0; i < 2; i++) {
             const id = others[i];
-            const btn = this.add.image(sideX[i], 370, `btn_target_${id.toLowerCase()}`);
+            const btn = this.add.image(sideX[i], 280, `btn_target_${id.toLowerCase()}`);
             btn.setInteractive({ useHandCursor: true });
             btn.on('pointerdown', () => {
                 this.submitAction(action, id);
@@ -369,8 +369,8 @@ export class Game extends Phaser.Scene {
         sideX[this.playerId] = selfX;
 
         const sideY = {
-            [others[0]]: 370,
-            [others[1]]: 370,
+            [others[0]]: 280,
+            [others[1]]: 280,
             [this.playerId]: selfY,
         };
 
