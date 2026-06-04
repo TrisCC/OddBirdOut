@@ -106,25 +106,25 @@ export class Lobby extends Phaser.Scene {
 
         this.add.rectangle(w / 2, h / 2, w, h, 0x1A0F0A);
 
-        this.add.text(w / 2, 110, 'Odd Bird Out', {
+        this.add.text(w / 2, 95, 'Odd Bird Out', {
             fontFamily: '"Press Start 2P"',
             fontSize: '28px',
             color: '#FFD700',
         }).setOrigin(0.5);
 
-        this.add.text(w / 2, 165, `You are Player ${this.socketManager.playerId}`, {
+        this.add.text(w / 2, 145, `You are Player ${this.socketManager.playerId}`, {
             fontFamily: '"Press Start 2P"',
             fontSize: '16px',
             color: '#FFFFFF',
         }).setOrigin(0.5);
 
-        this.statusText = this.add.text(w / 2, 215, 'Waiting for players...', {
+        this.statusText = this.add.text(w / 2, 190, 'Waiting for players...', {
             fontFamily: '"Press Start 2P"',
             fontSize: '14px',
             color: '#AAAAAA',
         }).setOrigin(0.5);
 
-        this.countText = this.add.text(w / 2, 260, '0 / 3 connected', {
+        this.countText = this.add.text(w / 2, 230, '0 / 3 connected', {
             fontFamily: '"Press Start 2P"',
             fontSize: '18px',
             color: '#FFD700',
@@ -133,7 +133,7 @@ export class Lobby extends Phaser.Scene {
         const birds = [];
         const birdX = [w / 2 - 160, w / 2, w / 2 + 160];
         for (let i = 0; i < 3; i++) {
-            const bird = this.add.image(birdX[i], 345, 'ostrich_a');
+            const bird = this.add.image(birdX[i], 315, 'ostrich_a');
             bird.setAlpha(0.3);
             bird.setScale(0.72);
             birds.push(bird);
@@ -167,7 +167,7 @@ export class Lobby extends Phaser.Scene {
         });
 
         this.socketManager.on('errorMessage', (data) => {
-            this.add.text(w / 2, 630, data.message, {
+            this.add.text(w / 2, 665, data.message, {
                 fontFamily: '"Press Start 2P"',
                 fontSize: '12px',
                 color: '#F44336',
@@ -183,13 +183,13 @@ export class Lobby extends Phaser.Scene {
         this.isDragging = false;
         this.isTransitioning = false;
 
-        this.carousel = this.add.container(w / 2, 500);
+        this.carousel = this.add.container(w / 2, 480);
 
         const bg = this.add.image(0, 0, 'panel_bg');
-        bg.setDisplaySize(660, 150);
+        bg.setDisplaySize(680, 200);
         this.carousel.add(bg);
 
-        this.slideContent = this.add.container(0, -12);
+        this.slideContent = this.add.container(0, -20);
         this.carousel.add(this.slideContent);
 
         this.navDots = [];
@@ -197,7 +197,7 @@ export class Lobby extends Phaser.Scene {
         const dotStartX = -((CAROUSEL_SLIDES.length - 1) * dotSpacing) / 2;
         for (let i = 0; i < CAROUSEL_SLIDES.length; i++) {
             const dotX = w / 2 + dotStartX + i * dotSpacing;
-            const dotY = 592;
+            const dotY = 598;
             const dot = this.add.circle(dotX, dotY, 5, 0x555555);
             dot.setStrokeStyle(1, 0x888888);
             dot.setInteractive(new Phaser.Geom.Circle(0, 0, 12), Phaser.Geom.Circle.Contains);
@@ -215,8 +215,8 @@ export class Lobby extends Phaser.Scene {
     isInCarousel(pointer) {
         const cx = this.carousel.x;
         const cy = this.carousel.y;
-        return pointer.x > cx - 340 && pointer.x < cx + 340 &&
-               pointer.y > cy - 82 && pointer.y < cy + 82;
+        return pointer.x > cx - 350 && pointer.x < cx + 350 &&
+               pointer.y > cy - 108 && pointer.y < cy + 108;
     }
 
     onPointerDown(pointer) {
@@ -227,7 +227,7 @@ export class Lobby extends Phaser.Scene {
         const dotStartX = this.scale.width / 2 - ((CAROUSEL_SLIDES.length - 1) * dotSpacing) / 2;
         for (let i = 0; i < CAROUSEL_SLIDES.length; i++) {
             const dx = pointer.x - (dotStartX + i * dotSpacing);
-            const dy = pointer.y - 592;
+            const dy = pointer.y - 598;
             if (dx * dx + dy * dy < 225) return;
         }
 
@@ -287,11 +287,11 @@ export class Lobby extends Phaser.Scene {
                 slide.render(this, this.slideContent);
 
                 const titleStyle = { fontFamily: '"Press Start 2P"', fontSize: '10px', color: '#FFFFFF' };
-                const title = this.add.text(0, 55, slide.title, titleStyle).setOrigin(0.5);
+                const title = this.add.text(0, 80, slide.title, titleStyle).setOrigin(0.5);
                 this.slideContent.add(title);
 
                 const descStyle = { fontFamily: '"Press Start 2P"', fontSize: '7px', color: '#CCCCCC' };
-                const desc = this.add.text(0, 70, slide.desc, descStyle).setOrigin(0.5);
+                const desc = this.add.text(0, 96, slide.desc, descStyle).setOrigin(0.5);
                 this.slideContent.add(desc);
 
                 this.updateDots();
@@ -317,11 +317,11 @@ export class Lobby extends Phaser.Scene {
         slide.render(this, this.slideContent);
 
         const titleStyle = { fontFamily: '"Press Start 2P"', fontSize: '10px', color: '#FFFFFF' };
-        const title = this.add.text(0, 55, slide.title, titleStyle).setOrigin(0.5);
+        const title = this.add.text(0, 80, slide.title, titleStyle).setOrigin(0.5);
         this.slideContent.add(title);
 
         const descStyle = { fontFamily: '"Press Start 2P"', fontSize: '7px', color: '#CCCCCC' };
-        const desc = this.add.text(0, 70, slide.desc, descStyle).setOrigin(0.5);
+        const desc = this.add.text(0, 96, slide.desc, descStyle).setOrigin(0.5);
         this.slideContent.add(desc);
 
         this.updateDots();

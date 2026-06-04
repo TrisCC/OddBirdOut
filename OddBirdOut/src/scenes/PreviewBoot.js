@@ -146,6 +146,14 @@ export class PreviewBoot extends Phaser.Scene {
                 break;
             }
 
+            case 'gameover': {
+                this.scene.start('GameOver', {
+                    ...getMockGameEndData(playerId),
+                    socketManager: mock,
+                });
+                break;
+            }
+
             default: {
                 this.scene.start('Lobby', { socketManager: mock });
                 break;

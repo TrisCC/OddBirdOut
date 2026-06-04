@@ -292,7 +292,7 @@ export class Game extends Phaser.Scene {
         });
 
         this.socketManager.on('gameEnd', (data) => {
-            this.scene.start('Reveal', { ...data, socketManager: this.socketManager });
+            this.scene.start('GameOver', { ...data, socketManager: this.socketManager });
         });
 
         this.socketManager.on('gameAborted', (data) => {

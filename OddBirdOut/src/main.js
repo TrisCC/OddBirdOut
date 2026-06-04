@@ -1,6 +1,7 @@
 import { Boot } from './scenes/Boot.js';
 import { Lobby } from './scenes/Lobby.js';
 import { Game } from './scenes/Game.js';
+import { GameOver } from './scenes/GameOver.js';
 import { Reveal } from './scenes/Reveal.js';
 import { PreviewBoot } from './scenes/PreviewBoot.js';
 
@@ -21,6 +22,7 @@ const config = {
         usePreview ? PreviewBoot : Boot,
         Lobby,
         Game,
+        GameOver,
         Reveal,
     ],
     scale: {
