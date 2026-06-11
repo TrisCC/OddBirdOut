@@ -56,6 +56,10 @@ export class SocketManager {
         this.socket.emit('playerReady', { playerId: this.playerId });
     }
 
+    requestLobbyState() {
+        this.socket.emit('requestLobbyState');
+    }
+
     emitPlayerAction(action, target) {
         this.socket.emit('playerAction', { action, target });
     }

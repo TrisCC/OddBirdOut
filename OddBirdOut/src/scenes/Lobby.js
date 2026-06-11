@@ -1,39 +1,35 @@
+const SIDE_ORDER = {
+    A: ['C', 'B'],
+    B: ['A', 'C'],
+    C: ['B', 'A'],
+};
+
 const CAROUSEL_SLIDES = [
     {
-        title: 'Choose Your Action',
-        desc: 'Share seeds, peck to steal, or hide to block attacks',
+        title: 'Share With a Neighbor',
+        desc: 'Each round, share seeds with the player on your left or right',
         render(scene, container) {
             const btnScale = 0.42;
-            const btnSpacing = 125;
             const labelStyle = { fontFamily: '"Press Start 2P"', fontSize: '8px', color: '#FFFFFF' };
+            const arrowStyle = { fontFamily: '"Press Start 2P"', fontSize: '14px', color: '#FFD700' };
 
-            const shareBtn = scene.add.image(-btnSpacing, 0, 'btn_share').setScale(btnScale);
-            const peckBtn = scene.add.image(0, 0, 'btn_peck').setScale(btnScale);
-            const hideBtn = scene.add.image(btnSpacing, 0, 'btn_hide').setScale(btnScale);
-            const shareLabel = scene.add.text(-btnSpacing, 28, 'Share', labelStyle).setOrigin(0.5);
-            const peckLabel = scene.add.text(0, 28, 'Peck', labelStyle).setOrigin(0.5);
-            const hideLabel = scene.add.text(btnSpacing, 28, 'Hide', labelStyle).setOrigin(0.5);
-
-            container.add([shareBtn, peckBtn, hideBtn, shareLabel, peckLabel, hideLabel]);
-        },
-    },
-    {
-        title: 'Target Another Player',
-        desc: 'After choosing an action, pick which player to target',
-        render(scene, container) {
-            const labelStyle = { fontFamily: '"Press Start 2P"', fontSize: '8px', color: '#FFFFFF' };
-            const arrowStyle = { fontFamily: '"Press Start 2P"', fontSize: '10px', color: '#FFD700' };
+            const others = SIDE_ORDER[scene.socketManager.playerId];
 
             const bird = scene.add.image(0, 0, 'ostrich_a').setScale(0.7);
-            const targetA = scene.add.image(-170, 0, 'btn_target_a').setScale(0.4);
-            const targetC = scene.add.image(170, 0, 'btn_target_c').setScale(0.4);
-            const labelB = scene.add.text(-170, 28, 'Player B', labelStyle).setOrigin(0.5);
+            const shareLeft = scene.add.image(-170, 0, 'btn_share').setScale(btnScale);
+            const shareRight = scene.add.image(170, 0, 'btn_share').setScale(btnScale);
+            const shareLeftLabel = scene.add.text(-170, 0, 'Share', labelStyle).setOrigin(0.5);
+            const shareRightLabel = scene.add.text(170, 0, 'Share', labelStyle).setOrigin(0.5);
+            const labelLeft = scene.add.text(-170, 30, `Player ${others[0]}`, labelStyle).setOrigin(0.5);
             const labelYou = scene.add.text(0, 40, 'You', labelStyle).setOrigin(0.5);
-            const labelC = scene.add.text(170, 28, 'Player C', labelStyle).setOrigin(0.5);
-            const arrowL = scene.add.text(-95, -5, '>', arrowStyle).setOrigin(0.5);
-            const arrowR = scene.add.text(95, -5, '<', arrowStyle).setOrigin(0.5);
+            const labelRight = scene.add.text(170, 30, `Player ${others[1]}`, labelStyle).setOrigin(0.5);
+            const arrowL = scene.add.text(-90, -5, '<', arrowStyle).setOrigin(0.5);
+            const arrowR = scene.add.text(90, -5, '>', arrowStyle).setOrigin(0.5);
 
-            container.add([targetA, targetC, bird, labelB, labelYou, labelC, arrowL, arrowR]);
+            container.add([
+                shareLeft, shareRight, shareLeftLabel, shareRightLabel,
+                bird, labelLeft, labelYou, labelRight, arrowL, arrowR,
+            ]);
         },
     },
     {
@@ -130,6 +126,12 @@ export class Lobby extends Phaser.Scene {
             color: '#FFD700',
         }).setOrigin(0.5);
 
+        this.readyText = this.add.text(w / 2, 258, '0 / 3 ready', {
+            fontFamily: '"Press Start 2P"',
+            fontSize: '12px',
+            color: '#AAAAAA',
+        }).setOrigin(0.5);
+
         const birds = [];
         const birdX = [w / 2 - 160, w / 2, w / 2 + 160];
         for (let i = 0; i < 3; i++) {
@@ -141,21 +143,35 @@ export class Lobby extends Phaser.Scene {
 
         this.createCarousel();
 
-        this.socketManager.emitPlayerReady();
+        this.isReady = false;
+        this.buildReadyButton();
 
         this.socketManager.on('lobbyUpdate', (data) => {
             const count = data.connected.length;
+            const readyCount = data.ready;
             this.countText.setText(`${count} / 3 connected`);
+            this.readyText.setText(`${readyCount} / 3 ready`);
 
             for (let i = 0; i < 3; i++) {
                 birds[i].setAlpha(i < count ? 1 : 0.3);
             }
 
-            if (count === 3) {
-                this.statusText.setText('All players connected!');
+            if (count < 3) {
+                this.statusText.setText('Waiting for players...');
+                this.statusText.setColor('#AAAAAA');
+            } else if (!this.isReady) {
+                this.statusText.setText('All players connected! Tap Ready to begin.');
+                this.statusText.setColor('#FFD700');
+            } else if (readyCount < 3) {
+                this.statusText.setText('Waiting for other players to be ready...');
+                this.statusText.setColor('#FFD700');
+            } else {
+                this.statusText.setText('All players ready!');
                 this.statusText.setColor('#4CAF50');
             }
         });
+
+        this.socketManager.requestLobbyState();
 
         this.socketManager.on('gameStart', (data) => {
             this.scene.start('Game', {
@@ -338,5 +354,39 @@ export class Lobby extends Phaser.Scene {
                 dot.setStrokeStyle(1, 0x888888);
             }
         }
+    }
+
+    buildReadyButton() {
+        const w = this.scale.width;
+
+        this.readyButton = this.add.container(w / 2, 650);
+
+        const bg = this.add.image(0, 0, 'btn_ready');
+        const label = this.add.text(0, 0, 'Ready', {
+            fontFamily: '"Press Start 2P"',
+            fontSize: '16px',
+            color: '#FFFFFF',
+        }).setOrigin(0.5);
+
+        this.readyButton.add([bg, label]);
+
+        bg.setInteractive({ useHandCursor: true });
+        bg.on('pointerdown', () => this.onReadyClick());
+        bg.on('pointerover', () => { this.readyButton.setScale(1.05); });
+        bg.on('pointerout', () => { this.readyButton.setScale(1.0); });
+
+        this.readyButtonBg = bg;
+        this.readyButtonLabel = label;
+    }
+
+    onReadyClick() {
+        if (this.isReady) return;
+        this.isReady = true;
+
+        this.socketManager.emitPlayerReady();
+
+        this.readyButtonBg.disableInteractive();
+        this.readyButton.setAlpha(0.5);
+        this.readyButtonLabel.setText('Ready!');
     }
 }

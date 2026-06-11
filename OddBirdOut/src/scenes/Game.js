@@ -38,7 +38,6 @@ export class Game extends Phaser.Scene {
         this.buildHUD();
         this.buildOstriches();
         this.buildActionButtons();
-        this.buildTargetSelector();
         this.setupListeners();
         this.setupVignette();
 
@@ -126,17 +125,17 @@ export class Game extends Phaser.Scene {
     }
 
     buildActionButtons() {
-        const w = this.scale.width;
+        const sideX = [250, 1030];
         const by = 590;
+        const others = SIDE_ORDER[this.playerId];
 
-        this.btnShare = this.createButton(w / 2 - 320, by, 'btn_share', 'Share', 'share', 0x4CAF50);
-        this.btnPeck = this.createButton(w / 2, by, 'btn_peck', 'Peck', 'peck', 0xF44336);
-        this.btnHide = this.createButton(w / 2 + 320, by, 'btn_hide', 'Hide', 'hide', 0x2196F3);
+        this.btnShareLeft = this.createButton(sideX[0], by, 'btn_share', 'Share', 'share', others[0]);
+        this.btnShareRight = this.createButton(sideX[1], by, 'btn_share', 'Share', 'share', others[1]);
 
-        this.actionButtons = [this.btnShare, this.btnPeck, this.btnHide];
+        this.actionButtons = [this.btnShareLeft, this.btnShareRight];
     }
 
-    createButton(x, y, texture, label, action, color) {
+    createButton(x, y, texture, label, action, target) {
         const container = this.add.container(x, y);
 
         const bg = this.add.image(0, 0, texture);
@@ -150,80 +149,16 @@ export class Game extends Phaser.Scene {
         container.add(labelText);
 
         bg.setInteractive({ useHandCursor: true });
-        bg.on('pointerdown', () => this.onActionPress(action, container));
+        bg.on('pointerdown', () => this.submitAction(action, target));
         bg.on('pointerover', () => { container.setScale(1.05); });
         bg.on('pointerout', () => { container.setScale(1.0); });
 
         container.action = action;
+        container.target = target;
         container.bg = bg;
         container.label = labelText;
 
         return container;
-    }
-
-    buildTargetSelector() {
-        this.targetContainer = this.add.container(0, 0);
-        this.targetContainer.setVisible(false);
-
-        const bg = this.add.rectangle(this.scale.width / 2, this.scale.height / 2,
-            this.scale.width, this.scale.height, 0x000000, 0.5);
-        this.targetContainer.add(bg);
-
-        this.targetButtons = [];
-        this.targetLabels = [];
-    }
-
-    showTargetSelector(action) {
-        const others = SIDE_ORDER[this.playerId];
-        const sideX = [250, 1030];
-
-        this.targetContainer.removeAll(true);
-        this.targetButtons = [];
-
-        const bg = this.add.rectangle(this.scale.width / 2, this.scale.height / 2,
-            this.scale.width, this.scale.height, 0x000000, 0.5);
-        this.targetContainer.add(bg);
-
-        for (let i = 0; i < 2; i++) {
-            const id = others[i];
-            const btn = this.add.image(sideX[i], 280, `btn_target_${id.toLowerCase()}`);
-            btn.setInteractive({ useHandCursor: true });
-            btn.on('pointerdown', () => {
-                this.submitAction(action, id);
-                this.targetContainer.setVisible(false);
-            });
-            this.targetContainer.add(btn);
-
-            const lbl = this.add.text(sideX[i], 370, `Player ${id}`, {
-                fontFamily: '"Press Start 2P"',
-                fontSize: '12px',
-                color: '#FFFFFF',
-            }).setOrigin(0.5);
-            this.targetContainer.add(lbl);
-        }
-
-        const cancelText = this.add.text(this.scale.width / 2, 650, 'Tap here to cancel', {
-            fontFamily: '"Press Start 2P"',
-            fontSize: '10px',
-            color: '#888888',
-        }).setOrigin(0.5).setInteractive({ useHandCursor: true });
-        cancelText.on('pointerdown', () => {
-            this.targetContainer.setVisible(false);
-        });
-        this.targetContainer.add(cancelText);
-
-        this.targetContainer.setVisible(true);
-        this.targetContainer.setDepth(50);
-    }
-
-    onActionPress(action, container) {
-        if (this.submitted) return;
-
-        if (action === 'hide') {
-            this.submitAction(action, null);
-        } else {
-            this.showTargetSelector(action);
-        }
     }
 
     submitAction(action, target) {
@@ -385,20 +320,8 @@ export class Game extends Phaser.Scene {
             const giverSprite = this.ostriches[giverId];
 
             if (act.action === 'share') {
-                const blocked = act.blocked === true;
                 this.time.delayedCall(delay, () => {
-                    this.playShareAnim(giverSprite, giverId, targetId, sideX, sideY, blocked);
-                });
-
-            } else if (act.action === 'peck') {
-                const blocked = act.blocked === true;
-                this.time.delayedCall(delay, () => {
-                    this.playPeckAnim(giverSprite, giverId, targetId, sideX, sideY, blocked);
-                });
-
-            } else if (act.action === 'hide') {
-                this.time.delayedCall(delay, () => {
-                    this.playHideAnim(giverSprite);
+                    this.playShareAnim(giverSprite, giverId, targetId, sideX, sideY);
                 });
             }
 
@@ -408,7 +331,7 @@ export class Game extends Phaser.Scene {
         this.time.delayedCall(delay + 500, onComplete);
     }
 
-    playShareAnim(giverSprite, giverId, targetId, sideX, sideY, blocked) {
+    playShareAnim(giverSprite, giverId, targetId, sideX, sideY) {
         if (!giverSprite || !targetId) return;
 
         const seed = this.add.image(sideX[giverId], sideY[giverId] - 20, 'seed');
@@ -424,7 +347,7 @@ export class Game extends Phaser.Scene {
                 duration: 600,
                 ease: 'Sine.easeIn',
                 onComplete: () => {
-                    if (!blocked && targetSprite !== giverSprite) {
+                    if (targetSprite !== giverSprite) {
                         this.tweens.add({
                             targets: targetSprite,
                             scaleX: targetSprite.scaleX * 1.1,
@@ -446,43 +369,6 @@ export class Game extends Phaser.Scene {
             scaleY: giverSprite.scaleY * 0.9,
             yoyo: true,
             duration: 100,
-        });
-    }
-
-    playPeckAnim(giverSprite, giverId, targetId, sideX, sideY, blocked) {
-        if (!giverSprite || !targetId) return;
-
-        const targetSprite = this.ostriches[targetId];
-        const originalX = giverSprite.x;
-        const targetX = sideX[targetId];
-
-        this.tweens.add({
-            targets: giverSprite,
-            x: targetX + (originalX < targetX ? -20 : 20),
-            duration: 150,
-            ease: 'Power2',
-            yoyo: true,
-            onYoyo: () => {
-                if (!blocked && targetSprite && targetSprite !== giverSprite) {
-                    this.tweens.add({
-                        targets: targetSprite,
-                        x: targetSprite.x + (originalX < targetX ? 10 : -10),
-                        duration: 50,
-                        yoyo: true,
-                    });
-                }
-            },
-        });
-    }
-
-    playHideAnim(giverSprite) {
-        if (!giverSprite) return;
-        this.tweens.add({
-            targets: giverSprite,
-            scaleY: giverSprite.scaleY * 0.5,
-            duration: 200,
-            yoyo: true,
-            ease: 'Sine.easeInOut',
         });
     }
 

@@ -20,6 +20,8 @@ function createMockSocket(playerId) {
 
         emitPlayerAction() {},
 
+        requestLobbyState() {},
+
         _fire(event, data) {
             if (!callbacks[event]) return;
             for (const cb of callbacks[event]) cb(data);
@@ -128,11 +130,11 @@ export class PreviewBoot extends Phaser.Scene {
                         actions: [
                             { player: others[0], action: 'share', target: others[1] },
                             { player: others[1], action: 'share', target: others[0] },
-                            { player: 'You', action: 'share', target: others[0], blocked: true },
+                            { player: 'You', action: 'share', target: others[0] },
                         ],
                         scores: { You: 5, [others[0]]: 8, [others[1]]: 3 },
-                        yourScoreDelta: -2,
-                        exclusionEvents: 3,
+                        yourScoreDelta: -1,
+                        exclusionEvents: 1,
                     });
                 });
                 break;

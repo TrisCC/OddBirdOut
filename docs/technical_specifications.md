@@ -28,13 +28,9 @@ Each round, every player selects one action:
 
 | Action | Target | Effect |
 |--------|--------|--------|
-| **Share** | Player B or C | Both sharer and target gain **+2 seeds** each |
-| **Peck** | Player B or C | Stealer gains **+2 seeds**, target loses **1 seed** |
-| **Head in Sand** | Self | Block all incoming Share and Peck actions this round |
+| **Share** | Left or right neighbor | If both targeted players share with each other, both gain **+2 seeds** each |
 
-A player cannot act on themselves with Share or Peck. Dead players cannot act.
-
-**Anti-steal rule:** If exactly 2 alive players Share and 1 alive player Pecks, the Peck is fully blocked AND the stealing player receives a **-1 seed penalty**.
+A player can only target their left or right neighbor, per the seating order (`SIDE_ORDER`). Dead players cannot act. A non-mutual share (the target doesn't share back) has no effect.
 
 ### 2.3 Scoring & Win Condition
 
@@ -47,11 +43,10 @@ A player cannot act on themselves with Share or Peck. Dead players cannot act.
 
 ### 2.4 Round Resolution Order
 
-1. All players submit their action (or timer expires — if no action, default to "Head in Sand").
-2. Server resolves in parallel: Head in Sand blocks all incoming actions against that player.
-3. Share/Peck between non-blocked players apply.
-4. True state is computed. Illusion states are fabricated for Phase 2.
-5. Round results are broadcast to each player.
+1. All players submit their action (or timer expires — if no action, default to Share with their left neighbor).
+2. Server resolves mutual shares: for each pair of players who shared with each other, both gain +2 seeds.
+3. True state is computed. Illusion states are fabricated for Phase 2.
+4. Round results are broadcast to each player.
 
 ---
 
@@ -88,25 +83,13 @@ server/
 
 ### 3.4 Ostracism Algorithm
 
-The fabrication escalates gradually across Phase 2. The algorithm, for each player P_i, generates an illusion where the other two (P_j, P_k) appear to cooperate with each other and exclude P_i, causing the player's perceived score to reach **exactly 0** by round 12.
+For Phase 2 (rounds 5–12), the algorithm generates, for each player P_i, an illusion where the other two players (P_j, P_k) appear to mutually share with **each other** every round — and P_i's own share (shown truthfully, targeting whichever neighbor they actually picked) is never reciprocated. This makes P_i's perceived score drain by **1 seed per round** (the per-round drain, with no offsetting gain) while P_j and P_k appear to gain +2/+2 from their mutual sharing.
 
 **Per-player cumulative illusion scores** track what each player sees. These diverge from true scores in Phase 2 and are used to calculate the fabricated actions shown to each player.
 
-**Escalation schedule:**
+This fabrication is uniform across rounds 5–12 — there is no escalation in content, only the steadily decreasing illusion score. Death is hidden — truly dead players appear alive in all illusions.
 
-| Rounds | Fabrication Level | Behavior |
-|--------|-------------------|----------|
-| 1–4 | None | True state shown to all |
-| 5–6 | Low | 1 fabricated share between P_j→P_k. Player's own Share/Peck shown as blocked. Subtle score decrease. |
-| 7–9 | Medium | Mutual sharing between P_j↔P_k. Player's actions shown as blocked. Player's perceived score drops steadily. |
-| 10–12 | High | Full exclusion shown. In the final round, fabricated actions are constructed to zero out the player's remaining illusion score exactly. Death is hidden — truly dead players appear alive in all illusions. |
-
-The fabrication is based on the player's own true action each round:
-- If player **Shared**: shown as blocked (ignored by the cooperating pair)
-- If player **Pecked**: shown as blocked (anti-steal triggered against them)
-- If player **Hid**: shown accurately, but other players peck them
-
-**Score targeting:** In round 12, additional fabricated actions are injected to bring each player's illusion score to exactly 0.
+**Score targeting:** In the final round (12), the player's illusion score is forced to **exactly 0**, regardless of the drain math.
 
 ### 3.5 Game Data Persistence
 
@@ -132,8 +115,8 @@ After each game ends, the **true state** is saved as a JSON file in `server/data
       "phase": "trust",
       "trueActions": [
         { "player": "A", "action": "share", "target": "B" },
-        { "player": "B", "action": "peck", "target": "A" },
-        { "player": "C", "action": "hide", "target": null }
+        { "player": "B", "action": "share", "target": "A" },
+        { "player": "C", "action": "share", "target": "B" }
       ],
       "trueScores": { "A": 0, "B": 1, "C": 0 },
       "illusions": {
@@ -191,12 +174,11 @@ const config = {
   - Three ostrich avatars: labeled "You" for self, "Player B" / "Player C" for others, with seed count underneath.
   - Hearts display: each player has 3 hearts shown under their avatar.
 - **Action Panel (bottom third):**
-  - Three large pixel-art buttons: **Share** (green), **Peck** (red), **Head in Sand** (blue).
-  - Tapping Share or Peck reveals a target selector (two smaller buttons for the other players).
-  - Tapping Head in Sand immediately submits (no target needed).
+  - Two large pixel-art **Share** buttons, positioned under the left and right neighbor avatars, each pre-bound to that neighbor as the target.
+  - Tapping a Share button immediately submits (no separate target selector).
   - Once submitted, buttons lock until round resolves.
 - **Round Resolution (animation phase, ~3 seconds):**
-  - Animates actions: seed flying between ostriches, peck animation, hide/burrow animation.
+  - Animates actions: seed flying between ostriches for each share.
   - Scores update with a count-up/down tween.
   - Broken heart appears when player is excluded (Phase 2).
 - **Phase 2 Additional UI:**
@@ -221,7 +203,7 @@ A shared `SocketManager` utility module (`src/SocketManager.js`):
 
 ```javascript
 // Singleton wrapping the Socket.IO client
-// Emits: playerReady, playerAction
+// Emits: playerReady, playerAction, requestLobbyState
 // Listens: lobbyUpdate, gameStart, roundResult, gameEnd
 // Exposes current playerId (A/B/C) from URL param
 ```
@@ -233,9 +215,7 @@ OddBirdOut/
   assets/
     sprites/
       ostrich_idle.png       # Placeholder ostrich
-      ostrich_peck.png
       ostrich_share.png
-      ostrich_hide.png
       ostrich_hurt.png
       seed.png
       golden_egg.png
@@ -243,8 +223,6 @@ OddBirdOut/
       broken_heart.png
     ui/
       button_share.png
-      button_peck.png
-      button_hide.png
       panel_bg.png
     fonts/
       press_start_2p.png     # Bitmap font or CSS font
@@ -268,8 +246,9 @@ OddBirdOut/
 
 | Event | Payload | Description |
 |-------|---------|-------------|
-| `playerReady` | `{ playerId: 'A' }` | Tablet announces role and readiness |
-| `playerAction` | `{ action: 'share'\|'peck'\|'hide', target: 'A'\|'B'\|'C'\|null }` | Submitted action for current round |
+| `playerReady` | `{ playerId: 'A' }` | Tablet announces it has tapped "Ready" in the lobby |
+| `playerAction` | `{ action: 'share', target: 'A'\|'B'\|'C' }` | Submitted action for current round — target must be the player's left or right neighbor |
+| `requestLobbyState` | _(none)_ | Client requests a fresh, targeted `lobbyUpdate` (sent on Lobby scene load to avoid missing the broadcast sent at connection time) |
 
 ### 5.2 Server → All Clients
 
@@ -293,11 +272,11 @@ OddBirdOut/
   "actions": [
     { "player": "B", "action": "share", "target": "C" },
     { "player": "C", "action": "share", "target": "B" },
-    { "player": "You", "action": "share", "target": "B", "blocked": true }
+    { "player": "You", "action": "share", "target": "B" }
   ],
   "scores": { "You": 2, "B": 5, "C": 4 },
-  "yourScoreDelta": 0,
-  "exclusionEvents": 2
+  "yourScoreDelta": -1,
+  "exclusionEvents": 1
 }
 ```
 
@@ -340,7 +319,7 @@ All audio uses Phaser's built-in audio manager. Placeholder: use Phaser-generate
 ### 8.1 Player Assignment & Room Management
 - Players join via unique URL: `?player=A`, `?player=B`, `?player=C`.
 - Server rejects duplicate role claims (second player trying `?player=A` gets an error page).
-- Game only starts when all three unique roles are connected and have emitted `playerReady`.
+- Game only starts when all three unique roles are connected and each player has tapped "Ready" (emitting `playerReady`), and the operator presses "Start Game" on the admin dashboard.
 
 ### 8.2 Disconnection Handling
 - If a player disconnects mid-game: game pauses, all clients show "Waiting for Player X to reconnect...".

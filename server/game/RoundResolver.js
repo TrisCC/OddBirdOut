@@ -5,6 +5,13 @@ const { v4: uuidv4 } = require('uuid');
 const fs = require('fs');
 const path = require('path');
 
+// [left, right] from each player's physical perspective in the installation
+const SIDE_ORDER = {
+    A: ['C', 'B'],
+    B: ['A', 'C'],
+    C: ['B', 'A'],
+};
+
 class RoundResolver {
 
     constructor(io, playerSockets) {
@@ -76,7 +83,7 @@ class RoundResolver {
     onRoundTimeout() {
         for (const player of ['A', 'B', 'C']) {
             if (!this.gameState.actionSubmitted[player]) {
-                this.gameState.submitAction(player, 'hide', null);
+                this.gameState.submitAction(player, 'share', SIDE_ORDER[player][0]);
             }
         }
         this.resolveRound();
@@ -84,7 +91,8 @@ class RoundResolver {
 
     submitPlayerAction(playerId, action, target) {
         if (!this.gameActive) return;
-        if (!action || !['share', 'peck', 'hide'].includes(action)) return;
+        if (action !== 'share') return;
+        if (!SIDE_ORDER[playerId].includes(target)) return;
 
         if (!this.gameState.isRoundActive()) {
             this.gameState.queueAction(playerId, action, target);
@@ -162,12 +170,10 @@ class RoundResolver {
 
                 const illusion = fabricateForPlayer(
                     playerId,
-                    trueActions,
                     preScores,
                     cumulativeIllusionScore,
                     this.gameState.round,
-                    playerTrueAction,
-                    alive
+                    playerTrueAction
                 );
 
                 this.perPlayerIllusionScores[playerId] = illusion.illusionScoreAfter;
@@ -298,6 +304,7 @@ class RoundResolver {
         const filename = `${timestamp}_${this.sessionId}.json`;
         const filepath = path.join(sessionsDir, filename);
 
+        fs.mkdirSync(sessionsDir, { recursive: true });
         fs.writeFileSync(filepath, JSON.stringify(this.sessionLog, null, 2));
     }
 

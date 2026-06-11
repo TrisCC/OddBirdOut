@@ -16,11 +16,7 @@ export function generateAllTextures(scene) {
     generateHeart(scene);
     generateBrokenHeart(scene);
     generateButton(scene, 'share', 0x4CAF50);
-    generateButton(scene, 'peck', 0xF44336);
-    generateButton(scene, 'hide', 0x2196F3);
-    generateTargetButton(scene, 'A', COLORS.A);
-    generateTargetButton(scene, 'B', COLORS.B);
-    generateTargetButton(scene, 'C', COLORS.C);
+    generateButton(scene, 'ready', 0x4CAF50);
     generateOstrichDead(scene);
     generatePanelBg(scene);
 }
@@ -143,18 +139,6 @@ function generateButton(scene, id, color) {
     g.fillRoundedRect(2, 2, w - 4, h / 2 - 2, { tl: 10, tr: 10, bl: 0, br: 0 });
 
     g.generateTexture(`btn_${id}`, w, h);
-    g.destroy();
-}
-
-function generateTargetButton(scene, id, color) {
-    const g = scene.add.graphics();
-    const w = 120;
-    const h = 80;
-
-    g.fillStyle(color);
-    g.fillRoundedRect(0, 0, w, h, 10);
-
-    g.generateTexture(`btn_target_${id.toLowerCase()}`, w, h);
     g.destroy();
 }
 

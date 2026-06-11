@@ -74,63 +74,45 @@ class GameState {
     }
 
     resolveRound() {
-        const blocked = new Set();
         const newlyDead = [];
 
+        const shareTarget = {};
         for (const act of this.currentActions) {
-            if (act.action === 'hide' && this.alive[act.player]) {
-                blocked.add(act.player);
+            if (!this.alive[act.player]) continue;
+            if (act.action === 'share' && act.target && this.alive[act.target]) {
+                shareTarget[act.player] = act.target;
             }
-        }
-
-        let antiStealTarget = null;
-        const aliveActions = this.currentActions.filter(a => this.alive[a.player]);
-
-        const mutualShares = new Set();
-        for (const act of aliveActions) {
-            if (act.action !== 'share') continue;
-            if (!act.target) continue;
-            const reciprocal = aliveActions.find(a =>
-                a.action === 'share' &&
-                a.player === act.target &&
-                a.target === act.player
-            );
-            if (reciprocal) {
-                mutualShares.add(`${act.player}->${act.target}`);
-            }
-        }
-
-        const mutualSharePlayers = [...new Set([...mutualShares].map(s => s.split('->')[0]))];
-        const stealPlayers = aliveActions.filter(a => a.action === 'peck').map(a => a.player);
-
-        if (mutualSharePlayers.length === 2 && stealPlayers.length === 1) {
-            antiStealTarget = stealPlayers[0];
         }
 
         const deltas = { A: 0, B: 0, C: 0 };
+        const alivePlayers = ['A', 'B', 'C'].filter(p => this.alive[p]);
 
-        for (const act of this.currentActions) {
-            if (!this.alive[act.player]) {
-                continue;
+        if (alivePlayers.length === 3) {
+            const mutualPair = alivePlayers.find(p =>
+                shareTarget[p] && shareTarget[shareTarget[p]] === p
+            );
+
+            if (mutualPair) {
+                const partner = shareTarget[mutualPair];
+                const excluded = alivePlayers.find(p => p !== mutualPair && p !== partner);
+                deltas[mutualPair] += 1;
+                deltas[partner] += 1;
+                deltas[excluded] -= 1;
+            } else {
+                // Three-way share: everyone gives and everyone receives
+                for (const p of alivePlayers) deltas[p] += 1;
             }
-
-            if (act.action === 'share') {
-                if (blocked.has(act.player)) continue;
-                if (!act.target || !this.alive[act.target]) continue;
-                if (blocked.has(act.target)) continue;
-                if (!mutualShares.has(`${act.player}->${act.target}`)) continue;
-                deltas[act.target] += 2;
-
-            } else if (act.action === 'peck') {
-                if (antiStealTarget === act.player) {
-                    deltas[act.player] -= 1;
-                    continue;
+        } else {
+            const counted = new Set();
+            for (const player of alivePlayers) {
+                const target = shareTarget[player];
+                if (!target || counted.has(player) || counted.has(target)) continue;
+                if (shareTarget[target] === player) {
+                    deltas[player] += 1;
+                    deltas[target] += 1;
+                    counted.add(player);
+                    counted.add(target);
                 }
-                if (blocked.has(act.player)) continue;
-                if (!act.target || !this.alive[act.target]) continue;
-                if (blocked.has(act.target)) continue;
-                deltas[act.player] += 2;
-                deltas[act.target] -= 1;
             }
         }
 

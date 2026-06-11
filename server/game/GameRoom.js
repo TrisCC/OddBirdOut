@@ -47,6 +47,7 @@ class GameRoom {
 
         socket.on('playerReady', () => this.onPlayerReady(playerId));
         socket.on('playerAction', (data) => this.onPlayerAction(playerId, data));
+        socket.on('requestLobbyState', () => socket.emit('lobbyUpdate', this.getLobbyState()));
         socket.on('disconnect', () => this.onDisconnect(socket, playerId));
 
         this.broadcastLobbyUpdate();
@@ -65,6 +66,7 @@ class GameRoom {
             }
         });
         socket.on('playerAction', (data) => this.onPlayerAction(playerId, data));
+        socket.on('requestLobbyState', () => socket.emit('lobbyUpdate', this.getLobbyState()));
         socket.on('disconnect', () => this.onDisconnect(socket, playerId));
 
         this.broadcastLobbyUpdate();
@@ -136,13 +138,17 @@ class GameRoom {
         this.io.emit(event, data);
     }
 
-    broadcastLobbyUpdate() {
+    getLobbyState() {
         const connected = VALID_ROLES.filter(r => this.players[r]);
-        this.io.emit('lobbyUpdate', {
+        return {
             connected,
             ready: this.readyPlayers.size,
             total: 3,
-        });
+        };
+    }
+
+    broadcastLobbyUpdate() {
+        this.io.emit('lobbyUpdate', this.getLobbyState());
         this.broadcastToAdmins('adminState', this.getAdminState());
     }
 

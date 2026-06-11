@@ -69,9 +69,8 @@ The server owns **all** game state. The frontend is a dumb renderer — it sends
 ## Scoring System
 
 - All players start with **5 seeds** (configurable via `STARTING_SEEDS` in `config.js`).
-- Each round: **Share** (give 1 seed), **Peck** (steal 1 seed), or **Head in Sand** (block all).
-- If a player has 0 seeds, they cannot share or be pecked (nothing to give/steal).
-- All actions resolve in parallel — hide effects computed first, then share/peck deltas applied atomically.
+- Each round, every player **Shares** with their left or right neighbor (per `SIDE_ORDER`). If both targeted players share with each other, both gain **+2 seeds**. Non-mutual shares have no effect.
+- All alive players also lose **1 seed** per round (`SEEDS_PER_ROUND_DRAIN`).
 - After round 12, player(s) with most seeds win the Golden Egg. Ties allowed.
 
 ### Ostracism Concealment (Phase 2)

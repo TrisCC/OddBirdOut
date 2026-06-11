@@ -10,7 +10,7 @@ Three players compete as ostriches collecting seeds to hatch a Golden Egg. But a
 2. **Phase 2 — Concealed Manipulation (Rounds 5–12):** The server silently fabricates what each player sees — but there are **no visible indicators of ostracism** during gameplay. No "Ostracism" label, no broken hearts, no sad ostrich expressions. The manipulation is entirely hidden from players.
 3. **Reveal:** After round 12, the truth comes out — nobody was actually excluded. The system manipulated everyone equally.
 
-Each round: choose **Share** (if both targeted players share with each other, both gain +2 seeds), **Peck** (steal 3 seeds from an undefended player), or **Head in Sand** (block all incoming actions). Each player starts with **10 seeds**. The player with the most seeds wins the Golden Egg.
+Each round, every player chooses to **Share** with their left or right neighbor. If both players share with each other, both gain +2 seeds — non-mutual shares do nothing. Each player starts with **10 seeds** and loses 1 per round. The player with the most seeds wins the Golden Egg.
 
 ## Physical Setup
 
@@ -66,12 +66,12 @@ http://localhost:3000/?player=A&preview=reveal
 
 Change `player` to `B` or `C` to see each screen from that player's perspective.
 
-| Route | Shows |
-|-------|-------|
-| `preview=lobby` | Lobby with 3/3 connected |
-| `preview=game` | Game scene at round 5, then animates an ostracism round |
-| `preview=reveal` | End screen with triangle scoreboard and mock winner |
-| `preview=boot` | Normal boot sequence (connects to server) |
+| Route            | Shows                                                   |
+| ---------------- | ------------------------------------------------------- |
+| `preview=lobby`  | Lobby with 3/3 connected                                |
+| `preview=game`   | Game scene at round 5, then animates an ostracism round |
+| `preview=reveal` | End screen with triangle scoreboard and mock winner     |
+| `preview=boot`   | Normal boot sequence (connects to server)               |
 
 No server connection is required for preview modes — textures are generated client-side and events are mocked.
 
