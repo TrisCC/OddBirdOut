@@ -8,11 +8,14 @@ import android.net.Network
 import android.net.NetworkCapabilities
 import android.net.NetworkRequest
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.provider.Settings
 import android.view.Gravity
 import android.view.KeyEvent
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowInsets
 import android.view.WindowManager
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
@@ -30,12 +33,35 @@ class MainActivity : ComponentActivity() {
     private lateinit var indicator: View
     private var isPageLoaded = false
     private var isNetworkAvailable = false
+    private val handler = Handler(Looper.getMainLooper())
+    private val refreshIntervalMs = 10_000L
+
+    private val refreshRunnable = object : Runnable {
+        override fun run() {
+            if (isNetworkAvailable) {
+                setIndicatorRefreshing()
+                webView.reload()
+            }
+            handler.postDelayed(this, refreshIntervalMs)
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         hideSystemBars()
+
+        window.decorView.setOnApplyWindowInsetsListener { view, insets ->
+            val controller = ViewCompat.getWindowInsetsController(view)
+            if (controller != null) {
+                controller.hide(WindowInsetsCompat.Type.systemBars())
+                controller.systemBarsBehavior =
+                    WindowInsetsControllerCompat.BEHAVIOR_DEFAULT
+            }
+            insets
+        }
 
         val container = FrameLayout(this).apply {
             setBackgroundColor(Color.BLACK)
@@ -60,7 +86,13 @@ class MainActivity : ComponentActivity() {
 
         webView.loadUrl(getTargetUrl())
         startNetworkMonitor()
+        handler.postDelayed(refreshRunnable, refreshIntervalMs)
         requestLockTask()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        handler.removeCallbacks(refreshRunnable)
     }
 
     override fun onResume() {
@@ -148,6 +180,10 @@ class MainActivity : ComponentActivity() {
         indicator.setBackgroundResource(drawable)
     }
 
+    private fun setIndicatorRefreshing() {
+        indicator.setBackgroundResource(android.R.drawable.presence_away)
+    }
+
     private fun getTargetUrl(): String {
         return try {
             val stored = Settings.Global.getString(contentResolver, "oddbirdout_url")
@@ -188,10 +224,14 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun hideSystemBars() {
-        ViewCompat.getWindowInsetsController(window.decorView)?.apply {
-            hide(WindowInsetsCompat.Type.systemBars())
-            systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-        }
+        window.decorView.systemUiVisibility = (
+            View.SYSTEM_UI_FLAG_FULLSCREEN
+            or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+            or View.SYSTEM_UI_FLAG_IMMERSIVE
+            or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+            or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+            or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+        )
     }
 
     private fun dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()

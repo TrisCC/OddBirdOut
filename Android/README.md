@@ -55,7 +55,7 @@ adb shell cmd wifi forget-network <networkId>
 ### 1. Install the APK
 
 ```bash
-adb install app/build/outputs/apk/release/app-release.apk
+adb install app/release/app-release.apk
 ```
 
 ### 2. Set as device owner
