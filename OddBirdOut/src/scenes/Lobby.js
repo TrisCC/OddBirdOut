@@ -132,13 +132,29 @@ export class Lobby extends Phaser.Scene {
             color: '#AAAAAA',
         }).setOrigin(0.5);
 
-        const birds = [];
+        const playerId = this.socketManager.playerId;
+        const neighbors = SIDE_ORDER[playerId];
+        const roles = [neighbors[0], playerId, neighbors[1]];
         const birdX = [w / 2 - 160, w / 2, w / 2 + 160];
+
+        this.birds = [];
+        this.birdLabels = [];
         for (let i = 0; i < 3; i++) {
-            const bird = this.add.image(birdX[i], 315, 'ostrich_a');
+            const role = roles[i];
+            const bird = this.add.image(birdX[i], 315, `ostrich_${role.toLowerCase()}`);
             bird.setAlpha(0.3);
             bird.setScale(0.72);
-            birds.push(bird);
+            this.birds[role] = bird;
+
+            const isSelf = role === playerId;
+            const labelText = isSelf ? `You (${role})` : `Player ${role}`;
+            const labelColor = isSelf ? '#FFD700' : '#AAAAAA';
+            const label = this.add.text(birdX[i], 358, labelText, {
+                fontFamily: '"Press Start 2P"',
+                fontSize: '8px',
+                color: labelColor,
+            }).setOrigin(0.5);
+            this.birdLabels[role] = label;
         }
 
         this.createCarousel();
@@ -148,12 +164,25 @@ export class Lobby extends Phaser.Scene {
 
         this.socketManager.on('lobbyUpdate', (data) => {
             const count = data.connected.length;
-            const readyCount = data.ready;
+            const readyArr = Array.isArray(data.ready) ? data.ready : [];
+            const readyCount = readyArr.length;
             this.countText.setText(`${count} / 3 connected`);
             this.readyText.setText(`${readyCount} / 3 ready`);
 
-            for (let i = 0; i < 3; i++) {
-                birds[i].setAlpha(i < count ? 1 : 0.3);
+            for (const role of ['A', 'B', 'C']) {
+                const connected = data.connected.includes(role);
+                const ready = readyArr.includes(role);
+                if (this.birds[role]) {
+                    this.birds[role].setAlpha(connected ? 1 : 0.3);
+                }
+                if (this.birdLabels[role]) {
+                    const isSelf = role === playerId;
+                    const baseText = isSelf ? `You (${role})` : `Player ${role}`;
+                    const suffix = ready ? ' \u2713' : '';
+                    const labelColor = isSelf ? '#FFD700' : (ready ? '#4CAF50' : '#AAAAAA');
+                    this.birdLabels[role].setText(baseText + suffix);
+                    this.birdLabels[role].setColor(labelColor);
+                }
             }
 
             if (count < 3) {

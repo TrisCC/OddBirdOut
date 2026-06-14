@@ -140,9 +140,10 @@ class GameRoom {
 
     getLobbyState() {
         const connected = VALID_ROLES.filter(r => this.players[r]);
+        const ready = [...this.readyPlayers];
         return {
             connected,
-            ready: this.readyPlayers.size,
+            ready,
             total: 3,
         };
     }

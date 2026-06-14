@@ -1,118 +1,124 @@
 # OddBirdOut — Android Kiosk App
 
-WebView wrapper that loads the OddBirdOut web game in a locked-down kiosk environment. Designed to run on three Android tablets via Fully Kiosk Browser-style device-owner pinning.
+WebView wrapper that loads the OddBirdOut web game in a locked-down kiosk environment. Designed to run on three Android tablets via device-owner pinning.
 
 ## Behavior
 
 - Opens a fullscreen WebView pointed at a configurable URL
-- Hides system bars (immersive sticky) — no status bar, no nav bar
+- Hides system bars — no status bar, no nav bar
 - Blocks back, home, and app-switch buttons
-- Re-enters lock task on user leave (prevents escape)
-- Auto-reloads the page when network becomes available after an outage
-- Shows a small connection indicator in the top-right corner (green = loaded, red = loading/error)
+- Disables the lock screen permanently (device-owner required)
+- Locks the task (screen pinning) so players cannot leave the app
+- Auto-launches on boot via `BOOT_COMPLETED` receiver
+- Auto-reloads the page every 10 seconds while WiFi is connected
+- Manually reload on long-press of the connection indicator
+- Shows a connection indicator in the top-right corner:
+  - **Yellow** — page loading / refreshing
+  - **Green** — page loaded successfully
+  - **Red** — page failed to load or no network
+- Keeps the screen on permanently
 - Locked to landscape orientation
 
-## Setting the URL
+## Tablet Setup (fresh device, per tablet)
 
-The URL is read from `Settings.Global.oddbirdout_url` at app start. Set it via ADB before launching:
+Run these commands from the laptop with the tablet connected via USB. Prerequisites: USB debugging enabled on the tablet.
+
+### 1. Build the APK
 
 ```bash
-adb shell settings put global oddbirdout_url "http://192.168.1.100:3000/?player=A"
+# From the Android/ directory
+gradlew.bat assembleRelease
 ```
 
-Verify:
+APK will be at `app\build\outputs\apk\release\app-release.apk`.
+
+### 2. Install the APK
 
 ```bash
-adb shell settings get global oddbirdout_url
+adb install -r app\release\app-release.apk
 ```
 
-If the setting is missing or blank, the app falls back to `http://localhost:3000`.
-
-## WiFi Management (ADB)
-
-All commands assume a single connected tablet. For multiple tablets, prepend `adb -s <serial>`.
+### 3. Connect to the expo WiFi network
 
 ```bash
-# Toggle WiFi on/off
 adb shell svc wifi enable
-adb shell svc wifi disable
-
-# Check current WiFi status
-adb shell dumpsys wifi | grep "mWifiInfo"
-
-# List saved networks
-adb shell cmd wifi list-networks
-
-# Connect to a network (Android 11+)
-adb shell cmd wifi connect-network "SSID" wpa2 "password"
-
-# Forget a saved network
-adb shell cmd wifi forget-network <networkId>
+adb shell cmd wifi connect-network "YOUR_SSID" wpa2 "YOUR_PASSWORD"
 ```
 
-## Kiosk Setup (per tablet)
-
-### 1. Install the APK
+Verify with:
 
 ```bash
-adb install app/release/app-release.apk
+adb shell dumpsys wifi | findstr "mWifiInfo"
 ```
 
-### 2. Set as device owner
+Look for `Supplicant state: COMPLETED` and an assigned IP address.
 
-This enables lock-task (screen pinning) so players cannot leave the app:
+### 4. Set the target URL (per player role)
+
+```bash
+# Tablet A
+adb shell settings put global oddbirdout_url "http://192.168.1.100:3000/?player=A"
+
+# Tablet B
+adb shell settings put global oddbirdout_url "http://192.168.1.100:3000/?player=B"
+
+# Tablet C
+adb shell settings put global oddbirdout_url "http://192.168.1.100:3000/?player=C"
+```
+
+### 5. Set as device owner
+
+Enables lock-task pinning and permanently disables the lock screen:
 
 ```bash
 adb shell dpm set-device-owner com.oddbirdout.android/.KioskDeviceAdminReceiver
 ```
 
-### 3. Set the URL for this tablet's player role
+### 6. Set as home activity
+
+Makes the app auto-launch on boot instead of the system launcher:
 
 ```bash
-adb shell settings put global oddbirdout_url "http://<server-ip>:3000/?player=A"
+adb shell cmd package set-home-activity com.oddbirdout.android/.MainActivity
 ```
 
-### 4. Launch
+### 7. Reboot and verify
 
-Open the app manually on first launch. On subsequent boots, if the app was set as the home screen (it declares `CATEGORY_HOME` in its intent filter), it will auto-launch.
+```bash
+adb reboot
+```
+
+After reboot the tablet should boot directly into the app (no lock screen) and load the game.
+
+### 8. Test connectivity
+
+From the laptop, verify the tablet can reach the server:
+
+```bash
+adb shell ping -c 3 192.168.1.100
+```
+
+If you need to update the APK later:
+
+```bash
+adb install -r app\release\app-release.apk
+adb shell dpm set-device-owner com.oddbirdout.android/.KioskDeviceAdminReceiver
+adb reboot
+```
+
+(Re-setting the device owner after each APK update ensures the `onEnabled` callback re-fires and the keyguard stays disabled.)
 
 ## Build
 
 From the `Android/` directory:
 
 ```bash
-# Windows
 gradlew.bat assembleRelease
-
-# macOS / Linux
-./gradlew assembleRelease
 ```
 
-The APK will be at `app/build/outputs/apk/release/app-release.apk`.
+The APK will be at `app\build\outputs\apk\release\app-release.apk`.
 
-The release build is signed with a debug keystore — sufficient for sideloaded kiosk tablets. For production, replace `debug.keystore` with your own key.
-
-## Project Structure
-
-```
-Android/
-├── app/
-│   └── src/
-│       └── main/
-│           ├── java/com/oddbirdout/android/
-│           │   ├── MainActivity.kt               # WebView + kiosk lock + indicator
-│           │   ├── BootReceiver.kt                # Auto-launch on device boot
-│           │   └── KioskDeviceAdminReceiver.kt    # Device-owner receiver
-│           ├── res/
-│           │   ├── values/
-│           │   │   ├── themes.xml                 # Fullscreen theme
-│           │   │   └── strings.xml
-│           │   └── xml/
-│           │       └── device_admin_receiver.xml   # Admin policy metadata
-│           └── AndroidManifest.xml
-├── build.gradle.kts
-└── settings.gradle.kts
-```
+Signing uses the debug keystore by default — sufficient for sideloaded kiosk tablets.
 
 ## Command Reference
 
@@ -145,7 +151,7 @@ adb shell settings get global oddbirdout_url
 ### Kiosk / device owner
 
 ```bash
-# Set app as device owner (enables lock-task pinning)
+# Set app as device owner (enables lock-task, disables lock screen)
 adb shell dpm set-device-owner com.oddbirdout.android/.KioskDeviceAdminReceiver
 
 # Make this app the default home screen (auto-launch on boot)
@@ -201,6 +207,28 @@ aapt dump xmltree app\release\app-release.apk AndroidManifest.xml | findstr clea
 ### Keystore (one-time)
 
 ```bash
-# Generate a signing key (run from Android/ directory)
 keytool -genkey -v -keystore oddbirdout.keystore -alias oddbirdout -keyalg RSA -keysize 2048 -validity 10000 -storepass yourpassword -keypass yourpassword -dname "CN=OddBirdOut"
+```
+
+## Project Structure
+
+```
+Android/
+├── app/
+│   └── src/
+│       └── main/
+│           ├── java/com/oddbirdout/android/
+│           │   ├── MainActivity.kt               # WebView + kiosk lock + indicator
+│           │   ├── BootReceiver.kt                # Auto-launch on device boot
+│           │   └── KioskDeviceAdminReceiver.kt    # Device-owner + keyguard disable
+│           ├── res/
+│           │   ├── values/
+│           │   │   ├── themes.xml                 # Fullscreen theme
+│           │   │   └── strings.xml
+│           │   └── xml/
+│           │       └── device_admin_receiver.xml   # Admin policy metadata
+│           └── AndroidManifest.xml
+├── build.gradle.kts
+├── settings.gradle.kts
+└── README.md
 ```

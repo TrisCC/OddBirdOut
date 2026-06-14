@@ -12,11 +12,13 @@ class KioskDeviceAdminReceiver : DeviceAdminReceiver() {
         val dpm = context.getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
         val admin = ComponentName(context, KioskDeviceAdminReceiver::class.java)
         dpm.setKeyguardDisabled(admin, true)
+        dpm.setLockTaskPackages(admin, arrayOf(context.packageName))
     }
 
     override fun onDisabled(context: Context, intent: Intent) {
         val dpm = context.getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
         val admin = ComponentName(context, KioskDeviceAdminReceiver::class.java)
         dpm.setKeyguardDisabled(admin, false)
+        dpm.setLockTaskPackages(admin, arrayOf<String>())
     }
 }

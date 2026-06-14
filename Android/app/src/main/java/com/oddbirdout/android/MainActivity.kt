@@ -41,7 +41,7 @@ class MainActivity : ComponentActivity() {
 
     private val refreshRunnable = object : Runnable {
         override fun run() {
-            if (isNetworkAvailable) {
+            if (isNetworkAvailable && !isPageLoaded) {
                 webView.reload()
             }
             handler.postDelayed(this, refreshIntervalMs)
