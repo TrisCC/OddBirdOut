@@ -3,6 +3,11 @@ const { RoundResolver } = require('./RoundResolver');
 
 const VALID_ROLES = ['A', 'B', 'C'];
 
+/**
+ * GameRoom manages the three player sockets, admin sockets, and the
+ * RoundResolver. It also runs a periodic state broadcast so all connected
+ * clients stay in sync even if an individual event is missed.
+ */
 class GameRoom {
 
     constructor(io) {
@@ -12,6 +17,42 @@ class GameRoom {
         this.roundResolver = null;
         this.reconnectTimers = {};
         this.adminSockets = new Set();
+        this.stateBroadcastTimer = null;
+
+        this.startStateBroadcast();
+    }
+
+    /** Starts a periodic broadcast of the current lobby/game state.
+     *  Interval depends on the current stage (lobby / active / post-game). */
+    startStateBroadcast() {
+        this.stopStateBroadcast();
+
+        const scheduleNext = () => {
+            this.broadcastLobbyUpdate();
+            const interval = this.getBroadcastIntervalMs();
+            this.stateBroadcastTimer = setTimeout(scheduleNext, interval);
+        };
+
+        scheduleNext();
+    }
+
+    /** Clears the active state broadcast timer. */
+    stopStateBroadcast() {
+        if (this.stateBroadcastTimer) {
+            clearTimeout(this.stateBroadcastTimer);
+            this.stateBroadcastTimer = null;
+        }
+    }
+
+    /** Returns the appropriate polling interval for the current game stage. */
+    getBroadcastIntervalMs() {
+        if (!this.roundResolver) {
+            return config.LOBBY_POLL_INTERVAL_MS;
+        }
+        if (this.roundResolver.gameActive) {
+            return config.GAME_POLL_INTERVAL_MS;
+        }
+        return config.POSTGAME_POLL_INTERVAL_MS;
     }
 
     handleConnection(socket) {
@@ -48,6 +89,7 @@ class GameRoom {
         socket.on('playerReady', () => this.onPlayerReady(playerId));
         socket.on('playerAction', (data) => this.onPlayerAction(playerId, data));
         socket.on('requestLobbyState', () => socket.emit('lobbyUpdate', this.getLobbyState()));
+        socket.on('heartbeat', () => socket.emit('heartbeatAck', { timestamp: Date.now() }));
         socket.on('disconnect', () => this.onDisconnect(socket, playerId));
 
         this.broadcastLobbyUpdate();
@@ -67,6 +109,7 @@ class GameRoom {
         });
         socket.on('playerAction', (data) => this.onPlayerAction(playerId, data));
         socket.on('requestLobbyState', () => socket.emit('lobbyUpdate', this.getLobbyState()));
+        socket.on('heartbeat', () => socket.emit('heartbeatAck', { timestamp: Date.now() }));
         socket.on('disconnect', () => this.onDisconnect(socket, playerId));
 
         this.broadcastLobbyUpdate();
@@ -102,7 +145,7 @@ class GameRoom {
                 this.endGameDueToDisconnect(playerId);
             }
             this.broadcastLobbyUpdate();
-        }, 60000);
+        }, config.RECONNECT_TIMEOUT_MS);
 
         this.broadcastLobbyUpdate();
     }

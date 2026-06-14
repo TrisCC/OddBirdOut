@@ -249,19 +249,21 @@ OddBirdOut/
 | `playerReady` | `{ playerId: 'A' }` | Tablet announces it has tapped "Ready" in the lobby |
 | `playerAction` | `{ action: 'share', target: 'A'\|'B'\|'C' }` | Submitted action for current round — target must be the player's left or right neighbor |
 | `requestLobbyState` | _(none)_ | Client requests a fresh, targeted `lobbyUpdate` (sent on Lobby scene load to avoid missing the broadcast sent at connection time) |
+| `heartbeat` | _(none)_ | Client keeps the connection alive and verifies the server is reachable |
 
 ### 5.2 Server → All Clients
 
 | Event | Payload | Description |
 |-------|---------|-------------|
-| `lobbyUpdate` | `{ connected: ['A','B'], ready: 3 }` | Live lobby status |
+| `lobbyUpdate` | `{ connected: ['A','B'], ready: ['A','B'] }` | Live lobby status (broadcast on connect/disconnect/ready and polled every few seconds) |
 | `gameStart` | `{ playerId: 'A', totalRounds: 12 }` | Game begins, tells client its role |
 | `gameEnd` | `{ trueState: {...}, winner: ['B'], illusions: {A:{...}, B:{...}, C:{...}} }` | Final results and reveal data |
 
-### 5.3 Server → Individual Client (Phase 2)
+### 5.3 Server → Individual Client
 
 | Event | Payload | Description |
 |-------|---------|-------------|
+| `heartbeatAck` | `{ timestamp: <number> }` | Server response to a client `heartbeat` |
 | `roundResult` | See below | Per-player fabricated round outcome |
 
 **`roundResult` payload (per-player, Phase 2 example):**
@@ -325,6 +327,11 @@ All audio uses Phaser's built-in audio manager. Placeholder: use Phaser-generate
 - If a player disconnects mid-game: game pauses, all clients show "Waiting for Player X to reconnect...".
 - 60-second reconnection window; if exceeded, game terminates and all clients return to lobby.
 - Auto-reconnect: Socket.IO `reconnect` enabled on client.
+- Server periodically re-broadcasts `lobbyUpdate` (and `adminState`) on a stage-dependent interval:
+  - Lobby: every 5 seconds
+  - Active game: every 10 seconds
+  - Post-game: every 30 seconds
+- Client heartbeat: every 10 seconds the client emits `heartbeat` and expects `heartbeatAck`. After 3 missed acks the client forces a reconnect.
 
 ### 8.3 Game Reset
 - Manual restart: operator refreshes all 3 tablets and restarts the Node.js server process.
