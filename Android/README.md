@@ -28,6 +28,28 @@ adb shell settings get global oddbirdout_url
 
 If the setting is missing or blank, the app falls back to `http://localhost:3000`.
 
+## WiFi Management (ADB)
+
+All commands assume a single connected tablet. For multiple tablets, prepend `adb -s <serial>`.
+
+```bash
+# Toggle WiFi on/off
+adb shell svc wifi enable
+adb shell svc wifi disable
+
+# Check current WiFi status
+adb shell dumpsys wifi | grep "mWifiInfo"
+
+# List saved networks
+adb shell cmd wifi list-networks
+
+# Connect to a network (Android 11+)
+adb shell cmd wifi connect-network "SSID" wpa2 "password"
+
+# Forget a saved network
+adb shell cmd wifi forget-network <networkId>
+```
+
 ## Kiosk Setup (per tablet)
 
 ### 1. Install the APK
@@ -56,12 +78,19 @@ Open the app manually on first launch. On subsequent boots, if the app was set a
 
 ## Build
 
+From the `Android/` directory:
+
 ```bash
-# From the Android/ directory
+# Windows
+gradlew.bat assembleRelease
+
+# macOS / Linux
 ./gradlew assembleRelease
 ```
 
 The APK will be at `app/build/outputs/apk/release/app-release.apk`.
+
+The release build is signed with a debug keystore — sufficient for sideloaded kiosk tablets. For production, replace `debug.keystore` with your own key.
 
 ## Project Structure
 
