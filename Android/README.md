@@ -101,12 +101,15 @@ adb shell ping -c 3 192.168.1.100
 If you need to update the APK later:
 
 ```bash
-adb install -r app\release\app-release.apk
-adb shell dpm set-device-owner com.oddbirdout.android/.KioskDeviceAdminReceiver
-adb reboot
+# Install the new APK over the old one (device owner persists)
+adb install -r app\build\outputs\apk\release\app-release.apk
+
+# Restart the app (re-applies all device policies on launch)
+adb shell am force-stop com.oddbirdout.android
+adb shell am start -n com.oddbirdout.android/.MainActivity
 ```
 
-(Re-setting the device owner after each APK update ensures the `onEnabled` callback re-fires and the keyguard stays disabled.)
+> The app re-applies all device policies on every launch (`setKeyguardDisabled`, `setStatusBarDisabled`, `setLockTaskPackages`) — no need to re-set the device owner.
 
 ## Build
 

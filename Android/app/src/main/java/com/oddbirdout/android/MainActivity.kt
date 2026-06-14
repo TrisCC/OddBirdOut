@@ -5,6 +5,7 @@ import android.app.admin.DevicePolicyManager
 import android.content.ComponentName
 import android.content.Context
 import android.graphics.Color
+import android.graphics.drawable.GradientDrawable
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
@@ -39,6 +40,10 @@ class MainActivity : ComponentActivity() {
     private val handler = Handler(Looper.getMainLooper())
     private val refreshIntervalMs = 10_000L
 
+    private val loadWatchdog = Runnable {
+        updateIndicator()
+    }
+
     private val refreshRunnable = object : Runnable {
         override fun run() {
             if (isNetworkAvailable && !isPageLoaded) {
@@ -55,7 +60,7 @@ class MainActivity : ComponentActivity() {
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         setShowWhenLocked(true)
         setTurnScreenOn(true)
-        disableKeyguard()
+        applyDevicePolicies()
         hideSystemBars()
 
         window.decorView.setOnApplyWindowInsetsListener { view, insets ->
@@ -98,6 +103,7 @@ class MainActivity : ComponentActivity() {
     override fun onDestroy() {
         super.onDestroy()
         handler.removeCallbacks(refreshRunnable)
+        handler.removeCallbacks(loadWatchdog)
     }
 
     override fun onResume() {
@@ -144,10 +150,14 @@ class MainActivity : ComponentActivity() {
 
         webViewClient = object : WebViewClient() {
             override fun onPageStarted(view: WebView, url: String, favicon: android.graphics.Bitmap?) {
+                isPageLoaded = false
                 setIndicatorRefreshing()
+                handler.removeCallbacks(loadWatchdog)
+                handler.postDelayed(loadWatchdog, 15_000L)
             }
 
             override fun onPageFinished(view: WebView, url: String) {
+                handler.removeCallbacks(loadWatchdog)
                 isPageLoaded = true
                 updateIndicator()
             }
@@ -159,6 +169,7 @@ class MainActivity : ComponentActivity() {
                 description: String,
                 failingUrl: String
             ) {
+                handler.removeCallbacks(loadWatchdog)
                 isPageLoaded = false
                 updateIndicator()
             }
@@ -169,6 +180,7 @@ class MainActivity : ComponentActivity() {
                 error: WebResourceError
             ) {
                 if (request.isForMainFrame) {
+                    handler.removeCallbacks(loadWatchdog)
                     isPageLoaded = false
                     updateIndicator()
                 }
@@ -183,7 +195,10 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun createIndicator(): View = View(this).apply {
-        setBackgroundResource(android.R.drawable.presence_offline)
+        background = GradientDrawable().apply {
+            shape = GradientDrawable.OVAL
+            setColor(COLOR_OFFLINE)
+        }
         visibility = View.VISIBLE
         isClickable = true
         isFocusable = false
@@ -196,23 +211,21 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun updateIndicator() {
-        val drawable = if (isPageLoaded) {
-            android.R.drawable.presence_online
-        } else {
-            android.R.drawable.presence_offline
-        }
-        indicator.setBackgroundResource(drawable)
+        val color = if (isPageLoaded) COLOR_ONLINE else COLOR_OFFLINE
+        (indicator.background as GradientDrawable).setColor(color)
     }
 
     private fun setIndicatorRefreshing() {
-        indicator.setBackgroundResource(android.R.drawable.presence_away)
+        (indicator.background as GradientDrawable).setColor(COLOR_REFRESHING)
     }
 
-    private fun disableKeyguard() {
+    private fun applyDevicePolicies() {
         val dpm = getSystemService(Context.DEVICE_POLICY_SERVICE) as? DevicePolicyManager ?: return
         val admin = ComponentName(this, KioskDeviceAdminReceiver::class.java)
         try {
             dpm.setKeyguardDisabled(admin, true)
+            dpm.setStatusBarDisabled(admin, true)
+            dpm.setLockTaskPackages(admin, arrayOf(packageName))
         } catch (_: Exception) {}
     }
 
@@ -270,5 +283,8 @@ class MainActivity : ComponentActivity() {
 
     companion object {
         const val DEFAULT_URL = "http://localhost:3000"
+        const val COLOR_ONLINE = 0xFF4CAF50.toInt()
+        const val COLOR_OFFLINE = 0xFFF44336.toInt()
+        const val COLOR_REFRESHING = 0xFFFFC107.toInt()
     }
 }
