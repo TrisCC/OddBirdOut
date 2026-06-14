@@ -100,15 +100,107 @@ Android/
 │   └── src/
 │       └── main/
 │           ├── java/com/oddbirdout/android/
-│           │   ├── MainActivity.kt              # WebView + kiosk lock + indicator
-│           │   └── KioskDeviceAdminReceiver.kt  # Device-owner receiver
+│           │   ├── MainActivity.kt               # WebView + kiosk lock + indicator
+│           │   ├── BootReceiver.kt                # Auto-launch on device boot
+│           │   └── KioskDeviceAdminReceiver.kt    # Device-owner receiver
 │           ├── res/
 │           │   ├── values/
-│           │   │   ├── themes.xml               # Fullscreen theme
+│           │   │   ├── themes.xml                 # Fullscreen theme
 │           │   │   └── strings.xml
 │           │   └── xml/
-│           │       └── device_admin_receiver.xml # Admin policy metadata
+│           │       └── device_admin_receiver.xml   # Admin policy metadata
 │           └── AndroidManifest.xml
 ├── build.gradle.kts
 └── settings.gradle.kts
+```
+
+## Command Reference
+
+### App lifecycle
+
+```bash
+# Install / update the APK
+adb install -r app\release\app-release.apk
+
+# Launch the app
+adb shell am start -n com.oddbirdout.android/.MainActivity
+
+# Force-stop + relaunch
+adb shell am force-stop com.oddbirdout.android && adb shell am start -n com.oddbirdout.android/.MainActivity
+
+# Open a URL in the device browser (test connectivity)
+adb shell am start -a android.intent.action.VIEW -d "http://192.168.1.100:3000"
+```
+
+### URL configuration
+
+```bash
+# Set the target URL (per tablet)
+adb shell settings put global oddbirdout_url "http://192.168.1.100:3000/?player=A"
+
+# Read the current URL
+adb shell settings get global oddbirdout_url
+```
+
+### Kiosk / device owner
+
+```bash
+# Set app as device owner (enables lock-task pinning)
+adb shell dpm set-device-owner com.oddbirdout.android/.KioskDeviceAdminReceiver
+
+# Make this app the default home screen (auto-launch on boot)
+adb shell cmd package set-home-activity com.oddbirdout.android/.MainActivity
+```
+
+### Screen info
+
+```bash
+# Display resolution
+adb shell wm size
+
+# Display density (DPI)
+adb shell wm density
+```
+
+### WiFi
+
+```bash
+# Enable / disable
+adb shell svc wifi enable
+adb shell svc wifi disable
+
+# Connection status
+adb shell dumpsys wifi | findstr "Wi-Fi"
+adb shell dumpsys wifi | findstr "mWifiInfo"
+
+# Saved networks
+adb shell cmd wifi list-networks
+
+# Connect (Android 11+)
+adb shell cmd wifi connect-network "SSID" wpa2 "password"
+
+# Forget
+adb shell cmd wifi forget-network <networkId>
+```
+
+### Debugging
+
+```bash
+# Ping a host from the tablet
+adb shell ping -c 3 192.168.1.100
+
+# Stream app logcat (filtered)
+adb logcat -s WebViewCallback:* chromium:* MainActivity:*
+
+# Inspect the installed APK manifest
+aapt dump xmltree app\release\app-release.apk AndroidManifest.xml | findstr cleartext
+```
+
+> **Note:** Commands use `findstr` (Windows). On macOS / Linux replace with `grep`.
+
+### Keystore (one-time)
+
+```bash
+# Generate a signing key (run from Android/ directory)
+keytool -genkey -v -keystore oddbirdout.keystore -alias oddbirdout -keyalg RSA -keysize 2048 -validity 10000 -storepass yourpassword -keypass yourpassword -dname "CN=OddBirdOut"
 ```

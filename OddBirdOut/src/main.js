@@ -15,7 +15,7 @@ const config = {
     description: '',
     parent: 'game-container',
     width: 1280,
-    height: 720,
+    height: 768,
     backgroundColor: '#2B1E10',
     pixelArt: true,
     scene: [

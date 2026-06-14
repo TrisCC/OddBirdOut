@@ -13,12 +13,21 @@ android {
 
     defaultConfig {
         applicationId = "com.oddbirdout.android"
-        minSdk = 24
+        minSdk = 27
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    signingConfigs {
+        create("release") {
+            storeFile = rootProject.file("keystore")
+            storePassword = System.getenv("KEYSTORE_PASSWORD") ?: "Ostracism"
+            keyAlias = "key0"
+            keyPassword = System.getenv("KEY_PASSWORD") ?: "Ostracism"
+        }
     }
 
     buildTypes {
@@ -28,6 +37,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("release")
         }
     }
     compileOptions {

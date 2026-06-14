@@ -1,6 +1,8 @@
 package com.oddbirdout.android
 
 import android.annotation.SuppressLint
+import android.app.admin.DevicePolicyManager
+import android.content.ComponentName
 import android.content.Context
 import android.graphics.Color
 import android.net.ConnectivityManager
@@ -17,6 +19,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.WindowInsets
 import android.view.WindowManager
+import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -39,7 +42,6 @@ class MainActivity : ComponentActivity() {
     private val refreshRunnable = object : Runnable {
         override fun run() {
             if (isNetworkAvailable) {
-                setIndicatorRefreshing()
                 webView.reload()
             }
             handler.postDelayed(this, refreshIntervalMs)
@@ -51,6 +53,9 @@ class MainActivity : ComponentActivity() {
 
         window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        setShowWhenLocked(true)
+        setTurnScreenOn(true)
+        disableKeyguard()
         hideSystemBars()
 
         window.decorView.setOnApplyWindowInsetsListener { view, insets ->
@@ -98,6 +103,7 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         hideSystemBars()
+        requestLockTask()
         if (!isPageLoaded && isNetworkAvailable) {
             webView.reload()
         }
@@ -114,10 +120,6 @@ class MainActivity : ComponentActivity() {
             KeyEvent.KEYCODE_APP_SWITCH -> true
             else -> super.onKeyDown(keyCode, event)
         }
-    }
-
-    override fun onUserLeaveHint() {
-        startLockTask()
     }
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -137,14 +139,20 @@ class MainActivity : ComponentActivity() {
             displayZoomControls = false
             mediaPlaybackRequiresUserGesture = false
             mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+            cacheMode = android.webkit.WebSettings.LOAD_NO_CACHE
         }
 
         webViewClient = object : WebViewClient() {
+            override fun onPageStarted(view: WebView, url: String, favicon: android.graphics.Bitmap?) {
+                setIndicatorRefreshing()
+            }
+
             override fun onPageFinished(view: WebView, url: String) {
                 isPageLoaded = true
                 updateIndicator()
             }
 
+            @Suppress("DEPRECATION")
             override fun onReceivedError(
                 view: WebView,
                 errorCode: Int,
@@ -153,6 +161,17 @@ class MainActivity : ComponentActivity() {
             ) {
                 isPageLoaded = false
                 updateIndicator()
+            }
+
+            override fun onReceivedError(
+                view: WebView,
+                request: WebResourceRequest,
+                error: WebResourceError
+            ) {
+                if (request.isForMainFrame) {
+                    isPageLoaded = false
+                    updateIndicator()
+                }
             }
 
             @Suppress("DEPRECATION")
@@ -166,9 +185,14 @@ class MainActivity : ComponentActivity() {
     private fun createIndicator(): View = View(this).apply {
         setBackgroundResource(android.R.drawable.presence_offline)
         visibility = View.VISIBLE
-        isClickable = false
+        isClickable = true
         isFocusable = false
         importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+        setOnLongClickListener {
+            setIndicatorRefreshing()
+            webView.reload()
+            true
+        }
     }
 
     private fun updateIndicator() {
@@ -182,6 +206,14 @@ class MainActivity : ComponentActivity() {
 
     private fun setIndicatorRefreshing() {
         indicator.setBackgroundResource(android.R.drawable.presence_away)
+    }
+
+    private fun disableKeyguard() {
+        val dpm = getSystemService(Context.DEVICE_POLICY_SERVICE) as? DevicePolicyManager ?: return
+        val admin = ComponentName(this, KioskDeviceAdminReceiver::class.java)
+        try {
+            dpm.setKeyguardDisabled(admin, true)
+        } catch (_: Exception) {}
     }
 
     private fun getTargetUrl(): String {
