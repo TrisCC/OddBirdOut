@@ -261,6 +261,7 @@ class GameRoom {
             allReady: this.allPlayersReady(),
             totalRounds: config.TOTAL_ROUNDS,
             game: null,
+            lighting: this.lighting ? this.lighting.getState() : null,
         };
 
         if (this.roundResolver) {

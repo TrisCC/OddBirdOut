@@ -159,6 +159,32 @@ class DmxLighting {
         }
         this.available = false;
     }
+
+    getState() {
+        if (!this.available) return { available: false };
+
+        let mode = 'game';
+        if (config.DMX_TEST_MODE) mode = 'test';
+        else if (this.duskActive) mode = 'dusk';
+
+        return {
+            available: true,
+            mode,
+            target: { ...this.targetRgb },
+            current: {
+                r: Math.round(this.currentRgb.r),
+                g: Math.round(this.currentRgb.g),
+                b: Math.round(this.currentRgb.b),
+            },
+            channels: {
+                r: config.DMX_CHANNEL_R,
+                g: config.DMX_CHANNEL_G,
+                b: config.DMX_CHANNEL_B,
+                mode: config.DMX_CHANNEL_MODE,
+                modeValue: config.DMX_MODE_VALUE,
+            },
+        };
+    }
 }
 
 class UdmxBackend {

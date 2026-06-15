@@ -70,6 +70,83 @@ body {
     margin-left: 8px;
 }
 
+.dmx-bar-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 4px 0;
+}
+
+.dmx-label {
+    width: 16px;
+    font-size: 11px;
+    font-weight: bold;
+    color: #aaa;
+    text-align: center;
+}
+
+.dmx-bar {
+    flex: 1;
+    height: 12px;
+    background: #1a1209;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.dmx-bar-fill {
+    height: 100%;
+    border-radius: 6px;
+    transition: width 0.15s linear;
+}
+
+.dmx-bar-fill.r { background: #F44336; }
+.dmx-bar-fill.g { background: #4CAF50; }
+.dmx-bar-fill.b { background: #2196F3; }
+
+.dmx-val {
+    width: 36px;
+    font-size: 11px;
+    color: #ccc;
+    text-align: right;
+}
+
+.dmx-chan {
+    font-size: 10px;
+    color: #666;
+}
+
+.dmx-swatch {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 2px solid #5D4037;
+    transition: background-color 0.15s linear;
+}
+
+.dmx-row {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.dmx-bars { flex: 1; min-width: 200px; }
+
+.dmx-mode-tag {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.dmx-mode-tag.test { background: #9C27B0; color: #fff; }
+.dmx-mode-tag.dusk { background: #E91E63; color: #fff; }
+.dmx-mode-tag.game { background: #FF9800; color: #fff; }
+.dmx-mode-tag.offline { background: #555; color: #888; }
+
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
 
 .panel {
@@ -255,6 +332,11 @@ td.ostracism-phase { color: #F44336; }
     </div>
 </div>
 
+<div class="panel panel-full" id="dmxPanel">
+    <h3>DMX Lighting</h3>
+    <div id="dmxContent"></div>
+</div>
+
 <div class="panel panel-full">
     <h3>True Scores</h3>
     <div class="scores-row" id="trueScores">
@@ -337,6 +419,7 @@ socket.on('adminState', (data) => {
     renderConnections(data);
     renderGameState(data);
     renderTrueScores(data);
+    renderLighting(data.lighting);
     if (data.state === 'lobby' && data.allReady && !data.game) {
         btnStart.classList.remove('hidden');
     } else {
@@ -561,6 +644,58 @@ function renderHistory() {
 }
 
 disconnectedOverlay.classList.remove('hidden');
+
+function renderLighting(state) {
+    const panel = document.getElementById('dmxPanel');
+    const content = document.getElementById('dmxContent');
+
+    if (!state || !state.available) {
+        panel.classList.remove('hidden');
+        content.innerHTML = '<div style="display:flex;align-items:center;gap:10px;">'
+            + '<span class="dmx-mode-tag offline">OFFLINE</span>'
+            + '<span style="color:#666;font-size:12px;">No DMX device connected</span>'
+            + '</div>';
+        return;
+    }
+
+    panel.classList.remove('hidden');
+
+    const cr = state.current.r;
+    const cg = state.current.g;
+    const cb = state.current.b;
+    const swatchColor = 'rgb(' + cr + ',' + cg + ',' + cb + ')';
+
+    const chLabels = [];
+    if (state.channels.mode > 0) {
+        chLabels.push('Ch ' + state.channels.mode + '=' + state.channels.modeValue);
+    }
+    chLabels.push('R:' + state.channels.r + ' G:' + state.channels.g + ' B:' + state.channels.b);
+
+    let html = '';
+    html += '<div class="dmx-row">';
+    html += '<div class="dmx-swatch" style="background-color:' + swatchColor + ';"></div>';
+    html += '<div class="dmx-bars">';
+    html += barRow('R', cr, '#F44336');
+    html += barRow('G', cg, '#4CAF50');
+    html += barRow('B', cb, '#2196F3');
+    html += '</div>';
+    html += '<div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;">';
+    html += '<span class="dmx-mode-tag ' + state.mode + '">' + state.mode + '</span>';
+    html += '<span class="dmx-chan">' + chLabels.join('  ') + '</span>';
+    html += '</div>';
+    html += '</div>';
+
+    content.innerHTML = html;
+}
+
+function barRow(label, value, color) {
+    const pct = Math.round(value / 255 * 100);
+    return '<div class="dmx-bar-wrap">'
+        + '<span class="dmx-label">' + label + '</span>'
+        + '<div class="dmx-bar"><div class="dmx-bar-fill" style="width:' + pct + '%;background:' + color + ';"></div></div>'
+        + '<span class="dmx-val">' + value + '</span>'
+        + '</div>';
+}
 </script>
 </body>
 </html>
