@@ -214,7 +214,7 @@ class UdmxBackend {
     }
 
     _flush() {
-        this.device.controlTransfer(0x40, 1, 0, 512, this.buffer, (err) => {
+        this.device.controlTransfer(0x40, 1, 0, 0, this.buffer, (err) => {
             if (err) { /* silently ignore */ }
         });
     }

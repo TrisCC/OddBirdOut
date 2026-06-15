@@ -49,7 +49,7 @@ try {
 
 function sendFrame(buffer) {
     return new Promise((resolve, reject) => {
-        device.controlTransfer(0x40, 1, 0, buffer.length, buffer, (err) => {
+        device.controlTransfer(0x40, 1, 0, 0, buffer, (err) => {
             if (err) reject(err);
             else resolve();
         });
