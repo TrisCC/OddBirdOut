@@ -17,48 +17,23 @@ try {
 console.log('\n2. Searching for uDMX device (VID=0x' + config.DMX_UDMX_VID.toString(16) + ', PID=0x' + config.DMX_UDMX_PID.toString(16) + ')...');
 const device = usb.findByIds(config.DMX_UDMX_VID, config.DMX_UDMX_PID);
 if (!device) {
-    console.error('   FAIL: uDMX device not found. Listing all USB devices:');
-    usb.getDeviceList().forEach(d => {
-        const desc = d.deviceDescriptor;
-        console.error('   - VID=0x' + desc.idVendor.toString(16) + ' PID=0x' + desc.idProduct.toString(16));
-    });
+    console.error('   FAIL: uDMX device not found.');
     process.exit(1);
 }
 console.log('   OK: device found');
 
-// 3. Print device info
-const desc = device.deviceDescriptor;
-console.log('\n3. Device descriptor:');
-console.log('   bDeviceClass:   ' + desc.bDeviceClass);
-console.log('   idVendor:      0x' + desc.idVendor.toString(16));
-console.log('   idProduct:     0x' + desc.idProduct.toString(16));
-console.log('   iManufacturer:  ' + desc.iManufacturer);
-console.log('   iProduct:       ' + desc.iProduct);
-console.log('   bNumConfigurations: ' + desc.bNumConfigurations);
-
-// 4. Open the device
-console.log('\n4. Opening device...');
+// 3. Open the device
+console.log('\n3. Opening device...');
 try {
     device.open();
     console.log('   OK: device opened');
 } catch (e) {
     console.error('   FAIL: cannot open device:', e.message);
-    console.error('   Hint: check udev rules and permissions on /dev/bus/usb/');
     process.exit(1);
 }
 
-// 5. Get interface info
-console.log('\n5. Interface info:');
-const interfaces = device.interfaces;
-console.log('   Number of interfaces: ' + interfaces.length);
-for (let i = 0; i < interfaces.length; i++) {
-    const iface = interfaces[i];
-    console.log('   Interface ' + i + ':');
-    console.log('     isKernelDriverActive: ' + iface.isKernelDriverActive());
-}
-
-// 6. Claim interface
-console.log('\n6. Claiming interface 0...');
+// 4. Claim interface
+console.log('\n4. Claiming interface 0...');
 try {
     const iface = device.interfaces[0];
     if (iface.isKernelDriverActive()) {
@@ -72,16 +47,6 @@ try {
     process.exit(1);
 }
 
-// 7. Send DMX values using bRequest=1 (TX_CHANNELS) with full frame buffer
-console.log('\n7. Sending test DMX values (bRequest=1, TX_CHANNELS)...');
-console.log('   Channels: R=' + config.DMX_CHANNEL_R + ' G=' + config.DMX_CHANNEL_G + ' B=' + config.DMX_CHANNEL_B);
-
-const chR = config.DMX_CHANNEL_R;
-const chG = config.DMX_CHANNEL_G;
-const chB = config.DMX_CHANNEL_B;
-const chMode = config.DMX_CHANNEL_MODE;
-const maxCh = Math.max(chR, chG, chB, chMode > 0 ? chMode : 0);
-
 function sendFrame(buffer) {
     return new Promise((resolve, reject) => {
         device.controlTransfer(0x40, 1, 0, buffer.length, buffer, (err) => {
@@ -91,98 +56,96 @@ function sendFrame(buffer) {
     });
 }
 
-function makeFrame(maxChannel) {
-    const buf = Buffer.alloc(maxChannel, 0);
-    return buf;
+function makeBuffer(maxChannel) {
+    return Buffer.alloc(maxChannel, 0);
+}
+
+async function testConfig(label, channels, maxChannel) {
+    // channels is an object: { channelNumber: value, ... }
+    const buf = makeBuffer(maxChannel);
+    for (const [ch, val] of Object.entries(channels)) {
+        buf[ch - 1] = val;
+    }
+    process.stdout.write('   ' + label + '... ');
+    try {
+        await sendFrame(buf);
+        console.log('sent OK');
+        return true;
+    } catch (e) {
+        console.log('FAIL: ' + e.message);
+        return false;
+    }
 }
 
 async function runTest() {
-    // Blackout
-    try {
-        const buf = makeFrame(maxCh);
-        if (chMode > 0) buf[chMode - 1] = config.DMX_MODE_VALUE;
-        await sendFrame(buf);
-        console.log('   Blackout sent — lamp should be OFF');
-    } catch (e) {
-        console.error('   FAIL: blackout error:', e.message);
-    }
+    const chR = config.DMX_CHANNEL_R;
+    const chG = config.DMX_CHANNEL_G;
+    const chB = config.DMX_CHANNEL_B;
+    const chMode = config.DMX_CHANNEL_MODE;
 
-    await sleep(1500);
+    console.log('\n5. Testing DMX output (current config: R=ch' + chR + ' G=ch' + chG + ' B=ch' + chB + ' mode=ch' + (chMode || 'none') + ')');
+    console.log('   Watch your PAR light for color changes.\n');
 
-    // Red
-    try {
-        const buf = makeFrame(maxCh);
-        if (chMode > 0) buf[chMode - 1] = config.DMX_MODE_VALUE;
-        buf[chR - 1] = 255;
-        buf[chG - 1] = 0;
-        buf[chB - 1] = 0;
-        await sendFrame(buf);
-        console.log('   RED sent (R=255) — lamp should show RED');
-    } catch (e) {
-        console.error('   FAIL: red error:', e.message);
-    }
-
-    await sleep(2000);
-
-    // Green
-    try {
-        const buf = makeFrame(maxCh);
-        if (chMode > 0) buf[chMode - 1] = config.DMX_MODE_VALUE;
-        buf[chR - 1] = 0;
-        buf[chG - 1] = 255;
-        buf[chB - 1] = 0;
-        await sendFrame(buf);
-        console.log('   GREEN sent (G=255) — lamp should show GREEN');
-    } catch (e) {
-        console.error('   FAIL: green error:', e.message);
-    }
-
-    await sleep(2000);
-
-    // Blue
-    try {
-        const buf = makeFrame(maxCh);
-        if (chMode > 0) buf[chMode - 1] = config.DMX_MODE_VALUE;
-        buf[chR - 1] = 0;
-        buf[chG - 1] = 0;
-        buf[chB - 1] = 255;
-        await sendFrame(buf);
-        console.log('   BLUE sent (B=255) — lamp should show BLUE');
-    } catch (e) {
-        console.error('   FAIL: blue error:', e.message);
-    }
-
-    await sleep(2000);
-
-    // White (full RGB)
-    try {
-        const buf = makeFrame(maxCh);
-        if (chMode > 0) buf[chMode - 1] = config.DMX_MODE_VALUE;
-        buf[chR - 1] = 255;
-        buf[chG - 1] = 255;
-        buf[chB - 1] = 255;
-        await sendFrame(buf);
-        console.log('   WHITE sent (R=255, G=255, B=255) — lamp should show WHITE');
-    } catch (e) {
-        console.error('   FAIL: white error:', e.message);
-    }
-
-    await sleep(2000);
+    const maxCh = Math.max(chR, chG, chB, chMode || 0);
 
     // Blackout
-    try {
-        const buf = makeFrame(maxCh);
-        if (chMode > 0) buf[chMode - 1] = config.DMX_MODE_VALUE;
-        await sendFrame(buf);
-        console.log('   Blackout sent — lamp should be OFF');
-    } catch (e) {}
+    await testConfig('Blackout (all 0)', {}, maxCh);
+    await new Promise(r => setTimeout(r, 1000));
+
+    // Test 1: Red on current config
+    const channels1 = {};
+    if (chMode > 0) channels1[chMode] = config.DMX_MODE_VALUE;
+    channels1[chR] = 255;
+    await testConfig('RED (config channels)', channels1, maxCh);
+    await new Promise(r => setTimeout(r, 2000));
+
+    // Blackout
+    await testConfig('Blackout', {}, maxCh);
+    await new Promise(r => setTimeout(r, 1000));
+
+    // Test 2: Try common 4-channel mode (dimmer on ch1, RGB on ch2-4)
+    if (chMode === 0) {
+        console.log('\n   Trying 4-channel mode (ch1=255/dimmer, ch2=R, ch3=G, ch4=B)...');
+        const channels4 = { 1: 255, 2: 255, 3: 0, 4: 0 };
+        await testConfig('4ch: Dimmer=255, RED', channels4, 4);
+        await new Promise(r => setTimeout(r, 2000));
+
+        const channels4g = { 1: 255, 2: 0, 3: 255, 4: 0 };
+        await testConfig('4ch: Dimmer=255, GREEN', channels4g, 4);
+        await new Promise(r => setTimeout(r, 2000));
+
+        const channels4b = { 1: 255, 2: 0, 3: 0, 4: 255 };
+        await testConfig('4ch: Dimmer=255, BLUE', channels4b, 4);
+        await new Promise(r => setTimeout(r, 2000));
+
+        await testConfig('4ch: Blackout', {}, 4);
+    }
+
+    // Test 3: Try all channels 1-6 to see what responds
+    console.log('\n   Sweeping ch1-6 with value 255 one at a time...');
+    for (let ch = 1; ch <= 6; ch++) {
+        const channels = {};
+        channels[ch] = 255;
+        await testConfig('ch' + ch + '=255, rest=0', channels, 6);
+        await new Promise(r => setTimeout(r, 1000));
+        await testConfig('  clear', {}, 6);
+        await new Promise(r => setTimeout(r, 300));
+    }
+
+    // Final blackout
+    await testConfig('Final blackout', {}, Math.max(maxCh, 6));
 
     console.log('\n=== Diagnostic complete ===');
-    console.log('\nTips if PAR did not respond:');
-    console.log('  - Check DMX cable is connected (XLR 3-pin or 5-pin)');
-    console.log('  - Check PAR DMX start address matches channel config');
-    console.log('  - Many PARs need a mode channel — set DMX_CHANNEL_MODE and DMX_MODE_VALUE');
-    console.log('  - Try DMX_CHANNEL_MODE=1 DMX_MODE_VALUE=0 (common for RGB mode on channel 2/3/4)');
+    console.log('\nIf the PAR responded during the 4-channel or sweep tests:');
+    console.log('  - Note which channels caused color changes');
+    console.log('  - Update config.js accordingly:');
+    console.log('    * If ch1=255 was needed first: DMX_CHANNEL_MODE=1, DMX_MODE_VALUE=255');
+    console.log('    * If RGB was on ch2/3/4: DMX_CHANNEL_R=2, DMX_CHANNEL_G=3, DMX_CHANNEL_B=4');
+    console.log('    * If RGB was on ch1/2/3: DMX_CHANNEL_R=1, DMX_CHANNEL_G=2, DMX_CHANNEL_B=3');
+    console.log('\nIf nothing caused any change:');
+    console.log('  - Check the DMX cable connection (XLR)');
+    console.log('  - Check the PAR DMX address/starting channel (usually DIP switches)');
+    console.log('  - Check the PAR is in DMX mode (not auto or sound mode)');
 
     try {
         device.interfaces[0].release(() => {
@@ -192,10 +155,6 @@ async function runTest() {
     } catch (e) {
         process.exit(0);
     }
-}
-
-function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 runTest().catch(e => {
