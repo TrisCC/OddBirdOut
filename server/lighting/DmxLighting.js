@@ -16,10 +16,22 @@ class DmxLighting {
             { r: 255, g: 69, b: 0 },
             { r: 0, g: 0, b: 139 },
         ];
+        this._testStartTime = 0;
+        this._testCycleMs = 10000;
 
         this._tryUdmx();
         if (!this.available) this._trySerialDmx();
-        if (!this.available) return;
+        if (!this.available) {
+            if (config.DMX_TEST_MODE) {
+                console.error('DMX test mode enabled but no device found.');
+            }
+            return;
+        }
+
+        if (config.DMX_TEST_MODE) {
+            this._testStartTime = Date.now();
+            console.log('DMX test mode active — cycling through all hues');
+        }
 
         this._startAnimationLoop();
     }
@@ -46,7 +58,7 @@ class DmxLighting {
             dmx.on('error', () => {});
             const universe = dmx.addUniverse('oddbirdout', config.DMX_DRIVER, config.DMX_DEVICE);
             universe.on('error', () => {});
-            this.backend = new SerialDmxBackend(universe, config.DMX_START_CHANNEL);
+            this.backend = new SerialDmxBackend(universe);
             this.available = true;
             console.log(`DMX lighting ready via serial (${config.DMX_DRIVER} on ${config.DMX_DEVICE})`);
         } catch (err) {
@@ -60,13 +72,24 @@ class DmxLighting {
     }
 
     _animateTick() {
-        if (this.duskActive) this._updateDuskTarget();
+        if (config.DMX_TEST_MODE) {
+            this._updateTestHueTarget();
+        } else if (this.duskActive) {
+            this._updateDuskTarget();
+        }
         this._lerpTowardTarget();
         this._write(
             Math.round(this.currentRgb.r),
             Math.round(this.currentRgb.g),
             Math.round(this.currentRgb.b)
         );
+    }
+
+    _updateTestHueTarget() {
+        const elapsed = Date.now() - this._testStartTime;
+        const hue = ((elapsed % this._testCycleMs) / this._testCycleMs) * 360;
+        const rgb = hsvToRgb(hue, 1, 1);
+        this._setTargetRGB(rgb.r, rgb.g, rgb.b);
     }
 
     _updateDuskTarget() {
@@ -152,19 +175,25 @@ class UdmxBackend {
         const iface = this.device.interfaces[0];
         if (iface.isKernelDriverActive()) iface.detachKernelDriver();
         iface.claim();
+
+        this._sendModeChannel();
     }
 
     writeRGB(r, g, b) {
-        const ch = config.DMX_START_CHANNEL;
-        this._setChannel(ch, r);
-        this._setChannel(ch + 1, g);
-        this._setChannel(ch + 2, b);
+        this._setChannel(config.DMX_CHANNEL_R, r);
+        this._setChannel(config.DMX_CHANNEL_G, g);
+        this._setChannel(config.DMX_CHANNEL_B, b);
     }
 
     _setChannel(channel, value) {
         this.device.controlTransfer(0x40, 2, channel, value, Buffer.alloc(0), (err) => {
             if (err) { /* silently ignore */ }
         });
+    }
+
+    _sendModeChannel() {
+        if (!config.DMX_CHANNEL_MODE || config.DMX_CHANNEL_MODE <= 0) return;
+        this._setChannel(config.DMX_CHANNEL_MODE, config.DMX_MODE_VALUE);
     }
 
     close() {
@@ -174,17 +203,45 @@ class UdmxBackend {
 
 class SerialDmxBackend {
 
-    constructor(universe, startChannel) {
+    constructor(universe) {
         this.universe = universe;
-        this.startChannel = startChannel;
+        this._sendModeChannel();
     }
 
     writeRGB(r, g, b) {
-        const ch = this.startChannel;
-        this.universe.update({ [ch]: r, [ch + 1]: g, [ch + 2]: b });
+        this.universe.update({
+            [config.DMX_CHANNEL_R]: r,
+            [config.DMX_CHANNEL_G]: g,
+            [config.DMX_CHANNEL_B]: b,
+        });
+    }
+
+    _sendModeChannel() {
+        if (!config.DMX_CHANNEL_MODE || config.DMX_CHANNEL_MODE <= 0) return;
+        this.universe.update({
+            [config.DMX_CHANNEL_MODE]: config.DMX_MODE_VALUE,
+        });
     }
 
     close() {}
+}
+
+function hsvToRgb(h, s, v) {
+    const c = v * s;
+    const x = c * (1 - Math.abs((h / 60) % 2 - 1));
+    const m = v - c;
+    let rp, gp, bp;
+    if (h < 60) { rp = c; gp = x; bp = 0; }
+    else if (h < 120) { rp = x; gp = c; bp = 0; }
+    else if (h < 180) { rp = 0; gp = c; bp = x; }
+    else if (h < 240) { rp = 0; gp = x; bp = c; }
+    else if (h < 300) { rp = x; gp = 0; bp = c; }
+    else { rp = c; gp = 0; bp = x; }
+    return {
+        r: Math.round((rp + m) * 255),
+        g: Math.round((gp + m) * 255),
+        b: Math.round((bp + m) * 255),
+    };
 }
 
 module.exports = { DmxLighting };
