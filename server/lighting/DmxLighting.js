@@ -202,26 +202,24 @@ class UdmxBackend {
         if (iface.isKernelDriverActive()) iface.detachKernelDriver();
         iface.claim();
 
-        this.buffer = Buffer.alloc(512, 0);
         this._sendModeChannel();
     }
 
     writeRGB(r, g, b) {
-        this.buffer[config.DMX_CHANNEL_R - 1] = r;
-        this.buffer[config.DMX_CHANNEL_G - 1] = g;
-        this.buffer[config.DMX_CHANNEL_B - 1] = b;
-        this._flush();
+        this._setChannel(config.DMX_CHANNEL_R, r);
+        this._setChannel(config.DMX_CHANNEL_G, g);
+        this._setChannel(config.DMX_CHANNEL_B, b);
     }
 
-    _flush() {
-        this.device.controlTransfer(0x40, 1, 0, 0, this.buffer, (err) => {
+    _setChannel(channel, value) {
+        this.device.controlTransfer(0x40, 2, channel, 0, Buffer.from([value]), (err) => {
             if (err) { /* silently ignore */ }
         });
     }
 
     _sendModeChannel() {
         if (!config.DMX_CHANNEL_MODE || config.DMX_CHANNEL_MODE <= 0) return;
-        this.buffer[config.DMX_CHANNEL_MODE - 1] = config.DMX_MODE_VALUE;
+        this._setChannel(config.DMX_CHANNEL_MODE, config.DMX_MODE_VALUE);
     }
 
     close() {
