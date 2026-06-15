@@ -214,10 +214,7 @@ class UdmxBackend {
     }
 
     _flush() {
-        const start = 0;
-        const end = Math.max(config.DMX_CHANNEL_R, config.DMX_CHANNEL_G, config.DMX_CHANNEL_B, config.DMX_CHANNEL_MODE || 0);
-        const slice = this.buffer.slice(start, end);
-        this.device.controlTransfer(0x40, 1, start, end, slice, (err) => {
+        this.device.controlTransfer(0x40, 1, 0, 512, this.buffer, (err) => {
             if (err) { /* silently ignore */ }
         });
     }
