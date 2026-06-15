@@ -43,7 +43,7 @@ try {
     console.log('   OK: device opened');
 } catch (e) {
     console.error('   FAIL: cannot open device:', e.message);
-    console.error('   Hint: check udev rules and permissions on /dev/bus/usb/001/');
+    console.error('   Hint: check udev rules and permissions on /dev/bus/usb/');
     process.exit(1);
 }
 
@@ -54,7 +54,6 @@ console.log('   Number of interfaces: ' + interfaces.length);
 for (let i = 0; i < interfaces.length; i++) {
     const iface = interfaces[i];
     console.log('   Interface ' + i + ':');
-    console.log('     interfaceNumber: ' + iface.interfaceNumber);
     console.log('     isKernelDriverActive: ' + iface.isKernelDriverActive());
 }
 
@@ -73,84 +72,118 @@ try {
     process.exit(1);
 }
 
-// 7. Try sending DMX values
-console.log('\n7. Sending test DMX values to channels R=' + config.DMX_CHANNEL_R + ' G=' + config.DMX_CHANNEL_G + ' B=' + config.DMX_CHANNEL_B + '...');
+// 7. Send DMX values using bRequest=1 (TX_CHANNELS) with full frame buffer
+console.log('\n7. Sending test DMX values (bRequest=1, TX_CHANNELS)...');
+console.log('   Channels: R=' + config.DMX_CHANNEL_R + ' G=' + config.DMX_CHANNEL_G + ' B=' + config.DMX_CHANNEL_B);
 
-function setChannel(channel, value) {
+const chR = config.DMX_CHANNEL_R;
+const chG = config.DMX_CHANNEL_G;
+const chB = config.DMX_CHANNEL_B;
+const chMode = config.DMX_CHANNEL_MODE;
+const maxCh = Math.max(chR, chG, chB, chMode > 0 ? chMode : 0);
+
+function sendFrame(buffer) {
     return new Promise((resolve, reject) => {
-        device.controlTransfer(0x40, 2, channel, value, Buffer.alloc(0), (err) => {
+        device.controlTransfer(0x40, 1, 0, buffer.length, buffer, (err) => {
             if (err) reject(err);
             else resolve();
         });
     });
 }
 
+function makeFrame(maxChannel) {
+    const buf = Buffer.alloc(maxChannel, 0);
+    return buf;
+}
+
 async function runTest() {
-    // Test: set all channels to 0 (blackout)
+    // Blackout
     try {
-        await setChannel(config.DMX_CHANNEL_R, 0);
-        await setChannel(config.DMX_CHANNEL_G, 0);
-        await setChannel(config.DMX_CHANNEL_B, 0);
-        console.log('   Blackout sent');
+        const buf = makeFrame(maxCh);
+        if (chMode > 0) buf[chMode - 1] = config.DMX_MODE_VALUE;
+        await sendFrame(buf);
+        console.log('   Blackout sent — lamp should be OFF');
     } catch (e) {
-        console.error('   FAIL: blackout controlTransfer error:', e.message);
+        console.error('   FAIL: blackout error:', e.message);
     }
 
-    await sleep(500);
+    await sleep(1500);
 
-    // Test: set R channel to 255 (should turn red if PAR is on correct DMX address)
+    // Red
     try {
-        await setChannel(config.DMX_CHANNEL_R, 255);
-        await setChannel(config.DMX_CHANNEL_G, 0);
-        await setChannel(config.DMX_CHANNEL_B, 0);
-        console.log('   RED sent (R=255, G=0, B=0) — is your PAR showing red?');
+        const buf = makeFrame(maxCh);
+        if (chMode > 0) buf[chMode - 1] = config.DMX_MODE_VALUE;
+        buf[chR - 1] = 255;
+        buf[chG - 1] = 0;
+        buf[chB - 1] = 0;
+        await sendFrame(buf);
+        console.log('   RED sent (R=255) — lamp should show RED');
     } catch (e) {
-        console.error('   FAIL: red controlTransfer error:', e.message);
+        console.error('   FAIL: red error:', e.message);
     }
 
     await sleep(2000);
 
-    // Test: set all to 255 (white if RGBW or bright if RGB)
+    // Green
     try {
-        await setChannel(config.DMX_CHANNEL_R, 255);
-        await setChannel(config.DMX_CHANNEL_G, 255);
-        await setChannel(config.DMX_CHANNEL_B, 255);
-        console.log('   WHITE sent (R=255, G=255, B=255)');
+        const buf = makeFrame(maxCh);
+        if (chMode > 0) buf[chMode - 1] = config.DMX_MODE_VALUE;
+        buf[chR - 1] = 0;
+        buf[chG - 1] = 255;
+        buf[chB - 1] = 0;
+        await sendFrame(buf);
+        console.log('   GREEN sent (G=255) — lamp should show GREEN');
     } catch (e) {
-        console.error('   FAIL: white controlTransfer error:', e.message);
+        console.error('   FAIL: green error:', e.message);
     }
 
     await sleep(2000);
 
-    // Test: mode channel (if configured)
-    if (config.DMX_CHANNEL_MODE > 0) {
-        try {
-            await setChannel(config.DMX_CHANNEL_MODE, config.DMX_MODE_VALUE);
-            console.log('   Mode channel ' + config.DMX_CHANNEL_MODE + ' set to ' + config.DMX_MODE_VALUE);
-        } catch (e) {
-            console.error('   FAIL: mode channel controlTransfer error:', e.message);
-        }
-    } else {
-        console.log('   Mode channel not configured (DMX_CHANNEL_MODE=0)');
+    // Blue
+    try {
+        const buf = makeFrame(maxCh);
+        if (chMode > 0) buf[chMode - 1] = config.DMX_MODE_VALUE;
+        buf[chR - 1] = 0;
+        buf[chG - 1] = 0;
+        buf[chB - 1] = 255;
+        await sendFrame(buf);
+        console.log('   BLUE sent (B=255) — lamp should show BLUE');
+    } catch (e) {
+        console.error('   FAIL: blue error:', e.message);
     }
+
+    await sleep(2000);
+
+    // White (full RGB)
+    try {
+        const buf = makeFrame(maxCh);
+        if (chMode > 0) buf[chMode - 1] = config.DMX_MODE_VALUE;
+        buf[chR - 1] = 255;
+        buf[chG - 1] = 255;
+        buf[chB - 1] = 255;
+        await sendFrame(buf);
+        console.log('   WHITE sent (R=255, G=255, B=255) — lamp should show WHITE');
+    } catch (e) {
+        console.error('   FAIL: white error:', e.message);
+    }
+
+    await sleep(2000);
 
     // Blackout
-    await sleep(1000);
     try {
-        await setChannel(config.DMX_CHANNEL_R, 0);
-        await setChannel(config.DMX_CHANNEL_G, 0);
-        await setChannel(config.DMX_CHANNEL_B, 0);
-        console.log('   Blackout sent');
+        const buf = makeFrame(maxCh);
+        if (chMode > 0) buf[chMode - 1] = config.DMX_MODE_VALUE;
+        await sendFrame(buf);
+        console.log('   Blackout sent — lamp should be OFF');
     } catch (e) {}
 
     console.log('\n=== Diagnostic complete ===');
     console.log('\nTips if PAR did not respond:');
-    console.log('  - Check PAR DMX address matches channels ' + config.DMX_CHANNEL_R + '/' + config.DMX_CHANNEL_G + '/' + config.DMX_CHANNEL_B);
-    console.log('  - Check DMX cable is connected from uDMX adapter to PAR');
-    console.log('  - Try setting DMX_CHANNEL_MODE to the mode channel and DMX_MODE_VALUE to the RGB mode value');
-    console.log('  - Some PARs need channel 1 set to a specific value (e.g. 0 or 255) for DMX control');
+    console.log('  - Check DMX cable is connected (XLR 3-pin or 5-pin)');
+    console.log('  - Check PAR DMX start address matches channel config');
+    console.log('  - Many PARs need a mode channel — set DMX_CHANNEL_MODE and DMX_MODE_VALUE');
+    console.log('  - Try DMX_CHANNEL_MODE=1 DMX_MODE_VALUE=0 (common for RGB mode on channel 2/3/4)');
 
-    // Release
     try {
         device.interfaces[0].release(() => {
             device.close();
