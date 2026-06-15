@@ -4,6 +4,7 @@ const path = require('path');
 const { Server } = require('socket.io');
 const config = require('./config');
 const { GameRoom } = require('./game/GameRoom');
+const { DmxLighting } = require('./lighting/DmxLighting');
 
 const app = express();
 const server = http.createServer(app);
@@ -15,7 +16,8 @@ app.get('/admin', (req, res) => {
     res.sendFile(path.join(__dirname, 'admin.html'));
 });
 
-const gameRoom = new GameRoom(io);
+const lighting = new DmxLighting();
+const gameRoom = new GameRoom(io, lighting);
 
 io.on('connection', (socket) => {
     gameRoom.handleConnection(socket);
@@ -25,4 +27,14 @@ server.listen(config.PORT, () => {
     console.log(`Odd Bird Out server running on port ${config.PORT}`);
     console.log(`Admin dashboard at http://localhost:${config.PORT}/admin`);
     console.log(`Serving static files from ${config.STATIC_DIR}`);
+});
+
+process.on('SIGINT', () => {
+    lighting.shutdown();
+    process.exit();
+});
+
+process.on('SIGTERM', () => {
+    lighting.shutdown();
+    process.exit();
 });

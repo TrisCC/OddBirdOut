@@ -14,13 +14,14 @@ const SIDE_ORDER = {
 
 class RoundResolver {
 
-    constructor(io, playerSockets) {
+    constructor(io, playerSockets, lighting) {
         this.io = io;
         this.playerSockets = playerSockets;
         this.gameState = new GameState();
         this.roundTimer = null;
         this.gameActive = false;
         this.adminCallback = null;
+        this.lighting = lighting || null;
         this.perPlayerIllusionScores = {
             A: config.STARTING_SEEDS,
             B: config.STARTING_SEEDS,
@@ -72,6 +73,11 @@ class RoundResolver {
         };
 
         this.broadcastToAll('roundStart', payload);
+
+        if (this.lighting) {
+            const progress = (this.gameState.round - 1) / (config.TOTAL_ROUNDS - 1);
+            this.lighting.setDaytime(progress);
+        }
 
         if (!config.DEBUG_MODE) {
             this.roundTimer = setTimeout(() => {
@@ -238,6 +244,10 @@ class RoundResolver {
 
     endGame() {
         this.gameActive = false;
+
+        if (this.lighting) {
+            this.lighting.startDusk();
+        }
 
         const winner = this.gameState.getWinner();
         const trueState = {

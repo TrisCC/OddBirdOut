@@ -10,7 +10,7 @@ const VALID_ROLES = ['A', 'B', 'C'];
  */
 class GameRoom {
 
-    constructor(io) {
+    constructor(io, lighting) {
         this.io = io;
         this.players = {};
         this.readyPlayers = new Set();
@@ -18,6 +18,11 @@ class GameRoom {
         this.reconnectTimers = {};
         this.adminSockets = new Set();
         this.stateBroadcastTimer = null;
+        this.lighting = lighting || null;
+
+        if (this.lighting) {
+            this.lighting.setNighttime();
+        }
 
         this.startStateBroadcast();
     }
@@ -151,10 +156,14 @@ class GameRoom {
     }
 
     startGame() {
-        this.roundResolver = new RoundResolver(this.io, { ...this.players });
+        this.roundResolver = new RoundResolver(this.io, { ...this.players }, this.lighting);
         this.roundResolver.setAdminCallback((data) => {
             this.broadcastToAdmins('adminRoundResult', data);
         });
+
+        if (this.lighting) {
+            this.lighting.setDaytime(0);
+        }
 
         for (const playerId of VALID_ROLES) {
             const socketId = this.players[playerId];
@@ -204,6 +213,9 @@ class GameRoom {
             clearTimeout(timer);
         }
         this.reconnectTimers = {};
+        if (this.lighting) {
+            this.lighting.setNighttime();
+        }
         this.broadcastLobbyUpdate();
     }
 

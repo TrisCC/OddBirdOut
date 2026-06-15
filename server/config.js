@@ -18,4 +18,11 @@ module.exports = {
     GAME_POLL_INTERVAL_MS: 10000,
     POSTGAME_POLL_INTERVAL_MS: 30000,
     CLIENT_HEARTBEAT_INTERVAL_MS: 10000,
+
+    // DMX lighting
+    DMX_DEVICE: '/dev/ttyUSB0',
+    DMX_DRIVER: 'enttec-open-usb-dmx',
+    DMX_START_CHANNEL: 1,
+    DMX_UDMX_VID: 0x16c0,
+    DMX_UDMX_PID: 0x05dc,
 };
