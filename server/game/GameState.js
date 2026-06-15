@@ -1,18 +1,17 @@
-const { STARTING_SEEDS, SEEDS_PER_ROUND_DRAIN, PHASE1_ROUNDS } = require('../config');
+const { STARTING_EGGS, PHASE1_ROUNDS } = require('../config');
 
 class GameState {
 
     constructor() {
         this.round = 1;
         this.phase = 'trust';
-        this.scores = { A: STARTING_SEEDS, B: STARTING_SEEDS, C: STARTING_SEEDS };
+        this.scores = { A: STARTING_EGGS, B: STARTING_EGGS, C: STARTING_EGGS };
         this.alive = { A: true, B: true, C: true };
         this.currentActions = [];
         this.actionSubmitted = { A: false, B: false, C: false };
         this.roundHistory = [];
         this._roundActive = false;
         this._actionQueue = [];
-        this._dyingThisRound = [];
     }
 
     isRoundActive() {
@@ -41,16 +40,6 @@ class GameState {
         this.currentActions = [];
         this.actionSubmitted = { A: false, B: false, C: false };
         this._roundActive = true;
-        this._dyingThisRound = [];
-
-        for (const player of ['A', 'B', 'C']) {
-            if (this.alive[player]) {
-                this.scores[player] -= SEEDS_PER_ROUND_DRAIN;
-                if (this.scores[player] <= 0) {
-                    this._dyingThisRound.push(player);
-                }
-            }
-        }
 
         if (this.round === 1) {
             this.phase = 'trust';
@@ -94,10 +83,9 @@ class GameState {
 
             if (mutualPair) {
                 const partner = shareTarget[mutualPair];
-                const excluded = alivePlayers.find(p => p !== mutualPair && p !== partner);
+                // The excluded player neither gains nor loses eggs this round
                 deltas[mutualPair] += 1;
                 deltas[partner] += 1;
-                deltas[excluded] -= 1;
             } else {
                 // Three-way share: everyone gives and everyone receives
                 for (const p of alivePlayers) deltas[p] += 1;
@@ -119,10 +107,6 @@ class GameState {
         for (const player of ['A', 'B', 'C']) {
             if (this.alive[player]) {
                 this.scores[player] += deltas[player];
-                if (this.scores[player] <= 0) {
-                    this.alive[player] = false;
-                    newlyDead.push(player);
-                }
             }
         }
 

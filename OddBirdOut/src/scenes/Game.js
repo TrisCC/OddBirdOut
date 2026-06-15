@@ -21,7 +21,7 @@ export class Game extends Phaser.Scene {
         this.socketManager = data.socketManager;
         this.playerId = data.playerId;
         this.totalRounds = data.totalRounds;
-        this.startingSeeds = data.startingSeeds || 10;
+        this.startingEggs = data.startingEggs ?? 0;
     }
 
     create() {
@@ -44,8 +44,8 @@ export class Game extends Phaser.Scene {
         this.currentRound = 0;
         this.currentPhase = 'trust';
         this.submitted = false;
-        this.seedSprites = [];
-        this.currentScores = { A: this.startingSeeds, B: this.startingSeeds, C: this.startingSeeds };
+        this.eggSprites = [];
+        this.currentScores = { A: this.startingEggs, B: this.startingEggs, C: this.startingEggs };
     }
 
     buildHUD() {
@@ -60,8 +60,8 @@ export class Game extends Phaser.Scene {
         this.timerBar = this.add.rectangle(20, 18, 0, 14, 0x4CAF50);
         this.timerBar.setOrigin(0, 0);
 
-        this.eggIcon = this.add.image(this.scale.width / 2, 78, 'golden_egg');
-        this.eggIcon.setScale(1.2);
+        this.eggIcon = this.add.image(this.scale.width / 2, 78, 'egg');
+        this.eggIcon.setScale(2.4);
 
         this.eggProgressText = this.add.text(this.scale.width / 2, 100, '', {
             fontFamily: '"Press Start 2P"',
@@ -86,7 +86,7 @@ export class Game extends Phaser.Scene {
         const playerOrder = [others[0], this.playerId, others[1]];
 
         this.ostriches = {};
-        this.seedCounts = {};
+        this.eggCounts = {};
         this.ostrichPositions = {};
 
         const positions = [
@@ -114,13 +114,13 @@ export class Game extends Phaser.Scene {
                 color: labelColor,
             }).setOrigin(0.5);
 
-            this.seedCounts[id] = this.add.text(pos.x, pos.y + 80, String(this.startingSeeds), {
+            this.eggCounts[id] = this.add.text(pos.x, pos.y + 80, String(this.startingEggs), {
                 fontFamily: '"Press Start 2P"',
                 fontSize: '20px',
                 color: '#FFD700',
             }).setOrigin(0.5);
 
-            this.add.image(pos.x, pos.y + 105, 'seed').setScale(0.8);
+            this.add.image(pos.x, pos.y + 105, 'egg').setScale(0.8);
         }
     }
 
@@ -186,53 +186,98 @@ export class Game extends Phaser.Scene {
     }
 
     setupListeners() {
+        this.eventQueue = [];
+        this.animating = false;
+
         this.socketManager.on('roundStart', (data) => {
-            this.currentRound = data.round;
-            this.currentPhase = data.phase;
-            this.submitted = false;
-
-            this.roundText.setText(`Round ${data.round} / ${this.totalRounds}`);
-
-            this.statusText.setText('');
-            this.enableButtons();
-
-            if (data.debugMode) {
-                const barWidth = this.scale.width - 40;
-                this.timerBar.width = barWidth;
-                this.timerBar.fillColor = 0x2196F3;
-            } else {
-                this.startTimer(data.roundDurationMs);
-            }
+            this.eventQueue.push({ type: 'roundStart', data });
+            this.processEventQueue();
         });
 
         this.socketManager.on('roundResult', (data) => {
-            // Capture deltas before scores update
-            const deltas = {};
-            for (const [key, newVal] of Object.entries(data.scores)) {
-                const id = key === 'You' ? this.playerId : key;
-                deltas[id] = newVal - (this.currentScores[id] ?? this.startingSeeds);
-            }
-
-            this.tweens.killAll();
-            this.timerBar.width = 0;
-            this.statusText.setText('');
-
-            this.playActionAnimations(data.actions, () => {
-                this.updateScores(data.scores);
-                this.updateVignetteAlpha();
-                for (const [id, delta] of Object.entries(deltas)) {
-                    if (delta !== 0) this.showSeedDelta(id, delta);
-                }
-            });
+            this.eventQueue.push({ type: 'roundResult', data });
+            this.processEventQueue();
         });
 
         this.socketManager.on('gameEnd', (data) => {
-            this.scene.start('GameOver', { ...data, socketManager: this.socketManager });
+            this.eventQueue.push({ type: 'gameEnd', data });
+            this.processEventQueue();
         });
 
         this.socketManager.on('gameAborted', (data) => {
             this.scene.start('Boot');
         });
+    }
+
+    // Ensures each round's result animation fully finishes (and scores update)
+    // before the next round's start is processed and input is re-enabled.
+    processEventQueue() {
+        if (this.animating || this.eventQueue.length === 0) return;
+
+        const { type, data } = this.eventQueue.shift();
+
+        switch (type) {
+            case 'roundStart':
+                this.applyRoundStart(data);
+                this.processEventQueue();
+                break;
+            case 'roundResult':
+                this.applyRoundResult(data);
+                break;
+            case 'gameEnd':
+                this.applyGameEnd(data);
+                break;
+        }
+    }
+
+    applyRoundStart(data) {
+        this.currentRound = data.round;
+        this.currentPhase = data.phase;
+        this.submitted = false;
+
+        this.roundText.setText(`Round ${data.round} / ${this.totalRounds}`);
+
+        this.statusText.setText('');
+        this.enableButtons();
+
+        if (data.debugMode) {
+            const barWidth = this.scale.width - 40;
+            this.timerBar.width = barWidth;
+            this.timerBar.fillColor = 0x2196F3;
+        } else {
+            this.startTimer(data.roundDurationMs);
+        }
+    }
+
+    applyRoundResult(data) {
+        // Capture deltas before scores update
+        const deltas = {};
+        for (const [key, newVal] of Object.entries(data.scores)) {
+            const id = key === 'You' ? this.playerId : key;
+            deltas[id] = newVal - (this.currentScores[id] ?? this.startingEggs);
+        }
+
+        this.disableButtons();
+        this.tweens.killAll();
+        this.timerBar.width = 0;
+        this.statusText.setText('');
+
+        this.animating = true;
+
+        this.playActionAnimations(data.actions, () => {
+            this.updateScores(data.scores);
+            this.updateVignetteAlpha();
+            for (const [id, delta] of Object.entries(deltas)) {
+                if (delta !== 0) this.showEggDelta(id, delta);
+            }
+
+            this.animating = false;
+            this.processEventQueue();
+        });
+    }
+
+    applyGameEnd(data) {
+        this.scene.start('GameOver', { ...data, socketManager: this.socketManager });
     }
 
     startTimer(durationMs) {
@@ -261,14 +306,14 @@ export class Game extends Phaser.Scene {
     updateScores(scores) {
         for (const key of Object.keys(scores)) {
             const id = key === 'You' ? this.playerId : key;
-            if (this.seedCounts[id]) {
-                this.seedCounts[id].setText(scores[key].toString());
+            if (this.eggCounts[id]) {
+                this.eggCounts[id].setText(scores[key].toString());
                 this.currentScores[id] = scores[key];
             }
         }
     }
 
-    showSeedDelta(playerId, delta) {
+    showEggDelta(playerId, delta) {
         const pos = this.ostrichPositions[playerId];
         if (!pos) return;
 
@@ -334,14 +379,14 @@ export class Game extends Phaser.Scene {
     playShareAnim(giverSprite, giverId, targetId, sideX, sideY) {
         if (!giverSprite || !targetId) return;
 
-        const seed = this.add.image(sideX[giverId], sideY[giverId] - 20, 'seed');
-        seed.setScale(0.6);
+        const egg = this.add.image(sideX[giverId], sideY[giverId] - 20, 'egg');
+        egg.setScale(0.6);
 
         const targetSprite = this.ostriches[targetId];
 
         if (targetSprite) {
             this.tweens.add({
-                targets: seed,
+                targets: egg,
                 x: sideX[targetId],
                 y: sideY[targetId] - 20,
                 duration: 600,
@@ -356,11 +401,11 @@ export class Game extends Phaser.Scene {
                             duration: 100,
                         });
                     }
-                    seed.destroy();
+                    egg.destroy();
                 },
             });
         } else {
-            this.time.delayedCall(600, () => seed.destroy());
+            this.time.delayedCall(600, () => egg.destroy());
         }
 
         this.tweens.add({

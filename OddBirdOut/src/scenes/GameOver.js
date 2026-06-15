@@ -1,3 +1,15 @@
+const PLAYER_COLORS = {
+    A: '#7CB87C',
+    B: '#7CB0D8',
+    C: '#D8A87C',
+};
+
+const OTHER_PLAYERS = {
+    A: ['B', 'C'],
+    B: ['A', 'C'],
+    C: ['A', 'B'],
+};
+
 export class GameOver extends Phaser.Scene {
 
     constructor() {
@@ -21,15 +33,6 @@ export class GameOver extends Phaser.Scene {
             });
         }
 
-        const playerId = this.socketManager.playerId;
-        const trueState = this.gameEndData.trueState;
-        const score = trueState && trueState.finalScores
-            ? trueState.finalScores[playerId]
-            : '?';
-        const isDead = trueState && trueState.alive
-            ? trueState.alive[playerId] === false
-            : true;
-
         const title = this.add.text(w / 2, 80, 'Game Over', {
             fontFamily: '"Press Start 2P"',
             fontSize: '40px',
@@ -44,10 +47,10 @@ export class GameOver extends Phaser.Scene {
         });
 
         this.time.delayedCall(800, () => {
-            const subtitle = this.add.text(w / 2, 140, 'You died', {
+            const subtitle = this.add.text(w / 2, 150, 'Final Egg Count', {
                 fontFamily: '"Press Start 2P"',
-                fontSize: '24px',
-                color: '#F44336',
+                fontSize: '18px',
+                color: '#FFFFFF',
             }).setOrigin(0.5).setAlpha(0);
 
             this.tweens.add({
@@ -58,55 +61,69 @@ export class GameOver extends Phaser.Scene {
             });
         });
 
-        this.time.delayedCall(1600, () => {
-            const seedIcon = this.add.image(w / 2 - 30, 190, 'seed').setScale(1.2).setAlpha(0);
-            const seedText = this.add.text(w / 2 + 10, 190, `${score} seeds`, {
+        this.time.delayedCall(1800, () => {
+            this.showFakeScores(w, h);
+        });
+
+        this.time.delayedCall(3400, () => {
+            this.createRevealButton(w);
+        });
+    }
+
+    showFakeScores(w, h) {
+        const playerId = this.socketManager.playerId;
+        const others = OTHER_PLAYERS[playerId];
+
+        const whatYouWereShown = this.gameEndData.whatYouWereShown || [];
+        const lastIllusion = whatYouWereShown[whatYouWereShown.length - 1];
+        const prevIllusion = whatYouWereShown[whatYouWereShown.length - 2] || lastIllusion;
+
+        // The final round's illusion dramatically zeroes out "You" for the
+        // in-game reveal animation. Game Over should show the fake score the
+        // player believed they had before that crash, not the post-crash 0.
+        const fakeScores = {
+            ...(lastIllusion ? lastIllusion.scores : {}),
+            ...(prevIllusion ? { You: prevIllusion.scores.You } : {}),
+        };
+
+        const rows = [
+            { id: playerId, label: `You (${playerId})`, key: 'You' },
+            { id: others[0], label: `Player ${others[0]}`, key: others[0] },
+            { id: others[1], label: `Player ${others[1]}`, key: others[1] },
+        ];
+
+        let y = h * 0.32;
+        for (const row of rows) {
+            const score = fakeScores[row.key] ?? 0;
+            const color = PLAYER_COLORS[row.id];
+
+            const group = [];
+
+            const label = this.add.text(w / 2 - 60, y, row.label, {
                 fontFamily: '"Press Start 2P"',
-                fontSize: '16px',
+                fontSize: '14px',
+                color,
+            }).setOrigin(1, 0.5).setAlpha(0);
+
+            const eggIcon = this.add.image(w / 2 - 20, y, 'egg').setScale(1.1).setAlpha(0);
+
+            const scoreText = this.add.text(w / 2 + 10, y, `${score}`, {
+                fontFamily: '"Press Start 2P"',
+                fontSize: '20px',
                 color: '#FFD700',
             }).setOrigin(0, 0.5).setAlpha(0);
 
+            group.push(label, eggIcon, scoreText);
+
             this.tweens.add({
-                targets: [seedIcon, seedText],
+                targets: group,
                 alpha: 1,
                 duration: 600,
                 ease: 'Power2',
             });
-        });
 
-        this.time.delayedCall(2200, () => {
-            const ostrich = this.add.image(w / 2, 340, 'ostrich_dead').setScale(2.5).setAlpha(0);
-
-            this.tweens.add({
-                targets: ostrich,
-                alpha: 1,
-                scaleX: 2.2,
-                scaleY: 2.2,
-                duration: 800,
-                ease: 'Back.easeOut',
-            });
-        });
-
-        this.time.delayedCall(3200, () => {
-            const hint = this.add.text(w / 2, 490, 'But were you really excluded by the others?', {
-                fontFamily: '"Press Start 2P"',
-                fontSize: '11px',
-                color: '#CCCCCC',
-                align: 'center',
-                wordWrap: { width: w - 80 },
-            }).setOrigin(0.5).setAlpha(0);
-
-            this.tweens.add({
-                targets: hint,
-                alpha: 1,
-                duration: 800,
-                ease: 'Power2',
-            });
-        });
-
-        this.time.delayedCall(4200, () => {
-            this.createRevealButton(w);
-        });
+            y += 80;
+        }
     }
 
     createRevealButton(w) {

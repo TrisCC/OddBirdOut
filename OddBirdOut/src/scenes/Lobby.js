@@ -6,8 +6,8 @@ const SIDE_ORDER = {
 
 const CAROUSEL_SLIDES = [
     {
-        title: 'Share With a Neighbor',
-        desc: 'Each round, share seeds with the player on your left or right',
+        title: 'Choose a Neighbor',
+        desc: 'Each round, pick a player on your left or right',
         render(scene, container) {
             const btnScale = 0.42;
             const labelStyle = { fontFamily: '"Press Start 2P"', fontSize: '8px', color: '#FFFFFF' };
@@ -33,29 +33,11 @@ const CAROUSEL_SLIDES = [
         },
     },
     {
-        title: 'Collect Seeds to Win',
-        desc: 'Win seeds each round. The player with the most wins the Golden Egg',
+        title: 'Partner Up to Collect Eggs',
+        desc: 'If your partner also chooses you, you both gain an egg',
         render(scene, container) {
-            const items = [];
-            for (let i = 0; i < 5; i++) {
-                const seed = scene.add.image(-200 + i * 90, 0, 'seed').setScale(0.9);
-                items.push(seed);
-            }
-            const egg = scene.add.image(240, 0, 'golden_egg').setScale(0.7);
-            items.push(egg);
-
-            const labelStyle = { fontFamily: '"Press Start 2P"', fontSize: '8px', color: '#FFD700' };
-            const seedsLabel = scene.add.text(-200, 22, '5 seeds', labelStyle).setOrigin(0.5);
-            const prizeLabel = scene.add.text(240, 22, 'Prize', labelStyle).setOrigin(0.5);
-            items.push(seedsLabel, prizeLabel);
-
-            const plusStyle = { fontFamily: '"Press Start 2P"', fontSize: '10px', color: '#4CAF50' };
-            for (let i = 1; i < 5; i++) {
-                const plus = scene.add.text(-200 + i * 90, -12, '+', plusStyle).setOrigin(0.5);
-                items.push(plus);
-            }
-
-            container.add(items);
+            const egg = scene.add.image(0, 0, 'egg').setScale(4);
+            container.add(egg);
         },
     },
     {
@@ -207,7 +189,7 @@ export class Lobby extends Phaser.Scene {
                 socketManager: this.socketManager,
                 playerId: data.playerId,
                 totalRounds: data.totalRounds,
-                startingSeeds: data.startingSeeds,
+                startingEggs: data.startingEggs,
             });
         });
 

@@ -162,7 +162,7 @@ class GameRoom {
                 this.io.to(socketId).emit('gameStart', {
                     playerId,
                     totalRounds: config.TOTAL_ROUNDS,
-                    startingSeeds: config.STARTING_SEEDS,
+                    startingEggs: config.STARTING_EGGS,
                 });
             }
         }

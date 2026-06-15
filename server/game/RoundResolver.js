@@ -22,9 +22,9 @@ class RoundResolver {
         this.gameActive = false;
         this.adminCallback = null;
         this.perPlayerIllusionScores = {
-            A: config.STARTING_SEEDS,
-            B: config.STARTING_SEEDS,
-            C: config.STARTING_SEEDS,
+            A: config.STARTING_EGGS,
+            B: config.STARTING_EGGS,
+            C: config.STARTING_EGGS,
         };
         this.sessionId = uuidv4();
         this.sessionLog = {
@@ -34,8 +34,7 @@ class RoundResolver {
                 totalRounds: config.TOTAL_ROUNDS,
                 roundDurationMs: config.ROUND_DURATION_MS,
                 phase1Rounds: config.PHASE1_ROUNDS,
-                startingSeeds: config.STARTING_SEEDS,
-                seedsPerRoundDrain: config.SEEDS_PER_ROUND_DRAIN,
+                startingEggs: config.STARTING_EGGS,
             },
             rounds: [],
             deaths: [],
@@ -49,15 +48,6 @@ class RoundResolver {
 
     startRound() {
         this.gameState.resetForNewRound();
-
-        for (const p of ['A', 'B', 'C']) {
-            if (this.gameState.alive[p]) {
-                this.perPlayerIllusionScores[p] -= config.SEEDS_PER_ROUND_DRAIN;
-                if (this.perPlayerIllusionScores[p] <= 0) {
-                    this.perPlayerIllusionScores[p] = 0;
-                }
-            }
-        }
 
         if (this.gameState.drainQueue()) {
             this.resolveRound();
@@ -293,6 +283,10 @@ class RoundResolver {
                 trueFinalScores: this.sessionLog.finalScores,
                 trueAlive: this.sessionLog.alive,
                 deaths: this.sessionLog.deaths,
+                trueActions: this.sessionLog.rounds.map(r => ({
+                    round: r.round,
+                    actions: r.trueActions,
+                })),
             },
             whatYouWereShown: illusionRounds,
         };
