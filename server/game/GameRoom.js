@@ -60,6 +60,7 @@ class GameRoom {
             this.adminSockets.add(socket.id);
             socket.on('adminReset', () => this.forceReset());
             socket.on('adminStart', () => this.adminStartGame());
+            socket.on('adminForceStart', () => this.adminForceStartGame());
             socket.on('disconnect', () => this.adminSockets.delete(socket.id));
             socket.emit('adminState', this.getAdminState());
             return;
@@ -220,6 +221,12 @@ class GameRoom {
     adminStartGame() {
         if (this.roundResolver) return;
         if (!this.allPlayersReady()) return;
+        this.startGame();
+    }
+
+    adminForceStartGame() {
+        if (this.roundResolver) return;
+        if (Object.keys(this.players).length < 3) return;
         this.startGame();
     }
 

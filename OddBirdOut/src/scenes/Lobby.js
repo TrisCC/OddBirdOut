@@ -82,7 +82,8 @@ export class Lobby extends Phaser.Scene {
         const w = this.scale.width;
         const h = this.scale.height;
 
-        this.add.rectangle(w / 2, h / 2, w, h, 0x1A0F0A);
+        this.add.image(w / 2, h / 2, 'bg_night').setDisplaySize(w, h);
+        this.add.rectangle(w / 2, h / 2, w, h, 0x000000).setAlpha(0.4);
 
         this.add.text(w / 2, 95, 'Odd Bird Out', {
             fontFamily: '"Press Start 2P"',
@@ -148,6 +149,12 @@ export class Lobby extends Phaser.Scene {
             const count = data.connected.length;
             const readyArr = Array.isArray(data.ready) ? data.ready : [];
             const readyCount = readyArr.length;
+
+            // If this player already clicked Ready but the server doesn't show
+            // them as ready (e.g. after a socket reconnect), resend the event.
+            if (this.isReady && !readyArr.includes(playerId.toUpperCase())) {
+                this.socketManager.emitPlayerReady();
+            }
             this.countText.setText(`${count} / 3 connected`);
             this.readyText.setText(`${readyCount} / 3 ready`);
 

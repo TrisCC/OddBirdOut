@@ -96,6 +96,10 @@ export class PreviewBoot extends Phaser.Scene {
     }
 
     preload() {
+        this.load.image('bg_night', 'assets/bg_night.png');
+        this.load.image('bg_day2night', 'assets/bg_day2night.png');
+        this.load.image('bg_day', 'assets/bg_day.png');
+
         const centerX = this.scale.width / 2;
         const centerY = this.scale.height / 2;
 
