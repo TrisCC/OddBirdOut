@@ -22,6 +22,7 @@ export class Game extends Phaser.Scene {
         this.playerId = data.playerId;
         this.totalRounds = data.totalRounds;
         this.startingEggs = data.startingEggs ?? 0;
+        this.colorChoices = data.colorChoices || {};
     }
 
     create() {
@@ -95,10 +96,14 @@ export class Game extends Phaser.Scene {
         for (const pos of positions) {
             const id = pos.id;
             const isSelf = id === this.playerId;
-            const textureKey = `ostrich_${id.toLowerCase()}`;
-
-            const sprite = this.add.image(pos.x, pos.y, textureKey);
-            sprite.setScale(pos.scale);
+            const colorKey = this.colorChoices[id];
+            const textureKey = colorKey ? `ostrich_${colorKey}` : 'ostrich_red';
+            const displaySize = isSelf ? 130 : 100;
+            const sprite = this.add.sprite(pos.x, pos.y, textureKey, 0);
+            sprite.setDisplaySize(displaySize, displaySize);
+            if (colorKey && this.anims.exists(`idle_${colorKey}`)) {
+                sprite.play(`idle_${colorKey}`);
+            }
             this.ostriches[id] = sprite;
             this.ostrichPositions[id] = { x: pos.x, y: pos.y };
 

@@ -12,6 +12,17 @@ export class Boot extends Phaser.Scene {
         this.load.image('bg_day2night', 'assets/bg_day2night.png');
         this.load.image('bg_day', 'assets/bg_day.png');
 
+        // Each PNG is 1920×640 with 3 animation frames of 640×640 each.
+        const FRAME = { frameWidth: 640, frameHeight: 640 };
+        this.load.spritesheet('ostrich_blue',   'assets/ostrich blue.png',   FRAME);
+        this.load.spritesheet('ostrich_cyan',   'assets/ostrich cyan.png',   FRAME);
+        this.load.spritesheet('ostrich_green',  'assets/ostrich green.png',  FRAME);
+        this.load.spritesheet('ostrich_orange', 'assets/ostrich orange.png', FRAME);
+        this.load.spritesheet('ostrich_pink',   'assets/ostrich pink.png',   FRAME);
+        this.load.spritesheet('ostrich_purple', 'assets/ostrich purple.png', FRAME);
+        this.load.spritesheet('ostrich_red',    'assets/ostrich red.png',    FRAME);
+        this.load.spritesheet('ostrich_yellow', 'assets/ostrich yellow.png', FRAME);
+
         const centerX = this.scale.width / 2;
         const centerY = this.scale.height / 2;
 
@@ -43,6 +54,16 @@ export class Boot extends Phaser.Scene {
 
     create() {
         generateAllTextures(this);
+
+        // Register idle animations for all 8 ostrich colours (global to the game).
+        for (const color of ['blue', 'cyan', 'green', 'orange', 'pink', 'purple', 'red', 'yellow']) {
+            this.anims.create({
+                key: `idle_${color}`,
+                frames: this.anims.generateFrameNumbers(`ostrich_${color}`, { start: 0, end: 2 }),
+                frameRate: 4,
+                repeat: -1,
+            });
+        }
 
         const socketManager = new SocketManager();
         socketManager.connect(window.location.origin);
