@@ -1,3 +1,5 @@
+import { addCreditsButton } from '../CreditsOverlay.js';
+
 const COLORS = {
     A: 0x4CAF50,
     B: 0x42A5F5,
@@ -46,6 +48,8 @@ export class Game extends Phaser.Scene {
 
         // Fade from lobby night to day as soon as the game scene loads.
         // animating=true blocks roundStart from being processed until the fade completes.
+        addCreditsButton(this);
+
         this.animating = true;
         this.doSunriseTransition(() => {
             this.animating = false;

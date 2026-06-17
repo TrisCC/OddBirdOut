@@ -111,6 +111,12 @@ class GameRoom {
 
         this.players[playerId] = socket.id;
 
+        // Keep the RoundResolver's socket map current so ostracism-phase
+        // per-player roundResult events reach the reconnected socket.
+        if (this.roundResolver) {
+            this.roundResolver.playerSockets[playerId] = socket.id;
+        }
+
         socket.on('playerReady', () => {
             this.readyPlayers.add(playerId);
             if (this.roundResolver) {

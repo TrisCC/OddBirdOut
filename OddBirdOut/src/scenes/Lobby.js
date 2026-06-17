@@ -1,3 +1,5 @@
+import { addCreditsButton } from '../CreditsOverlay.js';
+
 const SIDE_ORDER = {
     A: ['C', 'B'],
     B: ['A', 'C'],
@@ -149,6 +151,7 @@ export class Lobby extends Phaser.Scene {
         this.buildReadyButton();
         this.createCarousel();
         this.setupSocketListeners(w, h);
+        addCreditsButton(this);
 
     }
 
@@ -318,7 +321,7 @@ export class Lobby extends Phaser.Scene {
     }
 
     setupSocketListeners(w, h) {
-        this.socketManager.on('lobbyUpdate', (data) => {
+        const onLobbyUpdate = (data) => {
             const count = data.connected.length;
             const readyArr = Array.isArray(data.ready) ? data.ready : [];
             const readyCount = readyArr.length;
@@ -393,9 +396,9 @@ export class Lobby extends Phaser.Scene {
                 this.statusText.setText('All players ready!');
                 this.statusText.setColor('#4CAF50');
             }
-        });
+        };
 
-        this.socketManager.on('gameStart', (data) => {
+        const onGameStart = (data) => {
             this.scene.start('Game', {
                 socketManager: this.socketManager,
                 playerId: data.playerId,
@@ -403,14 +406,24 @@ export class Lobby extends Phaser.Scene {
                 startingEggs: data.startingEggs,
                 colorChoices: data.colorChoices || {},
             });
-        });
+        };
 
-        this.socketManager.on('errorMessage', (data) => {
+        const onErrorMessage = (data) => {
             this.add.text(w / 2, 665, data.message, {
                 fontFamily: '"Press Start 2P"',
                 fontSize: '12px',
                 color: '#F44336',
             }).setOrigin(0.5);
+        };
+
+        this.socketManager.on('lobbyUpdate',  onLobbyUpdate);
+        this.socketManager.on('gameStart',    onGameStart);
+        this.socketManager.on('errorMessage', onErrorMessage);
+
+        this.events.once('shutdown', () => {
+            this.socketManager.off('lobbyUpdate',  onLobbyUpdate);
+            this.socketManager.off('gameStart',    onGameStart);
+            this.socketManager.off('errorMessage', onErrorMessage);
         });
     }
 

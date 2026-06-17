@@ -1,3 +1,5 @@
+import { addCreditsButton } from '../CreditsOverlay.js';
+
 const PLAYER_COLORS = {
     A: '#7CB87C',
     B: '#7CB0D8',
@@ -89,6 +91,8 @@ export class Reveal extends Phaser.Scene {
                 }).setOrigin(0.5);
             });
         }
+
+        addCreditsButton(this);
     }
 
     showScoresAndDeaths(w, h) {

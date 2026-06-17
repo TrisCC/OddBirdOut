@@ -1,3 +1,5 @@
+import { addCreditsButton } from '../CreditsOverlay.js';
+
 const PLAYER_COLORS = {
     A: '#7CB87C',
     B: '#7CB0D8',
@@ -68,6 +70,8 @@ export class GameOver extends Phaser.Scene {
         this.time.delayedCall(3400, () => {
             this.createRevealButton(w);
         });
+
+        addCreditsButton(this);
     }
 
     showFakeScores(w, h) {
