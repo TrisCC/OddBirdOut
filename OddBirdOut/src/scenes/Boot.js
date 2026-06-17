@@ -94,7 +94,7 @@ export class Boot extends Phaser.Scene {
                 this.showError(data.message);
             });
 
-            this.scene.start('Lobby', { socketManager });
+            this.scene.start('Start', { socketManager });
         });
 
         socketManager.on('disconnected', () => {

@@ -1,4 +1,5 @@
 import { Boot } from './scenes/Boot.js';
+import { Start } from './scenes/Start.js';
 import { Lobby } from './scenes/Lobby.js';
 import { Game } from './scenes/Game.js';
 import { GameOver } from './scenes/GameOver.js';
@@ -20,6 +21,7 @@ const config = {
     pixelArt: true,
     scene: [
         usePreview ? PreviewBoot : Boot,
+        Start,
         Lobby,
         Game,
         GameOver,

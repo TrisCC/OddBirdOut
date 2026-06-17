@@ -138,13 +138,17 @@ class GameRoom {
     onPlayerColorChoice(playerId, color) {
         if (!this.VALID_COLORS.includes(color)) return;
 
-        // Reject if another player already holds this color
+        // Reject only if a ready player already holds this color
         for (const [pid, col] of Object.entries(this.colorChoices)) {
-            if (col === color && pid !== playerId) return;
+            if (col === color && pid !== playerId && this.readyPlayers.has(pid)) return;
+        }
+
+        // Changing color while ready → unready the player
+        if (this.readyPlayers.has(playerId) && this.colorChoices[playerId] !== color) {
+            this.readyPlayers.delete(playerId);
         }
 
         this.colorChoices[playerId] = color;
-        this.readyPlayers.add(playerId);
         this.broadcastLobbyUpdate();
     }
 
