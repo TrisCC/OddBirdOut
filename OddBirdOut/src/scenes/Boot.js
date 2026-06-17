@@ -14,6 +14,13 @@ export class Boot extends Phaser.Scene {
 
         // Each PNG is 1920×640 with 3 animation frames of 640×640 each.
         const FRAME = { frameWidth: 640, frameHeight: 640 };
+        // heart.png is 2560×640 with 4 animation frames of 640×640 each.
+        this.load.spritesheet('heart_frames', 'assets/heart.png', FRAME);
+        // 1egg.png is 2560×640 with 4 animation frames; 2–6 and 8 are single 640×640 images.
+        this.load.spritesheet('egg_1', 'assets/fonts/1egg.png', FRAME);
+        for (const n of [2, 3, 4, 5, 6, 8]) {
+            this.load.image(`egg_${n}`, `assets/fonts/${n}egg.png`);
+        }
         this.load.spritesheet('ostrich_blue',   'assets/ostrich blue.png',   FRAME);
         this.load.spritesheet('ostrich_cyan',   'assets/ostrich cyan.png',   FRAME);
         this.load.spritesheet('ostrich_green',  'assets/ostrich green.png',  FRAME);
@@ -54,6 +61,20 @@ export class Boot extends Phaser.Scene {
 
     create() {
         generateAllTextures(this);
+
+        this.anims.create({
+            key: 'egg_count_1',
+            frames: this.anims.generateFrameNumbers('egg_1', { start: 0, end: 3 }),
+            frameRate: 8,
+            repeat: 0,
+        });
+
+        this.anims.create({
+            key: 'heart_burst',
+            frames: this.anims.generateFrameNumbers('heart_frames', { start: 0, end: 3 }),
+            frameRate: 8,
+            repeat: 0,
+        });
 
         // Register idle animations for all 8 ostrich colours (global to the game).
         for (const color of ['blue', 'cyan', 'green', 'orange', 'pink', 'purple', 'red', 'yellow']) {

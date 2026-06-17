@@ -38,8 +38,6 @@ export class Game extends Phaser.Scene {
         this.buildOstriches();
         this.buildActionButtons();
         this.setupListeners();
-        this.setupVignette();
-
         this.currentRound = 0;
         this.currentPhase = 'trust';
         this.submitted = false;
@@ -60,7 +58,9 @@ export class Game extends Phaser.Scene {
             fontFamily: '"Press Start 2P"',
             fontSize: '24px',
             color: '#003366',
-        }).setDepth(5);
+            stroke: '#FFFFFF',
+            strokeThickness: 4,
+        }).setDepth(20);
 
         this.timerBarBg = this.add.rectangle(this.scale.width / 2, 18, this.scale.width - 40, 14, 0x333333).setDepth(5);
         this.timerBarBg.setOrigin(0.5, 0);
@@ -71,7 +71,9 @@ export class Game extends Phaser.Scene {
             fontFamily: '"Press Start 2P"',
             fontSize: '10px',
             color: '#003366',
-        }).setOrigin(0.5).setDepth(5);
+            stroke: '#FFFFFF',
+            strokeThickness: 3,
+        }).setOrigin(0.5).setDepth(20);
     }
 
     buildOstriches() {
@@ -84,13 +86,14 @@ export class Game extends Phaser.Scene {
         const playerOrder = [others[0], this.playerId, others[1]];
 
         this.ostriches = {};
-        this.eggCounts = {};
+        this.eggDisplays = {};
+        this.eggCountTexts = {};
         this.ostrichPositions = {};
 
         const positions = [
-            { x: sideX[0], y: sideY, id: playerOrder[0], scale: 1.0 },
-            { x: selfX, y: selfY, id: playerOrder[1], scale: 1.3 },
-            { x: sideX[1], y: sideY, id: playerOrder[2], scale: 1.0 },
+            { x: sideX[0], y: sideY, id: playerOrder[0], scale: 1.0, eggDx: -40, eggDy: 40,  eggSize: 50 },
+            { x: selfX,    y: selfY, id: playerOrder[1], scale: 1.3, eggDx:   0, eggDy: 80, eggSize: 64 },
+            { x: sideX[1], y: sideY, id: playerOrder[2], scale: 1.0, eggDx:  40, eggDy: 40,  eggSize: 50 },
         ];
 
         for (const pos of positions) {
@@ -113,15 +116,30 @@ export class Game extends Phaser.Scene {
                 fontFamily: '"Press Start 2P"',
                 fontSize: '10px',
                 color: '#003366',
-            }).setOrigin(0.5).setDepth(5);
+                stroke: '#FFFFFF',
+                strokeThickness: 3,
+            }).setOrigin(0.5).setDepth(20);
 
-            this.eggCounts[id] = this.add.text(pos.x, pos.y + 80, String(this.startingEggs), {
-                fontFamily: '"Press Start 2P"',
-                fontSize: '20px',
-                color: '#003366',
-            }).setOrigin(0.5).setDepth(5);
+            const eggDisplay = this.add.sprite(pos.x + pos.eggDx, pos.y + pos.eggDy, 'egg_1', 0);
+            eggDisplay.setDisplaySize(pos.eggSize, pos.eggSize).setDepth(5).setAlpha(0);
+            eggDisplay.baseDisplaySize = pos.eggSize;
+            this.eggDisplays[id] = eggDisplay;
 
-            this.add.image(pos.x, pos.y + 105, 'egg').setScale(2.4);
+            const countText = this.add.text(
+                pos.x + pos.eggDx,
+                pos.y + pos.eggDy + pos.eggSize / 2 + 10,
+                '',
+                {
+                    fontFamily: '"Press Start 2P"',
+                    fontSize: isSelf ? '16px' : '12px',
+                    color: '#003366',
+                    stroke: '#FFFFFF',
+                    strokeThickness: 3,
+                }
+            ).setOrigin(0.5).setDepth(20).setAlpha(0);
+            this.eggCountTexts[id] = countText;
+
+            if (this.startingEggs > 0) this.updateEggDisplay(id, this.startingEggs);
         }
     }
 
@@ -267,28 +285,33 @@ export class Game extends Phaser.Scene {
 
         const isLastRound = data.round >= this.totalRounds;
 
-        // Run the night cycle and share animations simultaneously.
-        // Both paths signal via this latch; processEventQueue fires once both are done.
-        let doneCount = 0;
-        const onBothDone = () => {
-            if (++doneCount === (isLastRound ? 1 : 2)) {
-                this.animating = false;
-                this.processEventQueue();
-            }
-        };
-
-        if (!isLastRound) {
-            this.doNightCycle(onBothDone);
-        }
-
-        this.playActionAnimations(data.actions, () => {
+        const applyScores = () => {
             this.updateScores(data.scores);
-            this.updateVignetteAlpha();
+
             for (const [id, delta] of Object.entries(deltas)) {
                 if (delta !== 0) this.showEggDelta(id, delta);
             }
-            onBothDone();
-        });
+        };
+
+        const finish = () => {
+            this.animating = false;
+            this.processEventQueue();
+        };
+
+        if (isLastRound) {
+            this.playActionAnimations(data.actions, () => {
+                applyScores();
+                finish();
+            });
+        } else {
+            // Sequence: fade to night → hearts play → scores update → fade to day → next round
+            this.crossFadeBg('bg_night', 1200, () => {
+                this.playActionAnimations(data.actions, () => {
+                    applyScores();
+                    this.crossFadeBg('bg_day', 1200, finish);
+                });
+            });
+        }
     }
 
     applyGameEnd(data) {
@@ -312,14 +335,6 @@ export class Game extends Phaser.Scene {
 
     doSunriseTransition(onComplete) {
         this.crossFadeBg('bg_day', 2000, onComplete);
-    }
-
-    doNightCycle(onComplete) {
-        this.crossFadeBg('bg_night', 1200, () => {
-            this.time.delayedCall(500, () => {
-                this.crossFadeBg('bg_day', 1200, onComplete);
-            });
-        });
     }
 
     startTimer(durationMs) {
@@ -348,10 +363,57 @@ export class Game extends Phaser.Scene {
     updateScores(scores) {
         for (const key of Object.keys(scores)) {
             const id = key === 'You' ? this.playerId : key;
-            if (this.eggCounts[id]) {
-                this.eggCounts[id].setText(scores[key].toString());
-                this.currentScores[id] = scores[key];
-            }
+            this.currentScores[id] = scores[key];
+            this.updateEggDisplay(id, scores[key]);
+        }
+    }
+
+    eggKeyForScore(score) {
+        if (score >= 8) return 'egg_8';
+        if (score === 7) return 'egg_6';
+        return `egg_${score}`;
+    }
+
+    updateEggDisplay(id, score) {
+        const sprite = this.eggDisplays[id];
+        if (!sprite) return;
+
+        sprite.stop();
+        sprite.off('animationupdate');
+        sprite.off('animationcomplete');
+
+        const countText = this.eggCountTexts[id];
+
+        if (score <= 0) {
+            sprite.setAlpha(0);
+            if (countText) countText.setAlpha(0);
+            return;
+        }
+
+        if (countText) {
+            countText.setText(String(score)).setAlpha(1);
+        }
+
+        sprite.setAlpha(1);
+        const key = this.eggKeyForScore(score);
+        const size = sprite.baseDisplaySize;
+
+        if (key === 'egg_1') {
+            sprite.setTexture('egg_1', 0);
+            sprite.setDisplaySize(size, size);
+            const baseScale = sprite.scaleX;
+            sprite.setScale(baseScale * 0.25);
+            sprite.play('egg_count_1');
+            sprite.on('animationupdate', (anim, frame) => {
+                sprite.setScale(baseScale * (frame.textureFrame + 1) / 4);
+            });
+            sprite.once('animationcomplete', () => {
+                sprite.setScale(baseScale);
+                sprite.off('animationupdate');
+            });
+        } else {
+            sprite.setTexture(key);
+            sprite.setDisplaySize(size, size);
         }
     }
 
@@ -398,7 +460,7 @@ export class Game extends Phaser.Scene {
 
         let delay = 0;
         const ANIM_DURATION = 800;
-        const STEP_DELAY = 1000;
+        const STEP_DELAY = 1800;
 
         for (const act of actions) {
             const giverId = act.player === 'You' ? this.playerId : act.player;
@@ -421,79 +483,65 @@ export class Game extends Phaser.Scene {
     playShareAnim(giverSprite, giverId, targetId, sideX, sideY) {
         if (!giverSprite || !targetId) return;
 
-        const egg = this.add.image(sideX[giverId], sideY[giverId] - 20, 'egg');
-        egg.setScale(0.6);
+        const from = this.ostrichPositions[giverId];
+        const to = this.ostrichPositions[targetId];
+        const heart = this.add.sprite(from.x, from.y, 'heart_frames', 0);
+        heart.setDisplaySize(60, 60).setDepth(15);
 
         const targetSprite = this.ostriches[targetId];
 
         if (targetSprite) {
             this.tweens.add({
-                targets: egg,
-                x: sideX[targetId],
-                y: sideY[targetId] - 20,
+                targets: heart,
+                x: to.x,
+                y: to.y,
                 duration: 600,
                 ease: 'Sine.easeIn',
                 onComplete: () => {
+                    heart.play('heart_burst');
+                    const baseScale = heart.scaleX;
+                    heart.on('animationupdate', (anim, frame) => {
+                        heart.setScale(baseScale * (1 + frame.textureFrame * 0.2));
+                    });
                     if (targetSprite !== giverSprite) {
                         this.tweens.add({
                             targets: targetSprite,
-                            scaleX: targetSprite.scaleX * 1.1,
-                            scaleY: targetSprite.scaleY * 1.1,
+                            x: targetSprite.x + 6,
+                            duration: 80,
                             yoyo: true,
-                            duration: 100,
+                            repeat: 0,
+                            ease: 'Sine.easeInOut',
                         });
                     }
-                    egg.destroy();
+                    heart.once('animationcomplete', () => {
+                        if (targetSprite !== giverSprite) {
+                            this.tweens.add({
+                                targets: targetSprite,
+                                scaleX: targetSprite.scaleX * 1.1,
+                                scaleY: targetSprite.scaleY * 1.1,
+                                yoyo: true,
+                                duration: 100,
+                            });
+                        }
+                        heart.destroy();
+                    });
                 },
             });
         } else {
-            this.time.delayedCall(600, () => egg.destroy());
+            this.time.delayedCall(600, () => heart.destroy());
         }
 
+        const dx = to.x - from.x;
+        const dy = to.y - from.y;
+        const len = Math.sqrt(dx * dx + dy * dy);
         this.tweens.add({
             targets: giverSprite,
-            scaleX: giverSprite.scaleX * 0.9,
-            scaleY: giverSprite.scaleY * 0.9,
+            x: giverSprite.x + (dx / len) * 15,
+            y: giverSprite.y + (dy / len) * 15,
+            duration: 150,
             yoyo: true,
-            duration: 100,
+            ease: 'Sine.easeOut',
         });
     }
 
-    updateVignetteAlpha() {
-        if (this.currentPhase !== 'ostracism') {
-            this.vignette.setAlpha(0);
-            return;
-        }
-        const maxRounds = 8;
-        const current = this.currentRound - 4;
-        const alpha = Math.min(1, current / maxRounds) * 0.08;
-        this.tweens.add({
-            targets: this.vignette,
-            alpha,
-            duration: 500,
-        });
-    }
-
-    setupVignette() {
-        const w = this.scale.width;
-        const h = this.scale.height;
-
-        const vignetteGfx = this.add.graphics();
-        vignetteGfx.setDepth(10);
-
-        vignetteGfx.fillStyle(0x000000, 1);
-        vignetteGfx.fillRect(0, 0, w, h);
-        vignetteGfx.fillStyle(0x000000, 0);
-        vignetteGfx.fillEllipse(w / 2, h / 2, w * 0.75, h * 0.75);
-
-        const maskShape = this.make.graphics({ add: false });
-        maskShape.fillStyle(0xffffff);
-        maskShape.fillEllipse(w / 2, h / 2, w * 0.75, h * 0.75);
-
-        const mask = maskShape.createGeometryMask();
-        vignetteGfx.setMask(mask);
-        vignetteGfx.setAlpha(0);
-
-        this.vignette = vignetteGfx;
-    }
 }

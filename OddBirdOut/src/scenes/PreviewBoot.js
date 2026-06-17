@@ -109,6 +109,11 @@ export class PreviewBoot extends Phaser.Scene {
         this.load.spritesheet('ostrich_purple', 'assets/ostrich purple.png', FRAME);
         this.load.spritesheet('ostrich_red',    'assets/ostrich red.png',    FRAME);
         this.load.spritesheet('ostrich_yellow', 'assets/ostrich yellow.png', FRAME);
+        this.load.spritesheet('heart_frames', 'assets/heart.png', FRAME);
+        this.load.spritesheet('egg_1', 'assets/fonts/1egg.png', FRAME);
+        for (const n of [2, 3, 4, 5, 6, 8]) {
+            this.load.image(`egg_${n}`, `assets/fonts/${n}egg.png`);
+        }
 
         const centerX = this.scale.width / 2;
         const centerY = this.scale.height / 2;
@@ -152,6 +157,20 @@ export class PreviewBoot extends Phaser.Scene {
             }
         }
 
+        this.anims.create({
+            key: 'egg_count_1',
+            frames: this.anims.generateFrameNumbers('egg_1', { start: 0, end: 3 }),
+            frameRate: 8,
+            repeat: 0,
+        });
+
+        this.anims.create({
+            key: 'heart_burst',
+            frames: this.anims.generateFrameNumbers('heart_frames', { start: 0, end: 3 }),
+            frameRate: 8,
+            repeat: 0,
+        });
+
         const params = new URLSearchParams(window.location.search);
         const preview = params.get('preview');
         const playerId = (params.get('player') || 'A').toUpperCase();
@@ -177,32 +196,38 @@ export class PreviewBoot extends Phaser.Scene {
                     playerId,
                     totalRounds: 12,
                     startingEggs: 0,
+                    colorChoices: { A: 'red', B: 'blue', C: 'green' },
                 });
 
                 this.time.delayedCall(600, () => {
                     mock._fire('roundStart', {
-                        round: 5,
-                        phase: 'ostracism',
+                        round: 4,
+                        phase: 'trust',
                         roundDurationMs: 0,
                         debugMode: true,
                     });
                 });
 
-                this.time.delayedCall(2200, () => {
-                    const others = playerId === 'A' ? ['B', 'C']
-                        : playerId === 'B' ? ['A', 'C'] : ['A', 'B'];
-
+                // After 4 rounds of everyone sharing right (A→B, B→C, C→A):
+                // no mutual pairs → three-way share each round → all scores = 4
+                this.time.delayedCall(3500, () => {
+                    const rightOf = { A: 'B', B: 'C', C: 'A' };
+                    const actions = Object.entries(rightOf).map(([giver, target]) => ({
+                        player: giver === playerId ? 'You' : giver,
+                        action: 'share',
+                        target: target === playerId ? 'You' : target,
+                    }));
+                    const scores = {};
+                    for (const p of ['A', 'B', 'C']) {
+                        scores[p === playerId ? 'You' : p] = 4;
+                    }
                     mock._fire('roundResult', {
-                        round: 5,
-                        phase: 'ostracism',
-                        actions: [
-                            { player: others[0], action: 'share', target: others[1] },
-                            { player: others[1], action: 'share', target: others[0] },
-                            { player: 'You', action: 'share', target: others[0] },
-                        ],
-                        scores: { You: 2, [others[0]]: 4, [others[1]]: 2 },
-                        yourScoreDelta: 0,
-                        exclusionEvents: 1,
+                        round: 4,
+                        phase: 'trust',
+                        actions,
+                        scores,
+                        yourScoreDelta: 1,
+                        exclusionEvents: 0,
                     });
                 });
                 break;
