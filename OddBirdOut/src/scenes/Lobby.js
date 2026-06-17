@@ -149,6 +149,7 @@ export class Lobby extends Phaser.Scene {
         this.buildReadyButton();
         this.createCarousel();
         this.setupSocketListeners(w, h);
+
     }
 
     setRoleBird(role, color, connected, ready = false) {

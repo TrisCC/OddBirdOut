@@ -64,6 +64,16 @@ body {
 
 .btn-reset:hover { background: #d32f2f; }
 
+.btn-music {
+    background: #1565C0;
+    color: #fff;
+    font-size: 12px;
+    padding: 6px 14px;
+}
+.btn-music:hover { background: #0d47a1; }
+.btn-music.muted { background: #455a64; }
+.btn-music.muted:hover { background: #37474f; }
+
 .btn-confirm {
     background: #FF5722;
     color: #fff;
@@ -308,17 +318,22 @@ td.ostracism-phase { color: #F44336; }
         <h1>Odd Bird Out</h1>
         <span style="font-size:11px;color:#888;">Admin Dashboard</span>
     </div>
-    <div>
-        <span id="connectionDot" class="status-dot offline"></span>
-        <span id="connectionLabel" style="font-size:12px;color:#888;">Disconnected</span>
-        <button class="btn hidden" id="btnStart" style="background:#4CAF50;color:#fff;">START GAME</button>
-        <button class="btn hidden" id="btnForceStart" style="background:#FF9800;color:#fff;">FORCE START</button>
-        <button class="btn btn-reset" id="btnReset">RESET</button>
-        <span id="resetConfirm" class="reset-confirm hidden">
-            <span style="font-size:12px;color:#F44336;">Are you sure?</span>
-            <button class="btn btn-confirm" id="btnConfirmYes">YES</button>
-            <button class="btn" id="btnConfirmNo" style="background:#555;color:#fff;">NO</button>
-        </span>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
+        <div>
+            <span id="connectionDot" class="status-dot offline"></span>
+            <span id="connectionLabel" style="font-size:12px;color:#888;">Disconnected</span>
+            <button class="btn hidden" id="btnStart" style="background:#4CAF50;color:#fff;">START GAME</button>
+            <button class="btn hidden" id="btnForceStart" style="background:#FF9800;color:#fff;">FORCE START</button>
+            <button class="btn btn-reset" id="btnReset">RESET</button>
+            <span id="resetConfirm" class="reset-confirm hidden">
+                <span style="font-size:12px;color:#F44336;">Are you sure?</span>
+                <button class="btn btn-confirm" id="btnConfirmYes">YES</button>
+                <button class="btn" id="btnConfirmNo" style="background:#555;color:#fff;">NO</button>
+            </span>
+        </div>
+        <div>
+            <button class="btn btn-music" id="btnMusicToggle">♪ Music: ON</button>
+        </div>
     </div>
 </div>
 
@@ -378,6 +393,8 @@ td.ostracism-phase { color: #F44336; }
     </div>
 </div>
 
+<audio id="lobbyAudio" loop src="/assets/Music/lobby-music-botswana.mp3" preload="auto"></audio>
+
 <div id="disconnectedOverlay"><div class="msg">Disconnected from server<br><span style="font-size:14px;color:#888;">Attempting to reconnect...</span></div></div>
 
 <script src="/socket.io/socket.io.js"></script>
@@ -402,6 +419,54 @@ const btnConfirmYes = document.getElementById('btnConfirmYes');
 const btnConfirmNo = document.getElementById('btnConfirmNo');
 
 let roundHistory = [];
+let gameEnded = false;
+let manualMute = false;
+
+const lobbyAudio = document.getElementById('lobbyAudio');
+const btnMusicToggle = document.getElementById('btnMusicToggle');
+let wantMusic = false;
+
+function updateMusicButton() {
+    if (manualMute) {
+        btnMusicToggle.textContent = '♪ Music: OFF';
+        btnMusicToggle.classList.add('muted');
+    } else {
+        btnMusicToggle.textContent = '♪ Music: ON';
+        btnMusicToggle.classList.remove('muted');
+    }
+}
+
+function playMusic() {
+    wantMusic = true;
+    if (manualMute) return;
+    lobbyAudio.play().catch(() => {
+        // Browser blocked autoplay — resumes on next user click
+    });
+}
+
+function stopMusic() {
+    wantMusic = false;
+    lobbyAudio.pause();
+    lobbyAudio.currentTime = 0;
+}
+
+btnMusicToggle.addEventListener('click', () => {
+    manualMute = !manualMute;
+    updateMusicButton();
+    if (manualMute) {
+        lobbyAudio.pause();
+        lobbyAudio.currentTime = 0;
+    } else if (wantMusic) {
+        lobbyAudio.play().catch(() => {});
+    }
+});
+
+// Unlock autoplay on first interaction (browser policy)
+document.addEventListener('click', () => {
+    if (wantMusic && !manualMute && lobbyAudio.paused) {
+        lobbyAudio.play().catch(() => {});
+    }
+});
 
 btnStart.classList.add('hidden');
 
@@ -423,10 +488,20 @@ socket.on('adminState', (data) => {
     renderTrueScores(data);
     renderLighting(data.lighting);
     const inLobby = data.state === 'lobby' && !data.game;
+    // Music plays when not actively in-game; stop only during live gameplay
+    if (data.state === 'playing' && !gameEnded) {
+        stopMusic();
+    } else {
+        playMusic();
+    }
+    // Game was reset — clear the ended flag
+    if (data.state !== 'playing') gameEnded = false;
     if (inLobby && data.allReady) {
+        resetStartBtn(btnStart, 'START GAME', '#4CAF50');
         btnStart.classList.remove('hidden');
         btnForceStart.classList.add('hidden');
     } else if (inLobby && data.connected.length === 3) {
+        resetStartBtn(btnForceStart, 'FORCE START', '#FF9800');
         btnStart.classList.add('hidden');
         btnForceStart.classList.remove('hidden');
     } else {
@@ -437,6 +512,8 @@ socket.on('adminState', (data) => {
 
 socket.on('adminRoundResult', (data) => {
     if (data.phase === 'ended') {
+        gameEnded = true;
+        playMusic();
         renderGameEnded(data);
         return;
     }
@@ -446,12 +523,26 @@ socket.on('adminRoundResult', (data) => {
     renderTrueScoresFromHistory(data);
 });
 
+function resetStartBtn(btn, label, color) {
+    btn.disabled = false;
+    btn.textContent = label;
+    btn.style.background = color;
+}
+
 btnStart.addEventListener('click', () => {
     socket.emit('adminStart');
+    stopMusic();
+    btnStart.disabled = true;
+    btnStart.textContent = 'STARTING...';
+    btnStart.style.background = '#388E3C';
 });
 
 btnForceStart.addEventListener('click', () => {
     socket.emit('adminForceStart');
+    stopMusic();
+    btnForceStart.disabled = true;
+    btnForceStart.textContent = 'STARTING...';
+    btnForceStart.style.background = '#F57C00';
 });
 
 btnReset.addEventListener('click', () => {

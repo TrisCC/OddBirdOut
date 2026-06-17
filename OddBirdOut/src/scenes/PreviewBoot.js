@@ -96,23 +96,24 @@ export class PreviewBoot extends Phaser.Scene {
     }
 
     preload() {
-        this.load.image('bg_night', 'assets/bg_night.png');
-        this.load.image('bg_day2night', 'assets/bg_day2night.png');
-        this.load.image('bg_day', 'assets/bg_day.png');
+        this.load.audio('lobby_music', 'assets/Music/lobby-music-botswana.mp3');
+        this.load.image('bg_night', 'assets/Sprites/bg_night.png');
+        this.load.image('bg_day2night', 'assets/Sprites/bg_day2night.png');
+        this.load.image('bg_day', 'assets/Sprites/bg_day.png');
 
         const FRAME = { frameWidth: 640, frameHeight: 640 };
-        this.load.spritesheet('ostrich_blue',   'assets/ostrich blue.png',   FRAME);
-        this.load.spritesheet('ostrich_cyan',   'assets/ostrich cyan.png',   FRAME);
-        this.load.spritesheet('ostrich_green',  'assets/ostrich green.png',  FRAME);
-        this.load.spritesheet('ostrich_orange', 'assets/ostrich orange.png', FRAME);
-        this.load.spritesheet('ostrich_pink',   'assets/ostrich pink.png',   FRAME);
-        this.load.spritesheet('ostrich_purple', 'assets/ostrich purple.png', FRAME);
-        this.load.spritesheet('ostrich_red',    'assets/ostrich red.png',    FRAME);
-        this.load.spritesheet('ostrich_yellow', 'assets/ostrich yellow.png', FRAME);
-        this.load.spritesheet('heart_frames', 'assets/heart.png', FRAME);
-        this.load.spritesheet('egg_1', 'assets/fonts/1egg.png', FRAME);
+        this.load.spritesheet('ostrich_blue',   'assets/Sprites/ostrich blue.png',   FRAME);
+        this.load.spritesheet('ostrich_cyan',   'assets/Sprites/ostrich cyan.png',   FRAME);
+        this.load.spritesheet('ostrich_green',  'assets/Sprites/ostrich green.png',  FRAME);
+        this.load.spritesheet('ostrich_orange', 'assets/Sprites/ostrich orange.png', FRAME);
+        this.load.spritesheet('ostrich_pink',   'assets/Sprites/ostrich pink.png',   FRAME);
+        this.load.spritesheet('ostrich_purple', 'assets/Sprites/ostrich purple.png', FRAME);
+        this.load.spritesheet('ostrich_red',    'assets/Sprites/ostrich red.png',    FRAME);
+        this.load.spritesheet('ostrich_yellow', 'assets/Sprites/ostrich yellow.png', FRAME);
+        this.load.spritesheet('heart_frames', 'assets/Sprites/heart.png', FRAME);
+        this.load.spritesheet('egg_1', 'assets/Sprites/1egg.png', FRAME);
         for (const n of [2, 3, 4, 5, 6, 8]) {
-            this.load.image(`egg_${n}`, `assets/fonts/${n}egg.png`);
+            this.load.image(`egg_${n}`, `assets/Sprites/${n}egg.png`);
         }
 
         const centerX = this.scale.width / 2;
