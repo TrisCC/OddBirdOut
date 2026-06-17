@@ -66,6 +66,12 @@ const CAROUSEL_SLIDES = [
     },
 ];
 
+const CAROUSEL_Y = 643;
+const DOT_Y = 736;
+const BIRD_Y = 252;
+const COLOR_ROW_Y = [387, 455];
+const READY_BTN_Y = 515;
+
 export class Lobby extends Phaser.Scene {
 
     constructor() {
@@ -80,66 +86,57 @@ export class Lobby extends Phaser.Scene {
         const w = this.scale.width;
         const h = this.scale.height;
 
-        // Store playerId on instance so setRoleBird and carousel can access it.
         this.playerId = (this.socketManager.playerId || 'A').toUpperCase();
         const neighbors = SIDE_ORDER[this.playerId];
         const roles = [neighbors[0], this.playerId, neighbors[1]];
         const birdX = [w / 2 - 200, w / 2, w / 2 + 200];
 
-        // Map role → x position so we can recreate bird sprites anywhere.
         this.birdXMap = {};
         for (let i = 0; i < 3; i++) this.birdXMap[roles[i]] = birdX[i];
 
         this.birds = {};
         this.birdLabels = {};
         this.birdColors = { A: null, B: null, C: null };
+        this.birdReady = { A: false, B: false, C: false };
         this.selectedColor = null;
-        this.activePopupObjects = null;
+        this.localReady = false;
         this.lastKnownTaken = new Set();
 
-        // Background
         this.add.image(w / 2, h / 2, 'bg_night').setDisplaySize(w, h);
         this.add.rectangle(w / 2, h / 2, w, h, 0x000000).setAlpha(0.4);
 
-        this.add.text(w / 2, 60, 'Odd Bird Out', {
-            fontFamily: '"Press Start 2P"',
-            fontSize: '28px',
-            color: '#FFD700',
-        }).setOrigin(0.5);
-
-        this.add.text(w / 2, 110, `You are Player ${this.playerId}`, {
+        this.add.text(w / 2, 52, `You are Player ${this.playerId}`, {
             fontFamily: '"Press Start 2P"',
             fontSize: '16px',
             color: '#FFFFFF',
         }).setOrigin(0.5);
 
-        this.statusText = this.add.text(w / 2, 148, 'Waiting for players...', {
+        this.statusText = this.add.text(w / 2, 90, 'Waiting for players...', {
             fontFamily: '"Press Start 2P"',
             fontSize: '12px',
             color: '#AAAAAA',
         }).setOrigin(0.5);
 
-        this.countText = this.add.text(w / 2, 178, '0 / 3 connected', {
+        this.countText = this.add.text(w / 2, 118, '0 / 3 connected', {
             fontFamily: '"Press Start 2P"',
             fontSize: '14px',
             color: '#FFD700',
         }).setOrigin(0.5);
 
-        this.readyText = this.add.text(w / 2, 204, '0 / 3 chosen', {
+        this.readyText = this.add.text(w / 2, 144, '0 / 3 ready', {
             fontFamily: '"Press Start 2P"',
             fontSize: '11px',
             color: '#AAAAAA',
         }).setOrigin(0.5);
 
-        // Initial placeholder birds (black silhouette)
         for (let i = 0; i < 3; i++) {
             const role = roles[i];
             const isSelf = role === this.playerId;
-            const bird = this.add.sprite(birdX[i], 310, 'ostrich_red', 0);
+            const bird = this.add.sprite(birdX[i], BIRD_Y, 'ostrich_red', 0);
             bird.setDisplaySize(130, 130).setAlpha(0.4).setTint(0x000000);
             this.birds[role] = bird;
 
-            const label = this.add.text(birdX[i], 382,
+            const label = this.add.text(birdX[i], BIRD_Y + 72,
                 isSelf ? `You (${role})` : `Player ${role}`, {
                     fontFamily: '"Press Start 2P"',
                     fontSize: '8px',
@@ -148,14 +145,14 @@ export class Lobby extends Phaser.Scene {
             this.birdLabels[role] = label;
         }
 
-        this.createCarousel();
         this.buildColorPicker();
+        this.buildReadyButton();
+        this.createCarousel();
         this.setupSocketListeners(w, h);
+
     }
 
-    // Destroys the existing sprite for a role and creates a fresh one.
-    // This is the only place birds are updated — no setTexture/play juggling.
-    setRoleBird(role, color, connected) {
+    setRoleBird(role, color, connected, ready = false) {
         const x = this.birdXMap[role];
         if (x === undefined) return;
 
@@ -166,11 +163,12 @@ export class Lobby extends Phaser.Scene {
 
         let bird;
         if (color) {
-            bird = this.add.sprite(x, 310, `ostrich_${color}`, 0);
-            bird.setDisplaySize(130, 130).clearTint().setAlpha(connected ? 1 : 0.4);
+            bird = this.add.sprite(x, BIRD_Y, `ostrich_${color}`, 0);
+            bird.setDisplaySize(130, 130).clearTint();
+            bird.setAlpha(ready ? 1.0 : 0.35);
             if (this.anims.exists(`idle_${color}`)) bird.play(`idle_${color}`);
         } else {
-            bird = this.add.sprite(x, 310, 'ostrich_red', 0);
+            bird = this.add.sprite(x, BIRD_Y, 'ostrich_red', 0);
             bird.setDisplaySize(130, 130).setTint(0x000000).setAlpha(connected ? 0.4 : 0.2);
         }
 
@@ -180,168 +178,141 @@ export class Lobby extends Phaser.Scene {
 
     buildColorPicker() {
         const w = this.scale.width;
-        const BTN = 88;
-        const RADIUS = 14;
-        const GAP = 14;
+        const BTN = 58;
+        const RADIUS = 10;
+        const GAP = 10;
         const STEP = BTN + GAP;
-        const totalW = OSTRICH_COLORS.length * BTN + (OSTRICH_COLORS.length - 1) * GAP;
-        const startX = (w - totalW) / 2 + BTN / 2;
-        const btnY = 660;
+        const COLS = 4;
+
+        const gridW = COLS * BTN + (COLS - 1) * GAP;
+        const firstX = (w - gridW) / 2 + BTN / 2;
 
         this.colorButtons = {};
 
         for (let i = 0; i < OSTRICH_COLORS.length; i++) {
             const { id, hex } = OSTRICH_COLORS[i];
-            const x = startX + i * STEP;
+            const col = i % COLS;
+            const row = Math.floor(i / COLS);
+            const x = firstX + col * STEP;
+            const y = COLOR_ROW_Y[row];
 
             const gfx = this.add.graphics();
             gfx.fillStyle(hex, 1);
-            gfx.fillRoundedRect(x - BTN / 2, btnY - BTN / 2, BTN, BTN, RADIUS);
+            gfx.fillRoundedRect(x - BTN / 2, y - BTN / 2, BTN, BTN, RADIUS);
 
             const ring = this.add.graphics();
             ring.lineStyle(4, 0xFFFFFF, 1);
-            ring.strokeRoundedRect(x - BTN / 2 - 4, btnY - BTN / 2 - 4, BTN + 8, BTN + 8, RADIUS + 4);
+            ring.strokeRoundedRect(x - BTN / 2 - 4, y - BTN / 2 - 4, BTN + 8, BTN + 8, RADIUS + 4);
             ring.setAlpha(0);
 
-            const label = this.add.text(x, btnY + BTN / 2 + 10, id, {
-                fontFamily: '"Press Start 2P"',
-                fontSize: '7px',
-                color: '#FFFFFF',
-            }).setOrigin(0.5);
+            const zone = this.add.zone(x, y, BTN + 8, BTN + 8).setInteractive();
+            zone.on('pointerdown', () => this.onColorClick(id));
 
-            const zone = this.add.zone(x, btnY, BTN + 12, BTN + 12).setInteractive();
-            zone.on('pointerdown', () => {
-                if (this.activePopupObjects) return;
-                this.showColorPopup(id, hex);
-            });
-
-            this.colorButtons[id] = { gfx, ring, label, zone, hex };
+            this.colorButtons[id] = { gfx, ring, zone, hex };
         }
     }
 
-    showColorPopup(color, colorHex) {
-        this.closePopup();
+    onColorClick(id) {
+        // A ready player's color is locked — can't steal it
+        if (this.lastKnownTaken.has(id)) return;
 
-        const w = this.scale.width;
-        const h = this.scale.height;
-        const cx = w / 2;
-        const cy = h / 2;
-        const D = 100;
-
-        // Dark overlay — also blocks accidental carousel drags
-        const overlay = this.add.rectangle(cx, cy, w, h, 0x000000, 0.72)
-            .setDepth(D).setInteractive();
-
-        // Panel
-        const panel = this.add.graphics().setDepth(D + 1);
-        panel.fillStyle(0x0d1b2a, 1);
-        panel.fillRoundedRect(cx - 190, cy - 148, 380, 296, 18);
-        panel.lineStyle(4, colorHex, 1);
-        panel.strokeRoundedRect(cx - 190, cy - 148, 380, 296, 18);
-
-        // Ostrich preview (fresh sprite, so animation works reliably)
-        const preview = this.add.sprite(cx, cy - 68, `ostrich_${color}`, 0)
-            .setDepth(D + 2).setDisplaySize(120, 120);
-        if (this.anims.exists(`idle_${color}`)) preview.play(`idle_${color}`);
-
-        const question = this.add.text(cx, cy + 10,
-            `Play as ${color.toUpperCase()}?`, {
-                fontFamily: '"Press Start 2P"',
-                fontSize: '12px',
-                color: '#FFFFFF',
-            }).setOrigin(0.5).setDepth(D + 2);
-
-        // Lock in button
-        const lockBg = this.add.graphics().setDepth(D + 1);
-        lockBg.fillStyle(0x2e7d32, 1);
-        lockBg.fillRoundedRect(cx - 175, cy + 58, 152, 50, 10);
-
-        const lockLabel = this.add.text(cx - 99, cy + 83, 'Lock in!', {
-            fontFamily: '"Press Start 2P"',
-            fontSize: '10px',
-            color: '#FFFFFF',
-        }).setOrigin(0.5).setDepth(D + 2);
-
-        const lockZone = this.add.zone(cx - 99, cy + 83, 152, 50)
-            .setDepth(D + 3).setInteractive();
-        lockZone.on('pointerdown', () => {
-            this.closePopup();
-            this.confirmColor(color);
-        });
-
-        // Cancel button
-        const cancelBg = this.add.graphics().setDepth(D + 1);
-        cancelBg.fillStyle(0x2a2a3a, 1);
-        cancelBg.fillRoundedRect(cx + 23, cy + 58, 152, 50, 10);
-
-        const cancelLabel = this.add.text(cx + 99, cy + 83, 'Cancel', {
-            fontFamily: '"Press Start 2P"',
-            fontSize: '10px',
-            color: '#AAAAAA',
-        }).setOrigin(0.5).setDepth(D + 2);
-
-        const cancelZone = this.add.zone(cx + 99, cy + 83, 152, 50)
-            .setDepth(D + 3).setInteractive();
-        cancelZone.on('pointerdown', () => this.closePopup());
-
-        this.activePopupObjects = [
-            overlay, panel, preview, question,
-            lockBg, lockLabel, lockZone,
-            cancelBg, cancelLabel, cancelZone,
-        ];
-    }
-
-    closePopup() {
-        if (this.activePopupObjects) {
-            for (const obj of this.activePopupObjects) {
-                if (obj && obj.active) obj.destroy();
-            }
-            this.activePopupObjects = null;
+        // Clicking a different color while ready → unready first
+        if (this.localReady && id !== this.selectedColor) {
+            this.localReady = false;
         }
+
+        this.confirmColor(id);
     }
 
     confirmColor(color) {
         this.selectedColor = color;
         this.socketManager.emitPlayerColorChoice(color);
-
-        // Update own bird immediately via the reliable destroy+recreate path.
-        this.setRoleBird(this.playerId, color, true);
-
-        // Refresh button states against last server-known taken set.
+        this.setRoleBird(this.playerId, color, true, false);
         this.updateColorButtons(this.lastKnownTaken);
+        this.updateReadyButton();
+    }
+
+    buildReadyButton() {
+        const w = this.scale.width;
+        const BTN_W = 220;
+        const BTN_H = 44;
+        const cx = w / 2;
+        const cy = READY_BTN_Y;
+
+        this._readyBtnCx = cx;
+        this._readyBtnCy = cy;
+        this._readyBtnW = BTN_W;
+        this._readyBtnH = BTN_H;
+        this._readyBtnRadius = 12;
+
+        this.readyBtnBg = this.add.graphics();
+
+        this.readyBtnLabel = this.add.text(cx, cy, 'Ready!', {
+            fontFamily: '"Press Start 2P"',
+            fontSize: '13px',
+            color: '#FFFFFF',
+        }).setOrigin(0.5);
+
+        this.readyBtnZone = this.add.zone(cx, cy, BTN_W, BTN_H).setInteractive();
+        this.readyBtnZone.on('pointerdown', () => this.onReadyClick());
+
+        this.updateReadyButton();
+    }
+
+    updateReadyButton() {
+        const { _readyBtnCx: cx, _readyBtnCy: cy, _readyBtnW: bw, _readyBtnH: bh, _readyBtnRadius: r } = this;
+        this.readyBtnBg.clear();
+
+        if (this.localReady) {
+            this.readyBtnBg.fillStyle(0x2e7d32, 1);
+            this.readyBtnBg.fillRoundedRect(cx - bw / 2, cy - bh / 2, bw, bh, r);
+            this.readyBtnLabel.setText('Ready! ✓').setAlpha(1);
+            this.readyBtnZone.disableInteractive();
+        } else if (this.selectedColor) {
+            this.readyBtnBg.fillStyle(0x1565C0, 1);
+            this.readyBtnBg.fillRoundedRect(cx - bw / 2, cy - bh / 2, bw, bh, r);
+            this.readyBtnLabel.setText('Ready!').setAlpha(1);
+            this.readyBtnZone.setInteractive();
+        } else {
+            this.readyBtnBg.fillStyle(0x333333, 1);
+            this.readyBtnBg.fillRoundedRect(cx - bw / 2, cy - bh / 2, bw, bh, r);
+            this.readyBtnLabel.setText('Ready!').setAlpha(0.4);
+            this.readyBtnZone.disableInteractive();
+        }
+    }
+
+    onReadyClick() {
+        if (!this.selectedColor || this.localReady) return;
+        this.localReady = true;
+        this.socketManager.emitPlayerReady();
+        this.setRoleBird(this.playerId, this.selectedColor, true, true);
+        this.updateColorButtons(this.lastKnownTaken);
+        this.updateReadyButton();
     }
 
     updateColorButtons(takenByOthers) {
-        for (const [id, { gfx, ring, label, zone, hex }] of Object.entries(this.colorButtons)) {
+        for (const [id, { gfx, ring, zone }] of Object.entries(this.colorButtons)) {
             const taken = takenByOthers.has(id);
             const isSelected = this.selectedColor === id;
 
             if (taken) {
+                // Only ready players' colors are locked — always block these
                 gfx.setAlpha(0.15);
-                label.setAlpha(0.15);
                 ring.setAlpha(0);
                 zone.disableInteractive();
+            } else if (this.localReady) {
+                // Post-ready: highlight own selection, grey out rest
+                gfx.setAlpha(isSelected ? 1 : 0.15);
+                ring.setAlpha(isSelected ? 1 : 0);
+                zone.setInteractive(); // still allow clicking another color to unready
             } else if (isSelected) {
                 gfx.setAlpha(1);
-                label.setAlpha(1);
                 ring.setAlpha(1);
                 zone.setInteractive();
-                zone.off('pointerdown');
-                zone.on('pointerdown', () => {
-                    if (this.activePopupObjects) return;
-                    this.showColorPopup(id, hex);
-                });
             } else {
-                const alpha = this.selectedColor ? 0.3 : 1;
-                gfx.setAlpha(alpha);
-                label.setAlpha(alpha);
+                gfx.setAlpha(this.selectedColor ? 0.4 : 1);
                 ring.setAlpha(0);
                 zone.setInteractive();
-                zone.off('pointerdown');
-                zone.on('pointerdown', () => {
-                    if (this.activePopupObjects) return;
-                    this.showColorPopup(id, hex);
-                });
             }
         }
     }
@@ -353,49 +324,54 @@ export class Lobby extends Phaser.Scene {
             const readyCount = readyArr.length;
             const colorChoices = data.colorChoices || {};
 
-            // Re-send on reconnect if server dropped our state.
-            if (this.selectedColor && !readyArr.includes(this.playerId)) {
+            // Re-send only if server is missing our state (reconnect recovery)
+            if (this.selectedColor && colorChoices[this.playerId] !== this.selectedColor) {
                 this.socketManager.emitPlayerColorChoice(this.selectedColor);
+            }
+            if (this.localReady && !readyArr.includes(this.playerId)) {
+                this.socketManager.emitPlayerReady();
             }
 
             this.countText.setText(`${count} / 3 connected`);
-            this.readyText.setText(`${readyCount} / 3 chosen`);
+            this.readyText.setText(`${readyCount} / 3 ready`);
 
             for (const role of ['A', 'B', 'C']) {
                 const connected = data.connected.includes(role);
                 const isOwnRole = role === this.playerId;
-                // Own role: local selectedColor is authoritative so a stale
-                // periodic broadcast can't revert the bird mid-flight.
-                const chosenColor = (isOwnRole && this.selectedColor)
-                    ? this.selectedColor
-                    : (colorChoices[role] || null);
+                const isReady = isOwnRole ? this.localReady : readyArr.includes(role);
+                // Own player shows colour immediately on selection; others only reveal on ready
+                const chosenColor = isOwnRole
+                    ? (this.selectedColor || null)
+                    : (isReady ? (colorChoices[role] || null) : null);
 
-                if (this.birdColors[role] !== chosenColor) {
-                    // Color changed — recreate the sprite fresh.
-                    this.setRoleBird(role, chosenColor, connected);
+                const colorChanged = this.birdColors[role] !== chosenColor;
+                const readyChanged = this.birdReady[role] !== isReady;
+
+                if (colorChanged || readyChanged) {
+                    this.setRoleBird(role, chosenColor, connected, isReady);
+                    this.birdReady[role] = isReady;
                 } else if (this.birds[role]) {
-                    // Same color, just sync the alpha for connection state.
-                    this.birds[role].setAlpha(
-                        chosenColor
-                            ? (connected ? 1 : 0.4)
-                            : (connected ? 0.4 : 0.2),
-                    );
+                    const targetAlpha = chosenColor
+                        ? (isReady ? 1.0 : 0.35)
+                        : (connected ? 0.4 : 0.2);
+                    this.birds[role].setAlpha(targetAlpha);
                 }
 
                 if (this.birdLabels[role]) {
                     const baseText = isOwnRole ? `You (${role})` : `Player ${role}`;
-                    const suffix = chosenColor ? ' ✓' : '';
+                    const suffix = isReady ? ' ✓' : (chosenColor ? ' •' : '');
                     const labelColor = isOwnRole
                         ? '#FFD700'
-                        : (chosenColor ? '#4CAF50' : '#AAAAAA');
+                        : (isReady ? '#4CAF50' : (chosenColor ? '#CCCCCC' : '#AAAAAA'));
                     this.birdLabels[role].setText(baseText + suffix);
                     this.birdLabels[role].setColor(labelColor);
                 }
             }
 
+            // Only ready players' colors count as locked for others
             const takenByOthers = new Set(
                 Object.entries(colorChoices)
-                    .filter(([pid]) => pid !== this.playerId)
+                    .filter(([pid]) => pid !== this.playerId && readyArr.includes(pid))
                     .map(([, col]) => col),
             );
             this.lastKnownTaken = takenByOthers;
@@ -407,8 +383,11 @@ export class Lobby extends Phaser.Scene {
             } else if (!this.selectedColor) {
                 this.statusText.setText('Pick your colour to begin!');
                 this.statusText.setColor('#FFD700');
+            } else if (!this.localReady) {
+                this.statusText.setText('Tap Ready when set!');
+                this.statusText.setColor('#FFD700');
             } else if (readyCount < 3) {
-                this.statusText.setText('Waiting for other players...');
+                this.statusText.setText('Waiting for others...');
                 this.statusText.setColor('#FFD700');
             } else {
                 this.statusText.setText('All players ready!');
@@ -417,7 +396,6 @@ export class Lobby extends Phaser.Scene {
         });
 
         this.socketManager.on('gameStart', (data) => {
-            this.closePopup();
             this.scene.start('Game', {
                 socketManager: this.socketManager,
                 playerId: data.playerId,
@@ -444,9 +422,10 @@ export class Lobby extends Phaser.Scene {
         this.isDragging = false;
         this.isTransitioning = false;
 
-        this.carousel = this.add.container(w / 2, 490);
-        const bg = this.add.image(0, 0, 'panel_bg');
-        bg.setDisplaySize(680, 180);
+        this.carousel = this.add.container(w / 2, CAROUSEL_Y);
+        const bg = this.add.graphics();
+        bg.fillStyle(0x000000, 0.45);
+        bg.fillRoundedRect(-340, -90, 680, 180, 18);
         this.carousel.add(bg);
 
         this.slideContent = this.add.container(0, -20);
@@ -457,8 +436,7 @@ export class Lobby extends Phaser.Scene {
         const dotStartX = -((CAROUSEL_SLIDES.length - 1) * dotSpacing) / 2;
         for (let i = 0; i < CAROUSEL_SLIDES.length; i++) {
             const dotX = w / 2 + dotStartX + i * dotSpacing;
-            const dotY = 592;
-            const dot = this.add.circle(dotX, dotY, 5, 0x555555);
+            const dot = this.add.circle(dotX, DOT_Y, 5, 0x555555);
             dot.setStrokeStyle(1, 0x888888);
             dot.setInteractive(new Phaser.Geom.Circle(0, 0, 12), Phaser.Geom.Circle.Contains);
             dot.on('pointerdown', () => this.onDotClick(i));
@@ -480,15 +458,13 @@ export class Lobby extends Phaser.Scene {
     }
 
     onPointerDown(pointer) {
-        if (this.activePopupObjects) return; // popup blocks carousel drag
         if (this.isTransitioning) return;
         if (!this.isInCarousel(pointer)) return;
 
-        const dotSpacing = 18;
-        const dotStartX = this.scale.width / 2 - ((CAROUSEL_SLIDES.length - 1) * dotSpacing) / 2;
-        for (let i = 0; i < CAROUSEL_SLIDES.length; i++) {
-            const dx = pointer.x - (dotStartX + i * dotSpacing);
-            const dy = pointer.y - 592;
+        // Don't start a drag if the pointer is on a nav dot
+        for (const dot of this.navDots) {
+            const dx = pointer.x - dot.x;
+            const dy = pointer.y - dot.y;
             if (dx * dx + dy * dy < 225) return;
         }
 

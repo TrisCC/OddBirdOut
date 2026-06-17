@@ -8,20 +8,28 @@ export class Boot extends Phaser.Scene {
     }
 
     preload() {
-        this.load.image('bg_night', 'assets/bg_night.png');
-        this.load.image('bg_day2night', 'assets/bg_day2night.png');
-        this.load.image('bg_day', 'assets/bg_day.png');
+        this.load.audio('lobby_music', 'assets/Music/lobby-music-botswana.mp3');
+        this.load.image('bg_night', 'assets/Sprites/bg_night.png');
+        this.load.image('bg_day2night', 'assets/Sprites/bg_day2night.png');
+        this.load.image('bg_day', 'assets/Sprites/bg_day.png');
 
         // Each PNG is 1920×640 with 3 animation frames of 640×640 each.
         const FRAME = { frameWidth: 640, frameHeight: 640 };
-        this.load.spritesheet('ostrich_blue',   'assets/ostrich blue.png',   FRAME);
-        this.load.spritesheet('ostrich_cyan',   'assets/ostrich cyan.png',   FRAME);
-        this.load.spritesheet('ostrich_green',  'assets/ostrich green.png',  FRAME);
-        this.load.spritesheet('ostrich_orange', 'assets/ostrich orange.png', FRAME);
-        this.load.spritesheet('ostrich_pink',   'assets/ostrich pink.png',   FRAME);
-        this.load.spritesheet('ostrich_purple', 'assets/ostrich purple.png', FRAME);
-        this.load.spritesheet('ostrich_red',    'assets/ostrich red.png',    FRAME);
-        this.load.spritesheet('ostrich_yellow', 'assets/ostrich yellow.png', FRAME);
+        // heart.png is 2560×640 with 4 animation frames of 640×640 each.
+        this.load.spritesheet('heart_frames', 'assets/Sprites/heart.png', FRAME);
+        // 1egg.png is 2560×640 with 4 animation frames; 2–6 and 8 are single 640×640 images.
+        this.load.spritesheet('egg_1', 'assets/Sprites/1egg.png', FRAME);
+        for (const n of [2, 3, 4, 5, 6, 8]) {
+            this.load.image(`egg_${n}`, `assets/Sprites/${n}egg.png`);
+        }
+        this.load.spritesheet('ostrich_blue',   'assets/Sprites/ostrich blue.png',   FRAME);
+        this.load.spritesheet('ostrich_cyan',   'assets/Sprites/ostrich cyan.png',   FRAME);
+        this.load.spritesheet('ostrich_green',  'assets/Sprites/ostrich green.png',  FRAME);
+        this.load.spritesheet('ostrich_orange', 'assets/Sprites/ostrich orange.png', FRAME);
+        this.load.spritesheet('ostrich_pink',   'assets/Sprites/ostrich pink.png',   FRAME);
+        this.load.spritesheet('ostrich_purple', 'assets/Sprites/ostrich purple.png', FRAME);
+        this.load.spritesheet('ostrich_red',    'assets/Sprites/ostrich red.png',    FRAME);
+        this.load.spritesheet('ostrich_yellow', 'assets/Sprites/ostrich yellow.png', FRAME);
 
         const centerX = this.scale.width / 2;
         const centerY = this.scale.height / 2;
@@ -55,6 +63,20 @@ export class Boot extends Phaser.Scene {
     create() {
         generateAllTextures(this);
 
+        this.anims.create({
+            key: 'egg_count_1',
+            frames: this.anims.generateFrameNumbers('egg_1', { start: 0, end: 3 }),
+            frameRate: 8,
+            repeat: 0,
+        });
+
+        this.anims.create({
+            key: 'heart_burst',
+            frames: this.anims.generateFrameNumbers('heart_frames', { start: 0, end: 3 }),
+            frameRate: 8,
+            repeat: 0,
+        });
+
         // Register idle animations for all 8 ostrich colours (global to the game).
         for (const color of ['blue', 'cyan', 'green', 'orange', 'pink', 'purple', 'red', 'yellow']) {
             this.anims.create({
@@ -73,7 +95,7 @@ export class Boot extends Phaser.Scene {
                 this.showError(data.message);
             });
 
-            this.scene.start('Lobby', { socketManager });
+            this.scene.start('Start', { socketManager });
         });
 
         socketManager.on('disconnected', () => {
