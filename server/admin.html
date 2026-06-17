@@ -394,7 +394,12 @@ td.ostracism-phase { color: #F44336; }
     </div>
 </div>
 
-<audio id="lobbyAudio" loop src="/assets/Music/lobby-music-botswana.mp3" preload="auto"></audio>
+<audio id="lobbyAudio"      src="/assets/Sound/lobby-music-botswana.mp3"      preload="auto"></audio>
+<audio id="gameAudio"  loop src="/assets/Sound/in-game-sandboxserenade.mp3"  preload="auto"></audio>
+<audio id="ostrichAudio1"    src="/assets/Sound/ostrich1.wav"               preload="auto"></audio>
+<audio id="ostrichAudio2"    src="/assets/Sound/ostrich2.wav"               preload="auto"></audio>
+<audio id="ostrichAudio3"    src="/assets/Sound/ostrich3.wav"               preload="auto"></audio>
+<audio id="eggAudio"        src="/assets/Sound/egg-hatch.mp3"                preload="auto"></audio>
 
 <div id="disconnectedOverlay"><div class="msg">Disconnected from server<br><span style="font-size:14px;color:#888;">Attempting to reconnect...</span></div></div>
 
@@ -421,11 +426,35 @@ const btnConfirmNo = document.getElementById('btnConfirmNo');
 
 let roundHistory = [];
 let gameEnded = false;
-let manualMute = false;
+let manualMute = true;
 
 const lobbyAudio = document.getElementById('lobbyAudio');
+const gameAudio  = document.getElementById('gameAudio');
+const ostrichAudios = [
+    document.getElementById('ostrichAudio1'),
+    document.getElementById('ostrichAudio2'),
+    document.getElementById('ostrichAudio3'),
+];
+let ostrichPool = [];
+const eggAudio   = document.getElementById('eggAudio');
 const btnMusicToggle = document.getElementById('btnMusicToggle');
-let wantMusic = false;
+let wantMusic     = false;  // lobby music (lobby/start/gameover/reveal)
+let wantGameMusic = false;  // in-game background music
+let gameOverMode  = false;  // true while gameover/reveal music plays (no loop)
+
+let adminPrevScores = { A: 0, B: 0, C: 0 };
+let sfxTimers = [];
+
+function clearSfxTimers() {
+    for (const t of sfxTimers) clearTimeout(t);
+    sfxTimers = [];
+}
+
+function playSfx(audio) {
+    if (manualMute) return;
+    audio.currentTime = 0;
+    audio.play().catch(() => {});
+}
 
 function updateMusicButton() {
     if (manualMute) {
@@ -436,13 +465,14 @@ function updateMusicButton() {
         btnMusicToggle.classList.remove('muted');
     }
 }
+updateMusicButton(); // apply initial muted state to button
 
 function playMusic() {
+    if (gameOverMode) return;  // gameover music manages itself; don't override loop setting
     wantMusic = true;
+    lobbyAudio.loop = true;
     if (manualMute) return;
-    lobbyAudio.play().catch(() => {
-        // Browser blocked autoplay — resumes on next user click
-    });
+    lobbyAudio.play().catch(() => {});
 }
 
 function stopMusic() {
@@ -457,15 +487,30 @@ btnMusicToggle.addEventListener('click', () => {
     if (manualMute) {
         lobbyAudio.pause();
         lobbyAudio.currentTime = 0;
-    } else if (wantMusic) {
-        lobbyAudio.play().catch(() => {});
+        gameAudio.pause(); // keep currentTime so it resumes from same spot
+    } else {
+        if (wantMusic) lobbyAudio.play().catch(() => {});
+        if (wantGameMusic && gameAudio.paused) gameAudio.play().catch(() => {});
     }
 });
 
 // Unlock autoplay on first interaction (browser policy)
 document.addEventListener('click', () => {
-    if (wantMusic && !manualMute && lobbyAudio.paused) {
-        lobbyAudio.play().catch(() => {});
+    if (manualMute) return;
+    if (wantMusic && lobbyAudio.paused) lobbyAudio.play().catch(() => {});
+    if (wantGameMusic && gameAudio.paused) gameAudio.play().catch(() => {});
+});
+
+// Night fade (1200ms) + 3 actions×1800ms + 500ms tail = 7100ms to day-fade start
+const DAY_FADE_DELAY_MS = 7100;
+let gameStarted = false;
+
+socket.on('roundStart', (data) => {
+    // Only auto-start in-game music on the very first round of a game
+    if (!gameStarted) {
+        gameStarted = true;
+        wantGameMusic = true;
+        if (!manualMute) gameAudio.play().catch(() => {});
     }
 });
 
@@ -513,11 +558,37 @@ socket.on('adminState', (data) => {
 
 socket.on('adminRoundResult', (data) => {
     if (data.phase === 'ended') {
+        clearSfxTimers();
+        adminPrevScores = { A: 0, B: 0, C: 0 };
         gameEnded = true;
-        playMusic();
+        gameOverMode = true;
+        wantGameMusic = false;
+        gameAudio.pause();
+        gameAudio.currentTime = 0;
+        // Play botswana once (no loop) through gameover and reveal
+        wantMusic = true;
+        lobbyAudio.loop = false;
+        lobbyAudio.currentTime = 0;
+        if (!manualMute) lobbyAudio.play().catch(() => {});
         renderGameEnded(data);
         return;
     }
+    clearSfxTimers();
+    // Schedule ostrich SFX at the moment each share animation starts (no repeats per round)
+    data.trueActions.forEach((act, i) => {
+        if (act.action === 'share') {
+            if (ostrichPool.length === 0) ostrichPool = [...ostrichAudios];
+            const idx = Math.floor(Math.random() * ostrichPool.length);
+            const audio = ostrichPool.splice(idx, 1)[0];
+            sfxTimers.push(setTimeout(() => playSfx(audio), 1200 + i * 1800));
+        }
+    });
+    // Schedule egg-hatch SFX when applyScores fires (same moment as day-fade start)
+    const s = data.trueScores;
+    if (s.A > adminPrevScores.A || s.B > adminPrevScores.B || s.C > adminPrevScores.C) {
+        sfxTimers.push(setTimeout(() => playSfx(eggAudio), DAY_FADE_DELAY_MS));
+    }
+    adminPrevScores = { A: s.A, B: s.B, C: s.C };
     roundHistory.push(data);
     renderHistory();
     renderIllusions(data);
@@ -558,6 +629,16 @@ btnConfirmYes.addEventListener('click', () => {
     roundHistory = [];
     renderHistory();
     renderIllusions(null);
+    clearSfxTimers();
+    adminPrevScores = { A: 0, B: 0, C: 0 };
+    wantMusic = false;
+    wantGameMusic = false;
+    gameOverMode = false;
+    gameStarted = false;
+    lobbyAudio.pause();
+    lobbyAudio.currentTime = 0;
+    gameAudio.pause();
+    gameAudio.currentTime = 0;
 });
 
 btnConfirmNo.addEventListener('click', () => {

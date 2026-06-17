@@ -208,23 +208,32 @@ export class Game extends Phaser.Scene {
         this.eventQueue = [];
         this.animating = false;
 
-        this.socketManager.on('roundStart', (data) => {
+        const onRoundStart = (data) => {
             this.eventQueue.push({ type: 'roundStart', data });
             this.processEventQueue();
-        });
-
-        this.socketManager.on('roundResult', (data) => {
+        };
+        const onRoundResult = (data) => {
             this.eventQueue.push({ type: 'roundResult', data });
             this.processEventQueue();
-        });
-
-        this.socketManager.on('gameEnd', (data) => {
+        };
+        const onGameEnd = (data) => {
             this.eventQueue.push({ type: 'gameEnd', data });
             this.processEventQueue();
-        });
-
-        this.socketManager.on('gameAborted', (data) => {
+        };
+        const onGameAborted = () => {
             this.scene.start('Boot');
+        };
+
+        this.socketManager.on('roundStart',  onRoundStart);
+        this.socketManager.on('roundResult', onRoundResult);
+        this.socketManager.on('gameEnd',     onGameEnd);
+        this.socketManager.on('gameAborted', onGameAborted);
+
+        this.events.once('shutdown', () => {
+            this.socketManager.off('roundStart',  onRoundStart);
+            this.socketManager.off('roundResult', onRoundResult);
+            this.socketManager.off('gameEnd',     onGameEnd);
+            this.socketManager.off('gameAborted', onGameAborted);
         });
     }
 

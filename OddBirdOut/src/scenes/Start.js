@@ -73,35 +73,29 @@ export class Start extends Phaser.Scene {
 
         const cx = w / 2;
         const cy = h / 2;
-        const panelW = 560;
-        const panelH = 130;
+        const panelW = 580;
+        const panelH = 190;
 
-        const overlay = this.add.rectangle(cx, cy, w, h, 0x000000, 0.6)
-            .setDepth(20).setInteractive();
+        const t = (x, y, str, size, color) => this.add.text(x, y, str, {
+            fontFamily: '"Press Start 2P"', fontSize: size, color,
+        }).setOrigin(0.5).setDepth(22);
 
+        const overlay = this.add.rectangle(cx, cy, w, h, 0x000000, 0.6).setDepth(20).setInteractive();
         const panel = this.add.graphics().setDepth(21);
         panel.fillStyle(0x000000, 0.88);
         panel.fillRoundedRect(cx - panelW / 2, cy - panelH / 2, panelW, panelH, 16);
 
-        const heading = this.add.text(cx, cy - 30, 'Music Credits', {
-            fontFamily: '"Press Start 2P"',
-            fontSize: '10px',
-            color: '#FFD700',
-        }).setOrigin(0.5).setDepth(22);
-
-        const line1 = this.add.text(cx, cy + 4, 'Music from #Uppbeat (free for Creators!)', {
-            fontFamily: '"Press Start 2P"',
-            fontSize: '7px',
-            color: '#FFFFFF',
-        }).setOrigin(0.5).setDepth(22);
-
-        const line2 = this.add.text(cx, cy + 26, 'uppbeat.io/t/richard-bodgers/botswana', {
-            fontFamily: '"Press Start 2P"',
-            fontSize: '7px',
-            color: '#AAAAAA',
-        }).setOrigin(0.5).setDepth(22);
-
-        const objects = [overlay, panel, heading, line1, line2];
+        const objects = [
+            overlay,
+            panel,
+            t(cx, cy - 68, 'Music Credits',                          '10px', '#FFD700'),
+            t(cx, cy - 40, 'Music from #Uppbeat (free for Creators!)', '7px', '#FFFFFF'),
+            t(cx, cy - 22, 'uppbeat.io/t/richard-bodgers/botswana',    '7px', '#AAAAAA'),
+            t(cx, cy +  4, 'Music from #Uppbeat (free for Creators!)', '7px', '#FFFFFF'),
+            t(cx, cy + 22, 'uppbeat.io/t/sky-toes/sandbox-serenade',   '7px', '#AAAAAA'),
+            t(cx, cy + 40, 'License: ZPTRS0EXAS3QL0CQ',               '7px', '#666666'),
+            t(cx, cy + 70, 'tap to close',                             '7px', '#555555'),
+        ];
 
         overlay.once('pointerdown', () => {
             for (const obj of objects) obj.destroy();
