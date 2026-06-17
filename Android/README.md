@@ -30,19 +30,19 @@ Run these commands from the laptop with the tablet connected via USB. Prerequisi
 gradlew.bat assembleRelease
 ```
 
-APK will be at `app\build\outputs\apk\release\app-release.apk`.
+APK will be at `app\release\app-release.apk`.
 
 ### 2. Install the APK
 
 ```bash
-adb install -r app\release\app-release.apk
+adb install -r app/release/app-release.apk
 ```
 
 ### 3. Connect to the expo WiFi network
 
 ```bash
 adb shell svc wifi enable
-adb shell cmd wifi connect-network "YOUR_SSID" wpa2 "YOUR_PASSWORD"
+adb shell cmd wifi connect-network "OddBirdOut" wpa2 "Ostracism"
 ```
 
 Verify with:
@@ -57,13 +57,13 @@ Look for `Supplicant state: COMPLETED` and an assigned IP address.
 
 ```bash
 # Tablet A
-adb shell settings put global oddbirdout_url "http://192.168.1.100:3000/?player=A"
+adb shell settings put global oddbirdout_url "http://192.168.1.74:3000/?player=A"
 
 # Tablet B
-adb shell settings put global oddbirdout_url "http://192.168.1.100:3000/?player=B"
+adb shell settings put global oddbirdout_url "http://192.168.1.74:3000/?player=B"
 
 # Tablet C
-adb shell settings put global oddbirdout_url "http://192.168.1.100:3000/?player=C"
+adb shell settings put global oddbirdout_url "http://192.168.1.74:3000/?player=C"
 ```
 
 ### 5. Set as device owner
@@ -82,7 +82,21 @@ Makes the app auto-launch on boot instead of the system launcher:
 adb shell cmd package set-home-activity com.oddbirdout.android/.MainActivity
 ```
 
-### 7. Reboot and verify
+### 7. Disable Bluetooth
+
+Bluetooth is enabled by default. Disable it to save resources:
+
+```bash
+adb shell svc bluetooth disable
+```
+
+To verify if its disabled:
+
+```bash
+adb shell settings get global bluetooth_on
+```
+
+### 8. Reboot and verify
 
 ```bash
 adb reboot
@@ -90,7 +104,7 @@ adb reboot
 
 After reboot the tablet should boot directly into the app (no lock screen) and load the game.
 
-### 8. Test connectivity
+### 9. Test connectivity
 
 From the laptop, verify the tablet can reach the server:
 
