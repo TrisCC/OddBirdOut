@@ -312,6 +312,7 @@ td.ostracism-phase { color: #F44336; }
         <span id="connectionDot" class="status-dot offline"></span>
         <span id="connectionLabel" style="font-size:12px;color:#888;">Disconnected</span>
         <button class="btn hidden" id="btnStart" style="background:#4CAF50;color:#fff;">START GAME</button>
+        <button class="btn hidden" id="btnForceStart" style="background:#FF9800;color:#fff;">FORCE START</button>
         <button class="btn btn-reset" id="btnReset">RESET</button>
         <span id="resetConfirm" class="reset-confirm hidden">
             <span style="font-size:12px;color:#F44336;">Are you sure?</span>
@@ -395,6 +396,7 @@ const connectionLabel = document.getElementById('connectionLabel');
 const disconnectedOverlay = document.getElementById('disconnectedOverlay');
 const btnReset = document.getElementById('btnReset');
 const btnStart = document.getElementById('btnStart');
+const btnForceStart = document.getElementById('btnForceStart');
 const resetConfirm = document.getElementById('resetConfirm');
 const btnConfirmYes = document.getElementById('btnConfirmYes');
 const btnConfirmNo = document.getElementById('btnConfirmNo');
@@ -420,10 +422,16 @@ socket.on('adminState', (data) => {
     renderGameState(data);
     renderTrueScores(data);
     renderLighting(data.lighting);
-    if (data.state === 'lobby' && data.allReady && !data.game) {
+    const inLobby = data.state === 'lobby' && !data.game;
+    if (inLobby && data.allReady) {
         btnStart.classList.remove('hidden');
+        btnForceStart.classList.add('hidden');
+    } else if (inLobby && data.connected.length === 3) {
+        btnStart.classList.add('hidden');
+        btnForceStart.classList.remove('hidden');
     } else {
         btnStart.classList.add('hidden');
+        btnForceStart.classList.add('hidden');
     }
 });
 
@@ -440,6 +448,10 @@ socket.on('adminRoundResult', (data) => {
 
 btnStart.addEventListener('click', () => {
     socket.emit('adminStart');
+});
+
+btnForceStart.addEventListener('click', () => {
+    socket.emit('adminForceStart');
 });
 
 btnReset.addEventListener('click', () => {

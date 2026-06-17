@@ -11,8 +11,7 @@ export function generateAllTextures(scene) {
     generateOstrichSad(scene, 'A', COLORS.A);
     generateOstrichSad(scene, 'B', COLORS.B);
     generateOstrichSad(scene, 'C', COLORS.C);
-    generateSeed(scene);
-    generateGoldenEgg(scene);
+    generateEgg(scene);
     generateHeart(scene);
     generateBrokenHeart(scene);
     generateButton(scene, 'share', 0x4CAF50);
@@ -83,25 +82,16 @@ function generateOstrichSad(scene, id, color) {
     g.destroy();
 }
 
-function generateSeed(scene) {
+function generateEgg(scene) {
     const g = scene.add.graphics();
-    g.fillStyle(0xFFD700);
-    g.fillCircle(10, 10, 9);
-    g.fillStyle(0xFFF8DC);
-    g.fillCircle(7, 7, 3);
-    g.generateTexture('seed', 20, 20);
-    g.destroy();
-}
-
-function generateGoldenEgg(scene) {
-    const g = scene.add.graphics();
-    g.fillStyle(0xFFD700);
-    g.fillEllipse(36, 28, 64, 48);
-    g.fillStyle(0xFFC107);
-    g.fillEllipse(36, 28, 56, 40);
-    g.fillStyle(0xFFECB3);
-    g.fillEllipse(30, 22, 16, 10);
-    g.generateTexture('golden_egg', 72, 56);
+    g.fillStyle(0xF5EFE0);
+    g.fillEllipse(10, 12, 16, 20);
+    g.fillStyle(0xD9C7A3);
+    g.fillCircle(7, 7, 1.5);
+    g.fillCircle(13, 11, 1.5);
+    g.fillCircle(8, 16, 1.5);
+    g.fillCircle(14, 17, 1.5);
+    g.generateTexture('egg', 20, 24);
     g.destroy();
 }
 

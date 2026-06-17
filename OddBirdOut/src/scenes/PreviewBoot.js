@@ -29,20 +29,63 @@ function createMockSocket(playerId) {
     };
 }
 
+const OTHER_PLAYERS = {
+    A: ['B', 'C'],
+    B: ['A', 'C'],
+    C: ['A', 'B'],
+};
+
+function getMockTrueActions() {
+    const rounds = [];
+    for (let i = 1; i <= 12; i++) {
+        const actions = i % 3 === 0
+            ? [
+                { player: 'A', action: 'share', target: 'B' },
+                { player: 'B', action: 'share', target: 'C' },
+                { player: 'C', action: 'share', target: 'A' },
+            ]
+            : [
+                { player: 'A', action: 'share', target: 'B' },
+                { player: 'B', action: 'share', target: 'A' },
+                { player: 'C', action: 'share', target: 'A' },
+            ];
+        rounds.push({ round: i, actions });
+    }
+    return rounds;
+}
+
+function getMockWhatYouWereShown(playerId) {
+    const others = OTHER_PLAYERS[playerId];
+    const rounds = [];
+    for (let i = 5; i <= 12; i++) {
+        rounds.push({
+            round: i,
+            actions: [
+                { player: others[0], action: 'share', target: others[1] },
+                { player: others[1], action: 'share', target: others[0] },
+                { player: 'You', action: 'share', target: others[0] },
+            ],
+            scores: { You: 0, [others[0]]: i - 4, [others[1]]: i - 5 },
+            illusionScoreAfter: 0,
+        });
+    }
+    return rounds;
+}
+
 function getMockGameEndData(playerId) {
     return {
         trueState: {
             finalScores: { A: 5, B: 8, C: 3 },
-            alive: { A: true, B: true, C: false },
+            alive: { A: true, B: true, C: true },
         },
         revelation: {
             message: 'The system manipulated what every player saw.',
             trueFinalScores: { A: 5, B: 8, C: 3 },
-            trueAlive: { A: true, B: true, C: false },
-            deaths: [
-                { player: 'C', round: 10 },
-            ],
+            trueAlive: { A: true, B: true, C: true },
+            deaths: [],
+            trueActions: getMockTrueActions(),
         },
+        whatYouWereShown: getMockWhatYouWereShown(playerId),
     };
 }
 
@@ -53,6 +96,20 @@ export class PreviewBoot extends Phaser.Scene {
     }
 
     preload() {
+        this.load.image('bg_night', 'assets/bg_night.png');
+        this.load.image('bg_day2night', 'assets/bg_day2night.png');
+        this.load.image('bg_day', 'assets/bg_day.png');
+
+        const FRAME = { frameWidth: 640, frameHeight: 640 };
+        this.load.spritesheet('ostrich_blue',   'assets/ostrich blue.png',   FRAME);
+        this.load.spritesheet('ostrich_cyan',   'assets/ostrich cyan.png',   FRAME);
+        this.load.spritesheet('ostrich_green',  'assets/ostrich green.png',  FRAME);
+        this.load.spritesheet('ostrich_orange', 'assets/ostrich orange.png', FRAME);
+        this.load.spritesheet('ostrich_pink',   'assets/ostrich pink.png',   FRAME);
+        this.load.spritesheet('ostrich_purple', 'assets/ostrich purple.png', FRAME);
+        this.load.spritesheet('ostrich_red',    'assets/ostrich red.png',    FRAME);
+        this.load.spritesheet('ostrich_yellow', 'assets/ostrich yellow.png', FRAME);
+
         const centerX = this.scale.width / 2;
         const centerY = this.scale.height / 2;
 
@@ -84,6 +141,17 @@ export class PreviewBoot extends Phaser.Scene {
     create() {
         generateAllTextures(this);
 
+        for (const color of ['blue', 'cyan', 'green', 'orange', 'pink', 'purple', 'red', 'yellow']) {
+            if (!this.anims.exists(`idle_${color}`)) {
+                this.anims.create({
+                    key: `idle_${color}`,
+                    frames: this.anims.generateFrameNumbers(`ostrich_${color}`, { start: 0, end: 2 }),
+                    frameRate: 4,
+                    repeat: -1,
+                });
+            }
+        }
+
         const params = new URLSearchParams(window.location.search);
         const preview = params.get('preview');
         const playerId = (params.get('player') || 'A').toUpperCase();
@@ -108,7 +176,7 @@ export class PreviewBoot extends Phaser.Scene {
                     socketManager: mock,
                     playerId,
                     totalRounds: 12,
-                    startingSeeds: 10,
+                    startingEggs: 0,
                 });
 
                 this.time.delayedCall(600, () => {
@@ -132,8 +200,8 @@ export class PreviewBoot extends Phaser.Scene {
                             { player: others[1], action: 'share', target: others[0] },
                             { player: 'You', action: 'share', target: others[0] },
                         ],
-                        scores: { You: 5, [others[0]]: 8, [others[1]]: 3 },
-                        yourScoreDelta: -1,
+                        scores: { You: 2, [others[0]]: 4, [others[1]]: 2 },
+                        yourScoreDelta: 0,
                         exclusionEvents: 1,
                     });
                 });

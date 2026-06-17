@@ -109,6 +109,10 @@ export class SocketManager {
         this.socket.emit('playerReady', { playerId: this.playerId });
     }
 
+    emitPlayerColorChoice(color) {
+        this.socket.emit('playerColorChoice', { color });
+    }
+
     requestLobbyState() {
         this.socket.emit('requestLobbyState');
     }

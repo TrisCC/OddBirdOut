@@ -10,6 +10,18 @@ const SIDE_ORDER = {
     C: ['B', 'A'],
 };
 
+function countShares(trueActions, fromPlayer, toPlayer) {
+    let count = 0;
+    for (const r of trueActions) {
+        for (const act of r.actions) {
+            if (act.player === fromPlayer && act.action === 'share' && act.target === toPlayer) {
+                count++;
+            }
+        }
+    }
+    return count;
+}
+
 export class Reveal extends Phaser.Scene {
 
     constructor() {
@@ -43,7 +55,7 @@ export class Reveal extends Phaser.Scene {
             });
 
             this.time.delayedCall(4000, () => {
-                const egg = this.add.image(w / 2, 540, 'golden_egg');
+                const egg = this.add.image(w / 2, 540, 'egg');
                 egg.setScale(0);
                 this.tweens.add({
                     targets: egg,
@@ -87,7 +99,7 @@ export class Reveal extends Phaser.Scene {
         if (!trueState || !trueState.finalScores) return;
 
         const scores = trueState.finalScores;
-        const alive = trueState.alive || {};
+        const trueActions = (revelation && revelation.trueActions) || [];
 
         this.add.text(w / 2, 145, 'Final Scores', {
             fontFamily: '"Press Start 2P"',
@@ -114,19 +126,22 @@ export class Reveal extends Phaser.Scene {
             if (score === undefined) continue;
 
             const pos = positions[playerId];
-            const isDead = alive[playerId] === false;
             const isSelf = playerId === myId;
             const label = isSelf ? `You (${playerId})` : `Player ${playerId}`;
             const color = PLAYER_COLORS[playerId];
 
-            const statusText = isDead ? 'Died' : 'Survived';
-            const statusColor = isDead ? '#F44336' : '#4CAF50';
-
-            this.add.text(pos.x, pos.y - 42, statusText, {
-                fontFamily: '"Press Start 2P"',
-                fontSize: '9px',
-                color: statusColor,
-            }).setOrigin(0.5);
+            const otherTwo = ['A', 'B', 'C'].filter(p => p !== playerId);
+            let statY = pos.y - 58;
+            for (const target of otherTwo) {
+                const count = countShares(trueActions, playerId, target);
+                const targetLabel = target === myId ? 'You' : `Player ${target}`;
+                this.add.text(pos.x, statY, `Shared w/ ${targetLabel}: ${count}`, {
+                    fontFamily: '"Press Start 2P"',
+                    fontSize: '9px',
+                    color: '#CCCCCC',
+                }).setOrigin(0.5);
+                statY += 16;
+            }
 
             this.add.text(pos.x, pos.y, label, {
                 fontFamily: '"Press Start 2P"',
@@ -139,28 +154,6 @@ export class Reveal extends Phaser.Scene {
                 fontSize: '22px',
                 color: '#E0E0E0',
             }).setOrigin(0.5);
-        }
-
-        if (revelation && revelation.deaths && revelation.deaths.length > 0) {
-            let yOff = h * 0.76;
-            this.add.text(w / 2, yOff, 'The system hid these deaths:', {
-                fontFamily: '"Press Start 2P"',
-                fontSize: '10px',
-                color: '#F44336',
-            }).setOrigin(0.5);
-
-            yOff += 25;
-            for (const death of revelation.deaths) {
-                this.add.text(w / 2, yOff,
-                    `Player ${death.player} died in round ${death.round}`,
-                    {
-                        fontFamily: '"Press Start 2P"',
-                        fontSize: '9px',
-                        color: '#F44336',
-                    }
-                ).setOrigin(0.5);
-                yOff += 18;
-            }
         }
     }
 

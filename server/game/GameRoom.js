@@ -14,6 +14,7 @@ class GameRoom {
         this.io = io;
         this.players = {};
         this.readyPlayers = new Set();
+        this.colorChoices = {};
         this.roundResolver = null;
         this.reconnectTimers = {};
         this.adminSockets = new Set();
@@ -23,6 +24,8 @@ class GameRoom {
         if (this.lighting) {
             this.lighting.setNighttime();
         }
+
+        this.VALID_COLORS = ['blue', 'cyan', 'green', 'orange', 'pink', 'purple', 'red', 'yellow'];
 
         this.startStateBroadcast();
     }
@@ -65,6 +68,7 @@ class GameRoom {
             this.adminSockets.add(socket.id);
             socket.on('adminReset', () => this.forceReset());
             socket.on('adminStart', () => this.adminStartGame());
+            socket.on('adminForceStart', () => this.adminForceStartGame());
             socket.on('disconnect', () => this.adminSockets.delete(socket.id));
             socket.emit('adminState', this.getAdminState());
             return;
@@ -92,6 +96,7 @@ class GameRoom {
         this.players[playerId] = socket.id;
 
         socket.on('playerReady', () => this.onPlayerReady(playerId));
+        socket.on('playerColorChoice', (data) => this.onPlayerColorChoice(playerId, data && data.color));
         socket.on('playerAction', (data) => this.onPlayerAction(playerId, data));
         socket.on('requestLobbyState', () => socket.emit('lobbyUpdate', this.getLobbyState()));
         socket.on('heartbeat', () => socket.emit('heartbeatAck', { timestamp: Date.now() }));
@@ -112,6 +117,7 @@ class GameRoom {
                 this.roundResolver.handleReconnect(playerId);
             }
         });
+        socket.on('playerColorChoice', (data) => this.onPlayerColorChoice(playerId, data && data.color));
         socket.on('playerAction', (data) => this.onPlayerAction(playerId, data));
         socket.on('requestLobbyState', () => socket.emit('lobbyUpdate', this.getLobbyState()));
         socket.on('heartbeat', () => socket.emit('heartbeatAck', { timestamp: Date.now() }));
@@ -125,6 +131,19 @@ class GameRoom {
     }
 
     onPlayerReady(playerId) {
+        this.readyPlayers.add(playerId);
+        this.broadcastLobbyUpdate();
+    }
+
+    onPlayerColorChoice(playerId, color) {
+        if (!this.VALID_COLORS.includes(color)) return;
+
+        // Reject if another player already holds this color
+        for (const [pid, col] of Object.entries(this.colorChoices)) {
+            if (col === color && pid !== playerId) return;
+        }
+
+        this.colorChoices[playerId] = color;
         this.readyPlayers.add(playerId);
         this.broadcastLobbyUpdate();
     }
@@ -171,7 +190,8 @@ class GameRoom {
                 this.io.to(socketId).emit('gameStart', {
                     playerId,
                     totalRounds: config.TOTAL_ROUNDS,
-                    startingSeeds: config.STARTING_SEEDS,
+                    startingEggs: config.STARTING_EGGS,
+                    colorChoices: { ...this.colorChoices },
                 });
             }
         }
@@ -196,6 +216,7 @@ class GameRoom {
         return {
             connected,
             ready,
+            colorChoices: { ...this.colorChoices },
             total: 3,
         };
     }
@@ -208,6 +229,7 @@ class GameRoom {
     reset() {
         this.roundResolver = null;
         this.readyPlayers.clear();
+        this.colorChoices = {};
         this.players = {};
         for (const timer of Object.values(this.reconnectTimers)) {
             clearTimeout(timer);
@@ -232,6 +254,12 @@ class GameRoom {
     adminStartGame() {
         if (this.roundResolver) return;
         if (!this.allPlayersReady()) return;
+        this.startGame();
+    }
+
+    adminForceStartGame() {
+        if (this.roundResolver) return;
+        if (Object.keys(this.players).length < 3) return;
         this.startGame();
     }
 

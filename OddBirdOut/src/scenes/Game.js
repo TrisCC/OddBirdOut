@@ -21,19 +21,18 @@ export class Game extends Phaser.Scene {
         this.socketManager = data.socketManager;
         this.playerId = data.playerId;
         this.totalRounds = data.totalRounds;
-        this.startingSeeds = data.startingSeeds || 10;
+        this.startingEggs = data.startingEggs ?? 0;
+        this.colorChoices = data.colorChoices || {};
     }
 
     create() {
         const w = this.scale.width;
         const h = this.scale.height;
 
-        this.add.rectangle(w / 2, h / 2, w, h, 0x2B1E10);
-
-        this.add.rectangle(w / 2, 10, w, 4, 0x3D2B1A).setOrigin(0.5, 0);
+        this.bg = this.add.image(w / 2, h / 2, 'bg_night').setDisplaySize(w, h).setDepth(-2);
+        this.bgOverlay = this.add.image(w / 2, h / 2, 'bg_night').setDisplaySize(w, h).setDepth(-1).setAlpha(0);
 
         this.groundY = 490;
-        this.add.rectangle(w / 2, this.groundY, w, 4, 0x5D4037);
 
         this.buildHUD();
         this.buildOstriches();
@@ -44,49 +43,48 @@ export class Game extends Phaser.Scene {
         this.currentRound = 0;
         this.currentPhase = 'trust';
         this.submitted = false;
-        this.seedSprites = [];
-        this.currentScores = { A: this.startingSeeds, B: this.startingSeeds, C: this.startingSeeds };
+        this.eggSprites = [];
+        this.currentScores = { A: this.startingEggs, B: this.startingEggs, C: this.startingEggs };
+
+        // Fade from lobby night to day as soon as the game scene loads.
+        // animating=true blocks roundStart from being processed until the fade completes.
+        this.animating = true;
+        this.doSunriseTransition(() => {
+            this.animating = false;
+            this.processEventQueue();
+        });
     }
 
     buildHUD() {
         this.roundText = this.add.text(20, 64, 'Round 0 / 12', {
             fontFamily: '"Press Start 2P"',
             fontSize: '24px',
-            color: '#FFD700',
-        });
+            color: '#003366',
+        }).setDepth(5);
 
-        this.timerBarBg = this.add.rectangle(this.scale.width / 2, 18, this.scale.width - 40, 14, 0x333333);
+        this.timerBarBg = this.add.rectangle(this.scale.width / 2, 18, this.scale.width - 40, 14, 0x333333).setDepth(5);
         this.timerBarBg.setOrigin(0.5, 0);
-        this.timerBar = this.add.rectangle(20, 18, 0, 14, 0x4CAF50);
+        this.timerBar = this.add.rectangle(20, 18, 0, 14, 0x4CAF50).setDepth(5);
         this.timerBar.setOrigin(0, 0);
-
-        this.eggIcon = this.add.image(this.scale.width / 2, 78, 'golden_egg');
-        this.eggIcon.setScale(1.2);
-
-        this.eggProgressText = this.add.text(this.scale.width / 2, 100, '', {
-            fontFamily: '"Press Start 2P"',
-            fontSize: '9px',
-            color: '#FFD700',
-        }).setOrigin(0.5);
 
         this.statusText = this.add.text(this.scale.width / 2, 700, '', {
             fontFamily: '"Press Start 2P"',
             fontSize: '10px',
-            color: '#888888',
-        }).setOrigin(0.5);
+            color: '#003366',
+        }).setOrigin(0.5).setDepth(5);
     }
 
     buildOstriches() {
         const selfX = this.scale.width / 2;
-        const selfY = 390;
+        const selfY = 450;
         const sideX = [250, 1030];
-        const sideY = 280;
+        const sideY = 340;
 
         const others = SIDE_ORDER[this.playerId];
         const playerOrder = [others[0], this.playerId, others[1]];
 
         this.ostriches = {};
-        this.seedCounts = {};
+        this.eggCounts = {};
         this.ostrichPositions = {};
 
         const positions = [
@@ -98,29 +96,32 @@ export class Game extends Phaser.Scene {
         for (const pos of positions) {
             const id = pos.id;
             const isSelf = id === this.playerId;
-            const textureKey = `ostrich_${id.toLowerCase()}`;
-
-            const sprite = this.add.image(pos.x, pos.y, textureKey);
-            sprite.setScale(pos.scale);
+            const colorKey = this.colorChoices[id];
+            const textureKey = colorKey ? `ostrich_${colorKey}` : 'ostrich_red';
+            const displaySize = isSelf ? 130 : 100;
+            const sprite = this.add.sprite(pos.x, pos.y, textureKey, 0);
+            sprite.setDisplaySize(displaySize, displaySize);
+            if (colorKey && this.anims.exists(`idle_${colorKey}`)) {
+                sprite.play(`idle_${colorKey}`);
+            }
             this.ostriches[id] = sprite;
             this.ostrichPositions[id] = { x: pos.x, y: pos.y };
 
             const label = isSelf ? 'You' : `Player ${id}`;
-            const labelColor = isSelf ? '#FFD700' : '#CCCCCC';
 
             this.add.text(pos.x, pos.y - 85, label, {
                 fontFamily: '"Press Start 2P"',
                 fontSize: '10px',
-                color: labelColor,
-            }).setOrigin(0.5);
+                color: '#003366',
+            }).setOrigin(0.5).setDepth(5);
 
-            this.seedCounts[id] = this.add.text(pos.x, pos.y + 80, String(this.startingSeeds), {
+            this.eggCounts[id] = this.add.text(pos.x, pos.y + 80, String(this.startingEggs), {
                 fontFamily: '"Press Start 2P"',
                 fontSize: '20px',
-                color: '#FFD700',
-            }).setOrigin(0.5);
+                color: '#003366',
+            }).setOrigin(0.5).setDepth(5);
 
-            this.add.image(pos.x, pos.y + 105, 'seed').setScale(0.8);
+            this.add.image(pos.x, pos.y + 105, 'egg').setScale(2.4);
         }
     }
 
@@ -186,52 +187,138 @@ export class Game extends Phaser.Scene {
     }
 
     setupListeners() {
+        this.eventQueue = [];
+        this.animating = false;
+
         this.socketManager.on('roundStart', (data) => {
-            this.currentRound = data.round;
-            this.currentPhase = data.phase;
-            this.submitted = false;
-
-            this.roundText.setText(`Round ${data.round} / ${this.totalRounds}`);
-
-            this.statusText.setText('');
-            this.enableButtons();
-
-            if (data.debugMode) {
-                const barWidth = this.scale.width - 40;
-                this.timerBar.width = barWidth;
-                this.timerBar.fillColor = 0x2196F3;
-            } else {
-                this.startTimer(data.roundDurationMs);
-            }
+            this.eventQueue.push({ type: 'roundStart', data });
+            this.processEventQueue();
         });
 
         this.socketManager.on('roundResult', (data) => {
-            // Capture deltas before scores update
-            const deltas = {};
-            for (const [key, newVal] of Object.entries(data.scores)) {
-                const id = key === 'You' ? this.playerId : key;
-                deltas[id] = newVal - (this.currentScores[id] ?? this.startingSeeds);
-            }
-
-            this.tweens.killAll();
-            this.timerBar.width = 0;
-            this.statusText.setText('');
-
-            this.playActionAnimations(data.actions, () => {
-                this.updateScores(data.scores);
-                this.updateVignetteAlpha();
-                for (const [id, delta] of Object.entries(deltas)) {
-                    if (delta !== 0) this.showSeedDelta(id, delta);
-                }
-            });
+            this.eventQueue.push({ type: 'roundResult', data });
+            this.processEventQueue();
         });
 
         this.socketManager.on('gameEnd', (data) => {
-            this.scene.start('GameOver', { ...data, socketManager: this.socketManager });
+            this.eventQueue.push({ type: 'gameEnd', data });
+            this.processEventQueue();
         });
 
         this.socketManager.on('gameAborted', (data) => {
             this.scene.start('Boot');
+        });
+    }
+
+    // Ensures each round's result animation fully finishes (and scores update)
+    // before the next round's start is processed and input is re-enabled.
+    processEventQueue() {
+        if (this.animating || this.eventQueue.length === 0) return;
+
+        const { type, data } = this.eventQueue.shift();
+
+        switch (type) {
+            case 'roundStart':
+                this.applyRoundStart(data);
+                this.processEventQueue();
+                break;
+            case 'roundResult':
+                this.applyRoundResult(data);
+                break;
+            case 'gameEnd':
+                this.applyGameEnd(data);
+                break;
+        }
+    }
+
+    applyRoundStart(data) {
+        this.currentRound = data.round;
+        this.currentPhase = data.phase;
+        this.submitted = false;
+
+        this.roundText.setText(`Round ${data.round} / ${this.totalRounds}`);
+
+        this.statusText.setText('');
+        this.enableButtons();
+
+        if (data.debugMode) {
+            const barWidth = this.scale.width - 40;
+            this.timerBar.width = barWidth;
+            this.timerBar.fillColor = 0x2196F3;
+        } else {
+            this.startTimer(data.roundDurationMs);
+        }
+    }
+
+    applyRoundResult(data) {
+        // Capture deltas before scores update
+        const deltas = {};
+        for (const [key, newVal] of Object.entries(data.scores)) {
+            const id = key === 'You' ? this.playerId : key;
+            deltas[id] = newVal - (this.currentScores[id] ?? this.startingEggs);
+        }
+
+        this.disableButtons();
+        this.tweens.killAll();
+        this.timerBar.width = 0;
+        this.statusText.setText('');
+
+        this.animating = true;
+
+        const isLastRound = data.round >= this.totalRounds;
+
+        // Run the night cycle and share animations simultaneously.
+        // Both paths signal via this latch; processEventQueue fires once both are done.
+        let doneCount = 0;
+        const onBothDone = () => {
+            if (++doneCount === (isLastRound ? 1 : 2)) {
+                this.animating = false;
+                this.processEventQueue();
+            }
+        };
+
+        if (!isLastRound) {
+            this.doNightCycle(onBothDone);
+        }
+
+        this.playActionAnimations(data.actions, () => {
+            this.updateScores(data.scores);
+            this.updateVignetteAlpha();
+            for (const [id, delta] of Object.entries(deltas)) {
+                if (delta !== 0) this.showEggDelta(id, delta);
+            }
+            onBothDone();
+        });
+    }
+
+    applyGameEnd(data) {
+        this.scene.start('GameOver', { ...data, socketManager: this.socketManager });
+    }
+
+    crossFadeBg(toKey, duration, onComplete) {
+        this.bgOverlay.setTexture(toKey).setAlpha(0);
+        this.tweens.add({
+            targets: this.bgOverlay,
+            alpha: 1,
+            duration,
+            ease: 'Linear',
+            onComplete: () => {
+                this.bg.setTexture(toKey);
+                this.bgOverlay.setAlpha(0);
+                if (onComplete) onComplete();
+            },
+        });
+    }
+
+    doSunriseTransition(onComplete) {
+        this.crossFadeBg('bg_day', 2000, onComplete);
+    }
+
+    doNightCycle(onComplete) {
+        this.crossFadeBg('bg_night', 1200, () => {
+            this.time.delayedCall(500, () => {
+                this.crossFadeBg('bg_day', 1200, onComplete);
+            });
         });
     }
 
@@ -261,14 +348,14 @@ export class Game extends Phaser.Scene {
     updateScores(scores) {
         for (const key of Object.keys(scores)) {
             const id = key === 'You' ? this.playerId : key;
-            if (this.seedCounts[id]) {
-                this.seedCounts[id].setText(scores[key].toString());
+            if (this.eggCounts[id]) {
+                this.eggCounts[id].setText(scores[key].toString());
                 this.currentScores[id] = scores[key];
             }
         }
     }
 
-    showSeedDelta(playerId, delta) {
+    showEggDelta(playerId, delta) {
         const pos = this.ostrichPositions[playerId];
         if (!pos) return;
 
@@ -334,14 +421,14 @@ export class Game extends Phaser.Scene {
     playShareAnim(giverSprite, giverId, targetId, sideX, sideY) {
         if (!giverSprite || !targetId) return;
 
-        const seed = this.add.image(sideX[giverId], sideY[giverId] - 20, 'seed');
-        seed.setScale(0.6);
+        const egg = this.add.image(sideX[giverId], sideY[giverId] - 20, 'egg');
+        egg.setScale(0.6);
 
         const targetSprite = this.ostriches[targetId];
 
         if (targetSprite) {
             this.tweens.add({
-                targets: seed,
+                targets: egg,
                 x: sideX[targetId],
                 y: sideY[targetId] - 20,
                 duration: 600,
@@ -356,11 +443,11 @@ export class Game extends Phaser.Scene {
                             duration: 100,
                         });
                     }
-                    seed.destroy();
+                    egg.destroy();
                 },
             });
         } else {
-            this.time.delayedCall(600, () => seed.destroy());
+            this.time.delayedCall(600, () => egg.destroy());
         }
 
         this.tweens.add({

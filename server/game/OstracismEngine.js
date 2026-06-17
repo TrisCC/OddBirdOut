@@ -1,4 +1,4 @@
-const { TOTAL_ROUNDS, SEEDS_PER_ROUND_DRAIN, PHASE1_ROUNDS } = require('../config');
+const { TOTAL_ROUNDS, PHASE1_ROUNDS } = require('../config');
 
 const OTHER_PLAYERS = {
     A: ['B', 'C'],
@@ -39,8 +39,8 @@ function computeMutualShareDeltas(actions, resolvePlayer) {
     for (const [player, target] of Object.entries(shareTarget)) {
         if (counted.has(player) || counted.has(target)) continue;
         if (shareTarget[target] === player) {
-            deltas[player] += 2;
-            deltas[target] += 2;
+            deltas[player] += 1;
+            deltas[target] += 1;
             counted.add(player);
             counted.add(target);
         }
@@ -77,7 +77,6 @@ function fabricateForPlayer(playerId, preScores, cumulativeIllusionScore, round,
 
     const resolvePlayer = (p) => p === 'You' ? playerId : p;
     const illusionDeltas = computeMutualShareDeltas(fabricatedActions, resolvePlayer);
-    illusionDeltas[playerId] = (illusionDeltas[playerId] || 0) - SEEDS_PER_ROUND_DRAIN;
 
     const postScores = {};
     for (const p of ['A', 'B', 'C']) {
