@@ -144,7 +144,8 @@ body {
 
 .dmx-mode-tag.test { background: #9C27B0; color: #fff; }
 .dmx-mode-tag.dusk { background: #E91E63; color: #fff; }
-.dmx-mode-tag.game { background: #FF9800; color: #fff; }
+.dmx-mode-tag.daytime { background: #FF9800; color: #fff; }
+.dmx-mode-tag.nighttime { background: #2196F3; color: #fff; }
 .dmx-mode-tag.offline { background: #555; color: #888; }
 
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
@@ -677,11 +678,23 @@ function renderLighting(state) {
     const cb = state.current.b;
     const swatchColor = 'rgb(' + cr + ',' + cg + ',' + cb + ')';
 
+    const modeLabels = {
+        test: 'TEST',
+        dusk: 'DUSK',
+        daytime: 'DAYTIME',
+        nighttime: 'NIGHTTIME',
+    };
+    const modeLabel = modeLabels[state.mode] || state.mode.toUpperCase();
+
     const chLabels = [];
     if (state.channels.mode > 0) {
         chLabels.push('Ch ' + state.channels.mode + '=' + state.channels.modeValue);
     }
     chLabels.push('R:' + state.channels.r + ' G:' + state.channels.g + ' B:' + state.channels.b);
+
+    const tr = Math.round(state.target.r);
+    const tg = Math.round(state.target.g);
+    const tb = Math.round(state.target.b);
 
     let html = '';
     html += '<div class="dmx-row">';
@@ -690,10 +703,11 @@ function renderLighting(state) {
     html += barRow('R', cr, '#F44336');
     html += barRow('G', cg, '#4CAF50');
     html += barRow('B', cb, '#2196F3');
+    html += '<div style="margin-top:4px;font-size:10px;color:#666;">target: ' + tr + ',' + tg + ',' + tb + '</div>';
     html += '</div>';
     html += '<div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;">';
-    html += '<span class="dmx-mode-tag ' + state.mode + '">' + state.mode + '</span>';
-    html += '<span class="dmx-chan">' + chLabels.join('  ') + '</span>';
+    html += '<span class="dmx-mode-tag ' + state.mode + '">' + modeLabel + '</span>';
+    html += '<span class="dmx-chan">' + chLabels.join(' &nbsp; ') + '</span>';
     html += '</div>';
     html += '</div>';
 

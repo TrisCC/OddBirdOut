@@ -8,6 +8,7 @@ class DmxLighting {
         this.animationTimer = null;
         this.targetRgb = { r: 0, g: 0, b: 0 };
         this.currentRgb = { r: 0, g: 0, b: 0 };
+        this.state = 'nighttime';
         this.duskActive = false;
         this.duskStartTime = 0;
         this.duskStepMs = 8000;
@@ -131,17 +132,20 @@ class DmxLighting {
 
     setNighttime() {
         this.duskActive = false;
+        this.state = 'nighttime';
         this._setTargetRGB(0, 0, 255);
     }
 
     setDaytime(progress) {
         this.duskActive = false;
+        this.state = 'daytime';
         const p = Math.max(0, Math.min(1, progress));
         this._setTargetRGB(255, Math.round(255 - 127 * p), 0);
     }
 
     startDusk() {
         this.duskActive = true;
+        this.state = 'dusk';
         this.duskStartTime = Date.now();
     }
 
@@ -163,9 +167,8 @@ class DmxLighting {
     getState() {
         if (!this.available) return { available: false };
 
-        let mode = 'game';
+        let mode = this.state;
         if (config.DMX_TEST_MODE) mode = 'test';
-        else if (this.duskActive) mode = 'dusk';
 
         return {
             available: true,
