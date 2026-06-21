@@ -225,19 +225,41 @@ export class Game extends Phaser.Scene {
             this.processEventQueue();
         };
         const onGameAborted = () => {
-            this.scene.start('Boot');
+            this.scene.start('Lobby', { socketManager: this.socketManager });
+        };
+        const onPlayerDisconnected = (data) => {
+            this.statusText.setText(`Player ${data.playerId} disconnected`);
+            this.statusText.setColor('#F44336');
+        };
+        const onPlayerReconnected = (data) => {
+            this.statusText.setText(`Player ${data.playerId} reconnected`);
+            this.statusText.setColor('#4CAF50');
+            this.time.delayedCall(3000, () => {
+                if (this.statusText && this.statusText.text === `Player ${data.playerId} reconnected`) {
+                    this.statusText.setText('');
+                }
+            });
+        };
+        const onConnected = () => {
+            this.socketManager.requestLobbyState();
         };
 
         this.socketManager.on('roundStart',  onRoundStart);
         this.socketManager.on('roundResult', onRoundResult);
         this.socketManager.on('gameEnd',     onGameEnd);
         this.socketManager.on('gameAborted', onGameAborted);
+        this.socketManager.on('playerDisconnected', onPlayerDisconnected);
+        this.socketManager.on('playerReconnected',  onPlayerReconnected);
+        this.socketManager.on('connected',          onConnected);
 
         this.events.once('shutdown', () => {
             this.socketManager.off('roundStart',  onRoundStart);
             this.socketManager.off('roundResult', onRoundResult);
             this.socketManager.off('gameEnd',     onGameEnd);
             this.socketManager.off('gameAborted', onGameAborted);
+            this.socketManager.off('playerDisconnected', onPlayerDisconnected);
+            this.socketManager.off('playerReconnected',  onPlayerReconnected);
+            this.socketManager.off('connected',          onConnected);
         });
     }
 

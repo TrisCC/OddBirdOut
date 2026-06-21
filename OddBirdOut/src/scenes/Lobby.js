@@ -408,6 +408,28 @@ export class Lobby extends Phaser.Scene {
             });
         };
 
+        const onGameAborted = () => {
+            this.localReady = false;
+            this.selectedColor = null;
+            this.socketManager.requestLobbyState();
+        };
+
+        const onPlayerDisconnected = (data) => {
+            this.statusText.setText(`Player ${data.playerId} disconnected`);
+            this.statusText.setColor('#F44336');
+        };
+
+        const onPlayerReconnected = (data) => {
+            this.statusText.setText(`Player ${data.playerId} reconnected`);
+            this.statusText.setColor('#4CAF50');
+        };
+
+        const onConnected = () => {
+            this.localReady = false;
+            this.selectedColor = null;
+            this.socketManager.requestLobbyState();
+        };
+
         const onErrorMessage = (data) => {
             this.add.text(w / 2, 665, data.message, {
                 fontFamily: '"Press Start 2P"',
@@ -418,13 +440,23 @@ export class Lobby extends Phaser.Scene {
 
         this.socketManager.on('lobbyUpdate',  onLobbyUpdate);
         this.socketManager.on('gameStart',    onGameStart);
+        this.socketManager.on('gameAborted',  onGameAborted);
+        this.socketManager.on('playerDisconnected', onPlayerDisconnected);
+        this.socketManager.on('playerReconnected',  onPlayerReconnected);
+        this.socketManager.on('connected',          onConnected);
         this.socketManager.on('errorMessage', onErrorMessage);
 
         this.events.once('shutdown', () => {
             this.socketManager.off('lobbyUpdate',  onLobbyUpdate);
             this.socketManager.off('gameStart',    onGameStart);
+            this.socketManager.off('gameAborted',  onGameAborted);
+            this.socketManager.off('playerDisconnected', onPlayerDisconnected);
+            this.socketManager.off('playerReconnected',  onPlayerReconnected);
+            this.socketManager.off('connected',          onConnected);
             this.socketManager.off('errorMessage', onErrorMessage);
         });
+
+        this.socketManager.requestLobbyState();
     }
 
     createCarousel() {

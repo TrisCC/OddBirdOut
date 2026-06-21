@@ -56,6 +56,14 @@ export class SocketManager {
             this._emit('gameAborted', data);
         });
 
+        this.socket.on('playerDisconnected', (data) => {
+            this._emit('playerDisconnected', data);
+        });
+
+        this.socket.on('playerReconnected', (data) => {
+            this._emit('playerReconnected', data);
+        });
+
         this.socket.on('errorMessage', (data) => {
             this._emit('errorMessage', data);
         });
@@ -80,6 +88,9 @@ export class SocketManager {
 
             this.socket.emit('heartbeat');
 
+            if (this.heartbeatTimeout) {
+                clearTimeout(this.heartbeatTimeout);
+            }
             this.heartbeatTimeout = setTimeout(() => {
                 this.missedHeartbeats++;
                 if (this.missedHeartbeats >= this.maxMissedHeartbeats) {

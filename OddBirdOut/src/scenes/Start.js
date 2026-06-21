@@ -16,6 +16,14 @@ export class Start extends Phaser.Scene {
 
         this.add.image(w / 2, h / 2, 'bg_night').setDisplaySize(w, h);
 
+        const onGameAborted = () => {
+            this.scene.start('Lobby', { socketManager: this.socketManager });
+        };
+        this.socketManager.on('gameAborted', onGameAborted);
+        this.events.once('shutdown', () => {
+            this.socketManager.off('gameAborted', onGameAborted);
+        });
+
         // Title placeholder — replace with actual title asset when ready
         const title = this.add.sprite(w / 2, h / 2 - 60, 'heart_frames', 0);
         title.setDisplaySize(220, 220);

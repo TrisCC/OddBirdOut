@@ -88,9 +88,13 @@ class GameRoom {
         }
 
         if (this.players[playerId]) {
-            socket.emit('errorMessage', { message: `Role ${playerId} is already taken` });
-            socket.disconnect(true);
-            return;
+            const existing = this.io.sockets.sockets.get(this.players[playerId]);
+            if (existing && existing.connected) {
+                socket.emit('errorMessage', { message: `Role ${playerId} is already taken` });
+                socket.disconnect(true);
+                return;
+            }
+            delete this.players[playerId];
         }
 
         this.players[playerId] = socket.id;
@@ -166,6 +170,8 @@ class GameRoom {
     }
 
     onDisconnect(socket, playerId) {
+        if (this.players[playerId] !== socket.id) return;
+
         delete this.players[playerId];
         this.readyPlayers.delete(playerId);
 
@@ -240,7 +246,6 @@ class GameRoom {
         this.roundResolver = null;
         this.readyPlayers.clear();
         this.colorChoices = {};
-        this.players = {};
         for (const timer of Object.values(this.reconnectTimers)) {
             clearTimeout(timer);
         }

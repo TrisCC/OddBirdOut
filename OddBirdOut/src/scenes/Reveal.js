@@ -43,7 +43,10 @@ export class Reveal extends Phaser.Scene {
 
         if (this.socketManager) {
             this.socketManager.on('gameAborted', () => {
-                this.scene.start('Boot');
+                this.scene.start('Lobby', { socketManager: this.socketManager });
+            });
+            this.socketManager.on('connected', () => {
+                this.socketManager.requestLobbyState();
             });
         }
 
