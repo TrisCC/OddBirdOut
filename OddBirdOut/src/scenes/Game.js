@@ -350,7 +350,7 @@ export class Game extends Phaser.Scene {
     }
 
     applyGameEnd(data) {
-        this.scene.start('GameOver', { ...data, socketManager: this.socketManager });
+        this.scene.start('GameOver', { ...data, socketManager: this.socketManager, colorChoices: this.colorChoices });
     }
 
     crossFadeBg(toKey, duration, onComplete) {

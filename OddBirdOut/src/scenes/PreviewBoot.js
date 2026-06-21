@@ -86,6 +86,7 @@ function getMockGameEndData(playerId) {
             trueActions: getMockTrueActions(),
         },
         whatYouWereShown: getMockWhatYouWereShown(playerId),
+        colorChoices: { A: 'red', B: 'blue', C: 'green' },
     };
 }
 
@@ -109,6 +110,16 @@ export class PreviewBoot extends Phaser.Scene {
         this.load.spritesheet('ostrich_purple', 'assets/Sprites/ostrich purple.png', FRAME);
         this.load.spritesheet('ostrich_red',    'assets/Sprites/ostrich red.png',    FRAME);
         this.load.spritesheet('ostrich_yellow', 'assets/Sprites/ostrich yellow.png', FRAME);
+
+        this.load.spritesheet('ostrich_blue_sand',   'assets/Sprites/blue ostrich in sand.png',   FRAME);
+        this.load.spritesheet('ostrich_cyan_sand',   'assets/Sprites/cyan ostrich in sand.png',   FRAME);
+        this.load.spritesheet('ostrich_green_sand',  'assets/Sprites/green ostrich in sand.png',  FRAME);
+        this.load.spritesheet('ostrich_orange_sand', 'assets/Sprites/orange ostrich in sand.png', FRAME);
+        this.load.spritesheet('ostrich_pink_sand',   'assets/Sprites/pink ostrich in sand.png',   FRAME);
+        this.load.spritesheet('ostrich_purple_sand', 'assets/Sprites/purple ostrich in sand.png', FRAME);
+        this.load.spritesheet('ostrich_red_sand',    'assets/Sprites/red ostrich in sand.png',    FRAME);
+        this.load.spritesheet('ostrich_yellow_sand', 'assets/Sprites/yellow ostrich in sand.png', FRAME);
+
         this.load.spritesheet('heart_frames', 'assets/Sprites/heart.png', FRAME);
         this.load.spritesheet('egg_1', 'assets/Sprites/1egg.png', FRAME);
         for (const n of [2, 3, 4, 5, 6, 8]) {
@@ -153,6 +164,17 @@ export class PreviewBoot extends Phaser.Scene {
                     frames: this.anims.generateFrameNumbers(`ostrich_${color}`, { start: 0, end: 2 }),
                     frameRate: 4,
                     repeat: -1,
+                });
+            }
+        }
+
+        for (const color of ['blue', 'cyan', 'green', 'orange', 'pink', 'purple', 'red', 'yellow']) {
+            if (!this.anims.exists(`sand_${color}`)) {
+                this.anims.create({
+                    key: `sand_${color}`,
+                    frames: this.anims.generateFrameNumbers(`ostrich_${color}_sand`, { start: 0, end: 5 }),
+                    frameRate: 6,
+                    repeat: 0,
                 });
             }
         }
@@ -234,7 +256,7 @@ export class PreviewBoot extends Phaser.Scene {
             }
 
             case 'reveal': {
-                this.scene.start('Reveal', {
+                this.scene.start('GameOver', {
                     ...getMockGameEndData(playerId),
                     socketManager: mock,
                 });

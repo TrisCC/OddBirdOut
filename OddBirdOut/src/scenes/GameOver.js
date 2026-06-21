@@ -1,15 +1,9 @@
 import { addCreditsButton } from '../CreditsOverlay.js';
 
-const PLAYER_COLORS = {
-    A: '#7CB87C',
-    B: '#7CB0D8',
-    C: '#D8A87C',
-};
-
-const OTHER_PLAYERS = {
-    A: ['B', 'C'],
+const SIDE_ORDER = {
+    A: ['C', 'B'],
     B: ['A', 'C'],
-    C: ['A', 'B'],
+    C: ['B', 'A'],
 };
 
 export class GameOver extends Phaser.Scene {
@@ -21,13 +15,14 @@ export class GameOver extends Phaser.Scene {
     init(data) {
         this.gameEndData = data;
         this.socketManager = data.socketManager;
+        this.colorChoices = data.colorChoices || {};
     }
 
     create() {
         const w = this.scale.width;
         const h = this.scale.height;
 
-        this.add.rectangle(w / 2, h / 2, w, h, 0x1A0F0A);
+        this.add.image(w / 2, h / 2, 'bg_night').setDisplaySize(w, h);
 
         if (this.socketManager) {
             this.socketManager.on('gameAborted', () => {
@@ -38,120 +33,104 @@ export class GameOver extends Phaser.Scene {
             });
         }
 
-        const title = this.add.text(w / 2, 80, 'Game Over', {
+        this.add.text(w / 2, 48, 'Were you left out?', {
             fontFamily: '"Press Start 2P"',
             fontSize: '40px',
             color: '#FFD700',
-        }).setOrigin(0.5).setAlpha(0);
+        }).setOrigin(0.5);
 
-        this.tweens.add({
-            targets: title,
-            alpha: 1,
-            duration: 1000,
-            ease: 'Power2',
-        });
-
-        this.time.delayedCall(800, () => {
-            const subtitle = this.add.text(w / 2, 150, 'Final Egg Count', {
-                fontFamily: '"Press Start 2P"',
-                fontSize: '18px',
-                color: '#FFFFFF',
-            }).setOrigin(0.5).setAlpha(0);
-
-            this.tweens.add({
-                targets: subtitle,
-                alpha: 1,
-                duration: 800,
-                ease: 'Power2',
-            });
-        });
-
-        this.time.delayedCall(1800, () => {
-            this.showFakeScores(w, h);
-        });
-
-        this.time.delayedCall(3400, () => {
-            this.createRevealButton(w);
-        });
+        this.showFakeResults(w, h);
+        this.createRevealButton(w, h);
 
         addCreditsButton(this);
     }
 
-    showFakeScores(w, h) {
+    showFakeResults(w, h) {
         const playerId = this.socketManager.playerId;
-        const others = OTHER_PLAYERS[playerId];
+        const others = SIDE_ORDER[playerId];
+        const playerOrder = [others[0], playerId, others[1]];
 
         const whatYouWereShown = this.gameEndData.whatYouWereShown || [];
         const lastIllusion = whatYouWereShown[whatYouWereShown.length - 1];
         const prevIllusion = whatYouWereShown[whatYouWereShown.length - 2] || lastIllusion;
 
-        // The final round's illusion dramatically zeroes out "You" for the
-        // in-game reveal animation. Game Over should show the fake score the
-        // player believed they had before that crash, not the post-crash 0.
         const fakeScores = {
             ...(lastIllusion ? lastIllusion.scores : {}),
             ...(prevIllusion ? { You: prevIllusion.scores.You } : {}),
         };
 
-        const rows = [
-            { id: playerId, label: `You (${playerId})`, key: 'You' },
-            { id: others[0], label: `Player ${others[0]}`, key: others[0] },
-            { id: others[1], label: `Player ${others[1]}`, key: others[1] },
-        ];
+        const xPositions = [w * 0.22, w * 0.5, w * 0.78];
+        const baseY = 380;
 
-        let y = h * 0.32;
-        for (const row of rows) {
-            const score = fakeScores[row.key] ?? 0;
-            const color = PLAYER_COLORS[row.id];
+        for (let i = 0; i < 3; i++) {
+            const id = playerOrder[i];
+            const isSelf = id === playerId;
+            const x = xPositions[i];
+            const y = isSelf ? baseY + 20 : baseY;
 
-            const group = [];
+            const colorKey = this.colorChoices[id] || 'red';
+            const textureKey = isSelf
+                ? `ostrich_${colorKey}_sand`
+                : `ostrich_${colorKey}`;
 
-            const label = this.add.text(w / 2 - 60, y, row.label, {
+            const sprite = this.add.sprite(x, y, textureKey, 0);
+            sprite.setDisplaySize(130, 130);
+
+            if (isSelf) {
+                if (this.anims.exists(`sand_${colorKey}`)) {
+                    sprite.play(`sand_${colorKey}`);
+                }
+            } else {
+                if (this.anims.exists(`idle_${colorKey}`)) {
+                    sprite.play(`idle_${colorKey}`);
+                }
+            }
+
+            const label = isSelf ? 'You' : `Player ${id}`;
+            this.add.text(x, y - 90, label, {
                 fontFamily: '"Press Start 2P"',
-                fontSize: '14px',
-                color,
-            }).setOrigin(1, 0.5).setAlpha(0);
+                fontSize: '18px',
+                color: isSelf ? '#FFD700' : '#CCCCCC',
+            }).setOrigin(0.5);
 
-            const eggIcon = this.add.image(w / 2 - 20, y, 'egg').setScale(1.1).setAlpha(0);
+            const scoreKey = isSelf ? 'You' : id;
+            const score = fakeScores[scoreKey] ?? 0;
 
-            const scoreText = this.add.text(w / 2 + 10, y, `${score}`, {
+            this.add.text(x, y + 80, `${score}`, {
                 fontFamily: '"Press Start 2P"',
-                fontSize: '20px',
+                fontSize: '44px',
                 color: '#FFD700',
-            }).setOrigin(0, 0.5).setAlpha(0);
+            }).setOrigin(0.5);
 
-            group.push(label, eggIcon, scoreText);
-
-            this.tweens.add({
-                targets: group,
-                alpha: 1,
-                duration: 600,
-                ease: 'Power2',
-            });
-
-            y += 80;
+            this.add.text(x, y + 108, 'eggs', {
+                fontFamily: '"Press Start 2P"',
+                fontSize: '18px',
+                color: '#000000',
+            }).setOrigin(0.5);
         }
     }
 
-    createRevealButton(w) {
-        const btnY = 600;
-        const btnW = 320;
-        const btnH = 64;
+    createRevealButton(w, h) {
+        const btnW = 480;
+        const btnH = 80;
+        const btnX = w / 2;
+        const btnY = 620;
+        const radius = 16;
 
         const bg = this.add.graphics();
-        bg.fillStyle(0x6A1B9A);
-        bg.fillRoundedRect(w / 2 - btnW / 2, btnY - btnH / 2, btnW, btnH, 16);
-        bg.fillStyle(0x000000, 0.15);
-        bg.fillRoundedRect(w / 2 - btnW / 2 + 4, btnY - btnH / 2 + 4,
+        bg.fillStyle(0x2E7D32);
+        bg.fillRoundedRect(btnX - btnW / 2, btnY - btnH / 2, btnW, btnH, radius);
+        bg.fillStyle(0x000000, 0.12);
+        bg.fillRoundedRect(btnX - btnW / 2 + 4, btnY - btnH / 2 + 4,
             btnW - 8, btnH / 2 - 4, { tl: 12, tr: 12, bl: 0, br: 0 });
 
-        const btnText = this.add.text(w / 2, btnY, 'Reveal the Truth', {
+        const btnText = this.add.text(btnX, btnY, 'Find out the truth', {
             fontFamily: '"Press Start 2P"',
-            fontSize: '14px',
+            fontSize: '20px',
             color: '#FFFFFF',
-        }).setOrigin(0.5).setAlpha(0);
+        }).setOrigin(0.5);
 
-        const hitZone = this.add.zone(w / 2, btnY, btnW, btnH)
+        const hitZone = this.add.zone(btnX, btnY, btnW, btnH)
             .setInteractive({ useHandCursor: true });
 
         hitZone.on('pointerover', () => {
@@ -165,14 +144,11 @@ export class GameOver extends Phaser.Scene {
         });
 
         hitZone.on('pointerdown', () => {
-            this.scene.start('Reveal', { ...this.gameEndData, socketManager: this.socketManager });
-        });
-
-        this.tweens.add({
-            targets: btnText,
-            alpha: 1,
-            duration: 600,
-            ease: 'Power2',
+            this.scene.start('Reveal', {
+                ...this.gameEndData,
+                socketManager: this.socketManager,
+                colorChoices: this.colorChoices,
+            });
         });
     }
 }

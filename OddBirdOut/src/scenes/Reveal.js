@@ -1,28 +1,10 @@
 import { addCreditsButton } from '../CreditsOverlay.js';
 
-const PLAYER_COLORS = {
-    A: '#7CB87C',
-    B: '#7CB0D8',
-    C: '#D8A87C',
-};
-
 const SIDE_ORDER = {
     A: ['C', 'B'],
     B: ['A', 'C'],
     C: ['B', 'A'],
 };
-
-function countShares(trueActions, fromPlayer, toPlayer) {
-    let count = 0;
-    for (const r of trueActions) {
-        for (const act of r.actions) {
-            if (act.player === fromPlayer && act.action === 'share' && act.target === toPlayer) {
-                count++;
-            }
-        }
-    }
-    return count;
-}
 
 export class Reveal extends Phaser.Scene {
 
@@ -33,13 +15,14 @@ export class Reveal extends Phaser.Scene {
     init(data) {
         this.gameEndData = data;
         this.socketManager = data.socketManager;
+        this.colorChoices = data.colorChoices || {};
     }
 
     create() {
         const w = this.scale.width;
         const h = this.scale.height;
 
-        this.add.rectangle(w / 2, h / 2, w, h, 0x1A0F0A);
+        this.add.image(w / 2, h / 2, 'bg_night').setDisplaySize(w, h);
 
         if (this.socketManager) {
             this.socketManager.on('gameAborted', () => {
@@ -50,133 +33,78 @@ export class Reveal extends Phaser.Scene {
             });
         }
 
-        this.time.delayedCall(800, () => {
-            this.showMessage(w / 2, 70, 'The Truth', '28px', '#FFD700');
-        });
+        this.add.text(w / 2, 36, 'Your exclusion was nothing personal', {
+            fontFamily: '"Press Start 2P"',
+            fontSize: '28px',
+            color: '#FFD700',
+        }).setOrigin(0.5);
 
-        if (this.gameEndData) {
-            this.time.delayedCall(2000, () => {
-                this.showScoresAndDeaths(w, h);
-            });
+        this.add.text(w / 2, 74, 'All of the player scores were manipulated', {
+            fontFamily: '"Press Start 2P"',
+            fontSize: '20px',
+            color: '#CCCCCC',
+        }).setOrigin(0.5);
 
-            this.time.delayedCall(4000, () => {
-                const egg = this.add.image(w / 2, 540, 'egg');
-                egg.setScale(0);
-                this.tweens.add({
-                    targets: egg,
-                    scaleX: 3,
-                    scaleY: 3,
-                    alpha: 0,
-                    duration: 1500,
-                    ease: 'Back.easeIn',
-                });
-            });
+        this.showTrueResults(w, h);
 
-            this.time.delayedCall(5500, () => {
-                this.add.text(w / 2, 600, 'You were all manipulated.', {
-                    fontFamily: '"Press Start 2P"',
-                    fontSize: '14px',
-                    color: '#FFFFFF',
-                }).setOrigin(0.5);
-
-                this.add.text(w / 2, 635, 'Nobody was truly excluded.', {
-                    fontFamily: '"Press Start 2P"',
-                    fontSize: '14px',
-                    color: '#FFFFFF',
-                }).setOrigin(0.5);
-            });
-
-            this.time.delayedCall(7500, () => {
-                this.add.text(w / 2, 690, 'The operator will restart the game shortly.', {
-                    fontFamily: '"Press Start 2P"',
-                    fontSize: '10px',
-                    color: '#888888',
-                }).setOrigin(0.5);
-            });
-        }
+        this.add.text(w / 2, 615, 'Being left out in the digital world never feels good,\nbut you should never take it seriously.\nExclusion over digital platforms can have several reasons\nyou have no control of. In this context, \n the feeling of exclusion is called Cyber Ostracism. \nThe game takes inspiration from\nCyberball and Ostracism Online to transform it \ninto a physical experience.', {
+            fontFamily: '"Press Start 2P"',
+            fontSize: '14px',
+            color: '#000000',
+            align: 'center',
+            lineSpacing: 14,
+        }).setOrigin(0.5);
 
         addCreditsButton(this);
     }
 
-    showScoresAndDeaths(w, h) {
+    showTrueResults(w, h) {
+        const playerId = this.socketManager.playerId;
+        const others = SIDE_ORDER[playerId];
+        const playerOrder = [others[0], playerId, others[1]];
+
         const trueState = this.gameEndData.trueState;
-        const revelation = this.gameEndData.revelation;
-        const myId = this.socketManager.playerId;
+        const scores = trueState ? trueState.finalScores : {};
 
-        if (!trueState || !trueState.finalScores) return;
+        const xPositions = [w * 0.22, w * 0.5, w * 0.78];
+        const baseY = 350;
 
-        const scores = trueState.finalScores;
-        const trueActions = (revelation && revelation.trueActions) || [];
+        for (let i = 0; i < 3; i++) {
+            const id = playerOrder[i];
+            const isSelf = id === playerId;
+            const x = xPositions[i];
+            const y = isSelf ? baseY + 20 : baseY;
 
-        this.add.text(w / 2, 145, 'Final Scores', {
-            fontFamily: '"Press Start 2P"',
-            fontSize: '14px',
-            color: '#FFFFFF',
-        }).setOrigin(0.5);
+            const colorKey = this.colorChoices[id] || 'red';
+            const textureKey = `ostrich_${colorKey}_sand`;
 
-        const sides = SIDE_ORDER[myId];
-        const positions = {
-            [sides[0]]: { x: w * 0.25, y: h * 0.35 },
-            [sides[1]]: { x: w * 0.75, y: h * 0.35 },
-            [myId]:     { x: w * 0.5,  y: h * 0.60 },
-        };
+            const sprite = this.add.sprite(x, y, textureKey, 0);
+            sprite.setDisplaySize(130, 130);
 
-        const pts = Object.values(positions);
-        const gfx = this.add.graphics();
-        gfx.lineStyle(2, 0x555555, 0.5);
-        gfx.lineBetween(pts[0].x, pts[0].y, pts[1].x, pts[1].y);
-        gfx.lineBetween(pts[1].x, pts[1].y, pts[2].x, pts[2].y);
-        gfx.lineBetween(pts[2].x, pts[2].y, pts[0].x, pts[0].y);
-
-        for (const playerId of ['A', 'B', 'C']) {
-            const score = scores[playerId];
-            if (score === undefined) continue;
-
-            const pos = positions[playerId];
-            const isSelf = playerId === myId;
-            const label = isSelf ? `You (${playerId})` : `Player ${playerId}`;
-            const color = PLAYER_COLORS[playerId];
-
-            const otherTwo = ['A', 'B', 'C'].filter(p => p !== playerId);
-            let statY = pos.y - 58;
-            for (const target of otherTwo) {
-                const count = countShares(trueActions, playerId, target);
-                const targetLabel = target === myId ? 'You' : `Player ${target}`;
-                this.add.text(pos.x, statY, `Shared w/ ${targetLabel}: ${count}`, {
-                    fontFamily: '"Press Start 2P"',
-                    fontSize: '9px',
-                    color: '#CCCCCC',
-                }).setOrigin(0.5);
-                statY += 16;
+            if (this.anims.exists(`sand_${colorKey}`)) {
+                sprite.play(`sand_${colorKey}`);
             }
 
-            this.add.text(pos.x, pos.y, label, {
+            const label = isSelf ? 'You' : `Player ${id}`;
+            this.add.text(x, y - 90, label, {
                 fontFamily: '"Press Start 2P"',
-                fontSize: '12px',
-                color,
+                fontSize: '18px',
+                color: isSelf ? '#FFD700' : '#CCCCCC',
             }).setOrigin(0.5);
 
-            this.add.text(pos.x, pos.y + 24, `${score}`, {
+            const score = scores[id] ?? 0;
+
+            this.add.text(x, y + 80, `${score}`, {
                 fontFamily: '"Press Start 2P"',
-                fontSize: '22px',
-                color: '#E0E0E0',
+                fontSize: '44px',
+                color: '#FFD700',
+            }).setOrigin(0.5);
+
+            this.add.text(x, y + 108, 'eggs', {
+                fontFamily: '"Press Start 2P"',
+                fontSize: '18px',
+                color: '#000000',
             }).setOrigin(0.5);
         }
-    }
-
-    showMessage(x, y, text, size, color) {
-        const t = this.add.text(x, y, text, {
-            fontFamily: '"Press Start 2P"',
-            fontSize: size,
-            color,
-        }).setOrigin(0.5).setAlpha(0);
-
-        this.tweens.add({
-            targets: t,
-            alpha: 1,
-            y: y - 10,
-            duration: 600,
-            ease: 'Power2',
-        });
     }
 }
