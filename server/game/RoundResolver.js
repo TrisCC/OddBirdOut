@@ -65,8 +65,7 @@ class RoundResolver {
         this.broadcastToAll('roundStart', payload);
 
         if (this.lighting) {
-            const progress = (this.gameState.round - 1) / (config.TOTAL_ROUNDS - 1);
-            this.lighting.setDaytime(progress);
+            this.lighting.setDaytime(0);
         }
 
         if (!config.DEBUG_MODE) {
@@ -220,6 +219,9 @@ class RoundResolver {
             this.endGame();
         } else {
             this.gameState.round++;
+            if (this.lighting) {
+                this.lighting.setNighttime();
+            }
             this.scheduleNextRound();
         }
     }

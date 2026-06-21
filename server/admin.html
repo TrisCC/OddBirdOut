@@ -100,7 +100,8 @@ body {
     height: 12px;
     background: #1a1209;
     border-radius: 6px;
-    overflow: hidden;
+    overflow: visible;
+    position: relative;
 }
 
 .dmx-bar-fill {
@@ -109,15 +110,45 @@ body {
     transition: width 0.15s linear;
 }
 
+.dmx-bar-target {
+    position: absolute;
+    top: -3px;
+    width: 6px;
+    height: 18px;
+    border-radius: 3px;
+    border: 2px solid #fff;
+    background: transparent;
+    transform: translateX(-50%);
+    opacity: 0.8;
+}
+
 .dmx-bar-fill.r { background: #F44336; }
 .dmx-bar-fill.g { background: #4CAF50; }
 .dmx-bar-fill.b { background: #2196F3; }
+.dmx-bar-target.r { border-color: #F44336; background: rgba(244,67,54,0.3); }
+.dmx-bar-target.g { border-color: #4CAF50; background: rgba(76,175,80,0.3); }
+.dmx-bar-target.b { border-color: #2196F3; background: rgba(33,150,243,0.3); }
 
 .dmx-val {
-    width: 36px;
+    width: 80px;
     font-size: 11px;
     color: #ccc;
     text-align: right;
+}
+
+.dmx-val-cur { color: #fff; }
+.dmx-val-arrow { color: #666; margin: 0 3px; }
+.dmx-val-tgt { color: #888; }
+
+.dmx-swatch-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.dmx-swatch-arrow {
+    font-size: 18px;
+    color: #666;
 }
 
 .dmx-chan {
@@ -848,7 +879,12 @@ function renderLighting(state) {
     const cr = state.current.r;
     const cg = state.current.g;
     const cb = state.current.b;
-    const swatchColor = 'rgb(' + cr + ',' + cg + ',' + cb + ')';
+    const curSwatch = 'rgb(' + cr + ',' + cg + ',' + cb + ')';
+
+    const tr = Math.round(state.target.r);
+    const tg = Math.round(state.target.g);
+    const tb = Math.round(state.target.b);
+    const tgtSwatch = 'rgb(' + tr + ',' + tg + ',' + tb + ')';
 
     const modeLabels = {
         test: 'TEST',
@@ -864,18 +900,22 @@ function renderLighting(state) {
     }
     chLabels.push('R:' + state.channels.r + ' G:' + state.channels.g + ' B:' + state.channels.b);
 
-    const tr = Math.round(state.target.r);
-    const tg = Math.round(state.target.g);
-    const tb = Math.round(state.target.b);
+    const samePixel = cr === tr && cg === tg && cb === tb;
+    const arrowHtml = samePixel ? '' : '<span class="dmx-swatch-arrow">&rarr;</span>';
 
     let html = '';
     html += '<div class="dmx-row">';
-    html += '<div class="dmx-swatch" style="background-color:' + swatchColor + ';"></div>';
+    html += '<div class="dmx-swatch-wrap">';
+    html += '<div class="dmx-swatch" style="background-color:' + curSwatch + ';"></div>';
+    if (!samePixel) {
+        html += arrowHtml;
+        html += '<div class="dmx-swatch" style="background-color:' + tgtSwatch + ';opacity:0.5;"></div>';
+    }
+    html += '</div>';
     html += '<div class="dmx-bars">';
-    html += barRow('R', cr, '#F44336');
-    html += barRow('G', cg, '#4CAF50');
-    html += barRow('B', cb, '#2196F3');
-    html += '<div style="margin-top:4px;font-size:10px;color:#666;">target: ' + tr + ',' + tg + ',' + tb + '</div>';
+    html += barRow('R', cr, tr, '#F44336');
+    html += barRow('G', cg, tg, '#4CAF50');
+    html += barRow('B', cb, tb, '#2196F3');
     html += '</div>';
     html += '<div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;">';
     html += '<span class="dmx-mode-tag ' + state.mode + '">' + modeLabel + '</span>';
@@ -886,12 +926,21 @@ function renderLighting(state) {
     content.innerHTML = html;
 }
 
-function barRow(label, value, color) {
-    const pct = Math.round(value / 255 * 100);
+function barRow(label, cur, tgt, color) {
+    const pctCur = Math.round(cur / 255 * 100);
+    const pctTgt = Math.round(tgt / 255 * 100);
+    const same = cur === tgt;
+
     return '<div class="dmx-bar-wrap">'
         + '<span class="dmx-label">' + label + '</span>'
-        + '<div class="dmx-bar"><div class="dmx-bar-fill" style="width:' + pct + '%;background:' + color + ';"></div></div>'
-        + '<span class="dmx-val">' + value + '</span>'
+        + '<div class="dmx-bar">'
+        + '<div class="dmx-bar-fill" style="width:' + pctCur + '%;background:' + color + ';"></div>'
+        + (same ? '' : '<div class="dmx-bar-target ' + label.toLowerCase() + '" style="left:' + pctTgt + '%;"></div>')
+        + '</div>'
+        + '<span class="dmx-val">'
+        + '<span class="dmx-val-cur">' + cur + '</span>'
+        + (same ? '' : '<span class="dmx-val-arrow">&rarr;</span><span class="dmx-val-tgt">' + tgt + '</span>')
+        + '</span>'
         + '</div>';
 }
 </script>
