@@ -19,6 +19,8 @@ class GameRoom {
         this.reconnectTimers = {};
         this.adminSockets = new Set();
         this.stateBroadcastTimer = null;
+        this.autoStartInterval = null;
+        this.autoStartSecondsRemaining = 0;
         this.lighting = lighting || null;
 
         if (this.lighting) {
@@ -99,7 +101,10 @@ class GameRoom {
 
         this.players[playerId] = socket.id;
 
-        socket.on('playerReady', () => this.onPlayerReady(playerId));
+        socket.on('playerReady', () => {
+            console.log(`[AutoStart] Received playerReady from ${playerId}`);
+            this.onPlayerReady(playerId);
+        });
         socket.on('playerColorChoice', (data) => this.onPlayerColorChoice(playerId, data && data.color));
         socket.on('playerAction', (data) => this.onPlayerAction(playerId, data));
         socket.on('requestLobbyState', () => socket.emit('lobbyUpdate', this.getLobbyState()));
@@ -122,9 +127,14 @@ class GameRoom {
         }
 
         socket.on('playerReady', () => {
+            console.log(`[AutoStart] Received playerReady from ${playerId} (reconnect path)`);
             this.readyPlayers.add(playerId);
+            this.broadcastLobbyUpdate();
             if (this.roundResolver) {
                 this.roundResolver.handleReconnect(playerId);
+            } else if (this.allPlayersReady()) {
+                console.log(`[AutoStart] All players ready (reconnect path) — starting timer`);
+                this.startAutoStartTimer();
             }
         });
         socket.on('playerColorChoice', (data) => this.onPlayerColorChoice(playerId, data && data.color));
@@ -142,7 +152,12 @@ class GameRoom {
 
     onPlayerReady(playerId) {
         this.readyPlayers.add(playerId);
+        console.log(`[AutoStart] Player ${playerId} ready. Ready: [${[...this.readyPlayers]}], Connected: [${Object.keys(this.players)}]`);
         this.broadcastLobbyUpdate();
+        if (!this.roundResolver && this.allPlayersReady()) {
+            console.log(`[AutoStart] allPlayersReady() = true, AUTO_START_DELAY_SECONDS = ${config.AUTO_START_DELAY_SECONDS}`);
+            this.startAutoStartTimer();
+        }
     }
 
     onPlayerColorChoice(playerId, color) {
@@ -156,6 +171,7 @@ class GameRoom {
         // Changing color while ready → unready the player
         if (this.readyPlayers.has(playerId) && this.colorChoices[playerId] !== color) {
             this.readyPlayers.delete(playerId);
+            this.cancelAutoStartTimer();
         }
 
         this.colorChoices[playerId] = color;
@@ -174,6 +190,7 @@ class GameRoom {
 
         delete this.players[playerId];
         this.readyPlayers.delete(playerId);
+        this.cancelAutoStartTimer();
 
         if (this.roundResolver) {
             this.roundResolver.handleDisconnect(playerId);
@@ -194,6 +211,12 @@ class GameRoom {
         this.roundResolver = new RoundResolver(this.io, { ...this.players }, this.lighting);
         this.roundResolver.setAdminCallback((data) => {
             this.broadcastToAdmins('adminRoundResult', data);
+        });
+        this.roundResolver.setResetCallback(() => {
+            this.broadcastToAll('gameAborted', {
+                reason: 'Game auto-reset.',
+            });
+            this.reset();
         });
 
         if (this.lighting) {
@@ -234,6 +257,7 @@ class GameRoom {
             ready,
             colorChoices: { ...this.colorChoices },
             total: 3,
+            autoStartSeconds: this.autoStartSecondsRemaining,
         };
     }
 
@@ -243,6 +267,7 @@ class GameRoom {
     }
 
     reset() {
+        this.cancelAutoStartTimer();
         this.roundResolver = null;
         this.readyPlayers.clear();
         this.colorChoices = {};
@@ -258,6 +283,7 @@ class GameRoom {
 
     forceReset() {
         if (this.roundResolver) {
+            this.roundResolver.stopAutoResetTimer();
             this.roundResolver.forceEnd();
         }
         this.broadcastToAll('gameAborted', {
@@ -269,17 +295,51 @@ class GameRoom {
     adminStartGame() {
         if (this.roundResolver) return;
         if (!this.allPlayersReady()) return;
+        this.cancelAutoStartTimer();
         this.startGame();
     }
 
     adminForceStartGame() {
         if (this.roundResolver) return;
         if (Object.keys(this.players).length < 3) return;
+        this.cancelAutoStartTimer();
         this.startGame();
     }
 
     allPlayersReady() {
         return VALID_ROLES.every(r => this.players[r] && this.readyPlayers.has(r));
+    }
+
+    startAutoStartTimer() {
+        console.log(`[AutoStart] startAutoStartTimer() called. AUTO_START_DELAY_SECONDS = ${config.AUTO_START_DELAY_SECONDS}`);
+        if (config.AUTO_START_DELAY_SECONDS <= 0) {
+            console.log('[AutoStart] Auto-start disabled (config <= 0)');
+            return;
+        }
+        this.cancelAutoStartTimer();
+        this.autoStartSecondsRemaining = config.AUTO_START_DELAY_SECONDS;
+        console.log(`[AutoStart] Broadcasting autoStartCountdown: ${this.autoStartSecondsRemaining}s`);
+        this.broadcastToAll('autoStartCountdown', { seconds: this.autoStartSecondsRemaining });
+
+        this.autoStartInterval = setInterval(() => {
+            this.autoStartSecondsRemaining--;
+            if (this.autoStartSecondsRemaining <= 0) {
+                console.log('[AutoStart] Timer expired — starting game');
+                this.cancelAutoStartTimer();
+                this.startGame();
+            } else {
+                this.broadcastToAll('autoStartCountdown', { seconds: this.autoStartSecondsRemaining });
+            }
+        }, 1000);
+    }
+
+    cancelAutoStartTimer() {
+        if (this.autoStartInterval) {
+            clearInterval(this.autoStartInterval);
+            this.autoStartInterval = null;
+        }
+        this.autoStartSecondsRemaining = 0;
+        this.broadcastToAll('autoStartCountdown', { seconds: 0 });
     }
 
     broadcastToAdmins(event, data) {

@@ -131,6 +131,12 @@ export class Lobby extends Phaser.Scene {
             color: '#AAAAAA',
         }).setOrigin(0.5);
 
+        this.autoStartText = this.add.text(w / 2, 168, '', {
+            fontFamily: '"Press Start 2P"',
+            fontSize: '12px',
+            color: '#4CAF50',
+        }).setOrigin(0.5);
+
         for (let i = 0; i < 3; i++) {
             const role = roles[i];
             const isSelf = role === this.playerId;
@@ -396,6 +402,10 @@ export class Lobby extends Phaser.Scene {
                 this.statusText.setText('All players ready!');
                 this.statusText.setColor('#4CAF50');
             }
+
+            if (data.autoStartSeconds > 0) {
+                this.updateAutoStartCountdown(data.autoStartSeconds);
+            }
         };
 
         const onGameStart = (data) => {
@@ -438,6 +448,10 @@ export class Lobby extends Phaser.Scene {
             }).setOrigin(0.5);
         };
 
+        const onAutoStartCountdown = (data) => {
+            this.updateAutoStartCountdown(data.seconds);
+        };
+
         this.socketManager.on('lobbyUpdate',  onLobbyUpdate);
         this.socketManager.on('gameStart',    onGameStart);
         this.socketManager.on('gameAborted',  onGameAborted);
@@ -445,6 +459,7 @@ export class Lobby extends Phaser.Scene {
         this.socketManager.on('playerReconnected',  onPlayerReconnected);
         this.socketManager.on('connected',          onConnected);
         this.socketManager.on('errorMessage', onErrorMessage);
+        this.socketManager.on('autoStartCountdown', onAutoStartCountdown);
 
         this.events.once('shutdown', () => {
             this.socketManager.off('lobbyUpdate',  onLobbyUpdate);
@@ -454,6 +469,7 @@ export class Lobby extends Phaser.Scene {
             this.socketManager.off('playerReconnected',  onPlayerReconnected);
             this.socketManager.off('connected',          onConnected);
             this.socketManager.off('errorMessage', onErrorMessage);
+            this.socketManager.off('autoStartCountdown', onAutoStartCountdown);
         });
 
         this.socketManager.requestLobbyState();
@@ -619,6 +635,16 @@ export class Lobby extends Phaser.Scene {
                 dot.setFillStyle(0x555555);
                 dot.setStrokeStyle(1, 0x888888);
             }
+        }
+    }
+
+    updateAutoStartCountdown(seconds) {
+        if (!this.autoStartText) return;
+        if (seconds > 0) {
+            this.autoStartText.setText(`Game starts in ${seconds}s...`);
+            this.autoStartText.setVisible(true);
+        } else {
+            this.autoStartText.setVisible(false);
         }
     }
 }

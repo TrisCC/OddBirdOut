@@ -31,7 +31,16 @@ export class Reveal extends Phaser.Scene {
             this.socketManager.on('connected', () => {
                 this.socketManager.requestLobbyState();
             });
+            this.socketManager.on('resetCountdown', (data) => {
+                this.updateResetCountdown(data.seconds);
+            });
         }
+
+        this.resetCountdownText = this.add.text(w / 2, h - 24, '', {
+            fontFamily: '"Press Start 2P"',
+            fontSize: '14px',
+            color: '#FF9800',
+        }).setOrigin(0.5);
 
         this.add.text(w / 2, 36, 'Your exclusion was nothing personal', {
             fontFamily: '"Press Start 2P"',
@@ -105,6 +114,15 @@ export class Reveal extends Phaser.Scene {
                 fontSize: '18px',
                 color: '#000000',
             }).setOrigin(0.5);
+        }
+    }
+
+    updateResetCountdown(seconds) {
+        if (!this.resetCountdownText) return;
+        if (seconds > 0) {
+            this.resetCountdownText.setText(`Returning to lobby in ${seconds}s...`);
+        } else {
+            this.resetCountdownText.setText('');
         }
     }
 }

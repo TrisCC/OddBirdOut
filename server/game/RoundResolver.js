@@ -21,6 +21,9 @@ class RoundResolver {
         this.roundTimer = null;
         this.gameActive = false;
         this.adminCallback = null;
+        this.resetCallback = null;
+        this.autoResetInterval = null;
+        this.autoResetSecondsRemaining = 0;
         this.lighting = lighting || null;
         this.perPlayerIllusionScores = {
             A: config.STARTING_EGGS,
@@ -266,6 +269,8 @@ class RoundResolver {
 
         this.saveSessionLog();
 
+        this.startAutoResetTimer();
+
         if (this.adminCallback) {
             this.adminCallback({
                 round: this.gameState.round,
@@ -349,6 +354,38 @@ class RoundResolver {
         this.adminCallback = cb;
     }
 
+    setResetCallback(cb) {
+        this.resetCallback = cb;
+    }
+
+    startAutoResetTimer() {
+        if (config.AUTO_RESET_TIMEOUT_SECONDS <= 0) return;
+        this.stopAutoResetTimer();
+        this.autoResetSecondsRemaining = config.AUTO_RESET_TIMEOUT_SECONDS;
+        this.broadcastToAll('resetCountdown', { seconds: this.autoResetSecondsRemaining });
+
+        this.autoResetInterval = setInterval(() => {
+            this.autoResetSecondsRemaining--;
+            if (this.autoResetSecondsRemaining <= 0) {
+                this.stopAutoResetTimer();
+                if (this.resetCallback) {
+                    this.resetCallback();
+                }
+            } else {
+                this.broadcastToAll('resetCountdown', { seconds: this.autoResetSecondsRemaining });
+            }
+        }, 1000);
+    }
+
+    stopAutoResetTimer() {
+        if (this.autoResetInterval) {
+            clearInterval(this.autoResetInterval);
+            this.autoResetInterval = null;
+        }
+        this.autoResetSecondsRemaining = 0;
+        this.broadcastToAll('resetCountdown', { seconds: 0 });
+    }
+
     getAdminState() {
         const state = this.gameState.getFullState();
         return {
@@ -361,6 +398,7 @@ class RoundResolver {
             escalationLevel: state.phase === 'trust' ? 'none' : getEscalationLevel(state.round),
             perPlayerIllusionScores: { ...this.perPlayerIllusionScores },
             roundHistory: state.roundHistory,
+            autoResetSeconds: this.autoResetSecondsRemaining,
         };
     }
 
@@ -369,6 +407,7 @@ class RoundResolver {
             clearTimeout(this.roundTimer);
             this.roundTimer = null;
         }
+        this.stopAutoResetTimer();
         this.gameActive = false;
     }
 }

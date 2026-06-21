@@ -373,10 +373,20 @@ td.ostracism-phase { color: #F44336; }
     <div class="panel">
         <h3>Connections</h3>
         <div id="connectionsContent" class="empty-state">No players connected</div>
+        <div id="autoStartCountdown" style="display:none; margin-top: 10px; padding: 8px; background: #1a1209; border-radius: 4px; text-align: center;">
+            <span style="font-size: 12px; color: #4CAF50;">AUTO START IN: </span>
+            <span id="autoStartCountdownValue" style="font-size: 24px; font-weight: bold; color: #4CAF50;">--</span>
+            <span style="font-size: 12px; color: #4CAF50;">s</span>
+        </div>
     </div>
     <div class="panel">
         <h3>Game State</h3>
         <div id="gameStateContent" class="empty-state">Waiting for game...</div>
+        <div id="resetCountdown" style="display:none; margin-top: 10px; padding: 8px; background: #1a1209; border-radius: 4px; text-align: center;">
+            <span style="font-size: 12px; color: #FF9800;">AUTO RESET IN: </span>
+            <span id="resetCountdownValue" style="font-size: 24px; font-weight: bold; color: #FF9800;">--</span>
+            <span style="font-size: 12px; color: #FF9800;">s</span>
+        </div>
     </div>
 </div>
 
@@ -454,6 +464,10 @@ const btnForceStart = document.getElementById('btnForceStart');
 const resetConfirm = document.getElementById('resetConfirm');
 const btnConfirmYes = document.getElementById('btnConfirmYes');
 const btnConfirmNo = document.getElementById('btnConfirmNo');
+const resetCountdownEl = document.getElementById('resetCountdown');
+const resetCountdownValue = document.getElementById('resetCountdownValue');
+const autoStartCountdownEl = document.getElementById('autoStartCountdown');
+const autoStartCountdownValue = document.getElementById('autoStartCountdownValue');
 
 let roundHistory = [];
 let gameEnded = false;
@@ -626,6 +640,24 @@ socket.on('adminRoundResult', (data) => {
     renderTrueScoresFromHistory(data);
 });
 
+socket.on('resetCountdown', (data) => {
+    if (data.seconds > 0) {
+        resetCountdownEl.style.display = 'block';
+        resetCountdownValue.textContent = data.seconds;
+    } else {
+        resetCountdownEl.style.display = 'none';
+    }
+});
+
+socket.on('autoStartCountdown', (data) => {
+    if (data.seconds > 0) {
+        autoStartCountdownEl.style.display = 'block';
+        autoStartCountdownValue.textContent = data.seconds;
+    } else {
+        autoStartCountdownEl.style.display = 'none';
+    }
+});
+
 function resetStartBtn(btn, label, color) {
     btn.disabled = false;
     btn.textContent = label;
@@ -635,6 +667,7 @@ function resetStartBtn(btn, label, color) {
 btnStart.addEventListener('click', () => {
     socket.emit('adminStart');
     stopMusic();
+    autoStartCountdownEl.style.display = 'none';
     btnStart.disabled = true;
     btnStart.textContent = 'STARTING...';
     btnStart.style.background = '#388E3C';
@@ -643,6 +676,7 @@ btnStart.addEventListener('click', () => {
 btnForceStart.addEventListener('click', () => {
     socket.emit('adminForceStart');
     stopMusic();
+    autoStartCountdownEl.style.display = 'none';
     btnForceStart.disabled = true;
     btnForceStart.textContent = 'STARTING...';
     btnForceStart.style.background = '#F57C00';
@@ -657,6 +691,8 @@ btnConfirmYes.addEventListener('click', () => {
     socket.emit('adminReset');
     resetConfirm.classList.add('hidden');
     btnReset.classList.remove('hidden');
+    resetCountdownEl.style.display = 'none';
+    autoStartCountdownEl.style.display = 'none';
     roundHistory = [];
     renderHistory();
     renderIllusions(null);
@@ -702,6 +738,8 @@ function renderConnections(data) {
 function renderGameState(data) {
     if (!data.game) {
         gameStateContent.innerHTML = `<div class="empty-state">No active game</div>`;
+        resetCountdownEl.style.display = 'none';
+        autoStartCountdownEl.style.display = 'none';
         return;
     }
     const g = data.game;
@@ -722,7 +760,15 @@ function renderGameState(data) {
         html += `<span class="${sub ? 'submitted' : 'pending'}">${p}: ${sub ? '✓' : dead ? '☠' : '✗'}</span> `;
     }
     html += `</span></div>`;
+    html += `<div class="row"><span>Actions Submitted</span><span>${JSON.stringify(g.actionsSubmitted)}</span></div>`;
     gameStateContent.innerHTML = html;
+
+    if (g.autoResetSeconds > 0) {
+        resetCountdownEl.style.display = 'block';
+        resetCountdownValue.textContent = g.autoResetSeconds;
+    } else {
+        resetCountdownEl.style.display = 'none';
+    }
 }
 
 function renderGameEnded(data) {

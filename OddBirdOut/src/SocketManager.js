@@ -56,6 +56,14 @@ export class SocketManager {
             this._emit('gameAborted', data);
         });
 
+        this.socket.on('resetCountdown', (data) => {
+            this._emit('resetCountdown', data);
+        });
+
+        this.socket.on('autoStartCountdown', (data) => {
+            this._emit('autoStartCountdown', data);
+        });
+
         this.socket.on('playerDisconnected', (data) => {
             this._emit('playerDisconnected', data);
         });
