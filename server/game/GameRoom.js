@@ -126,13 +126,22 @@ class GameRoom {
             this.roundResolver.playerSockets[playerId] = socket.id;
         }
 
+        if (this.roundResolver) {
+            const recovery = this.roundResolver.getRecoveryState(playerId);
+            socket.emit('gameStart', {
+                playerId,
+                totalRounds: config.TOTAL_ROUNDS,
+                startingEggs: config.STARTING_EGGS,
+                colorChoices: { ...this.colorChoices },
+                recovery,
+            });
+        }
+
         socket.on('playerReady', () => {
             console.log(`[AutoStart] Received playerReady from ${playerId} (reconnect path)`);
             this.readyPlayers.add(playerId);
             this.broadcastLobbyUpdate();
-            if (this.roundResolver) {
-                this.roundResolver.handleReconnect(playerId);
-            } else if (this.allPlayersReady()) {
+            if (!this.roundResolver && this.allPlayersReady()) {
                 console.log(`[AutoStart] All players ready (reconnect path) — starting timer`);
                 this.startAutoStartTimer();
             }
@@ -183,6 +192,7 @@ class GameRoom {
         if (!data || typeof data.action !== 'string') return;
         const { action, target } = data;
         this.roundResolver.submitPlayerAction(playerId, action, target);
+        this.broadcastToAdmins('adminState', this.getAdminState());
     }
 
     onDisconnect(socket, playerId) {
@@ -217,6 +227,9 @@ class GameRoom {
                 reason: 'Game auto-reset.',
             });
             this.reset();
+        });
+        this.roundResolver.setStateChangeCallback(() => {
+            this.broadcastToAdmins('adminState', this.getAdminState());
         });
 
         if (this.lighting) {

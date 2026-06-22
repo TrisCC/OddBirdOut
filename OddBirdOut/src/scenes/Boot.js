@@ -105,6 +105,26 @@ export class Boot extends Phaser.Scene {
         }
 
         const socketManager = new SocketManager();
+
+        let gameStartData = null;
+        let startSceneTimer = null;
+
+        socketManager.on('gameStart', (data) => {
+            gameStartData = data;
+            if (startSceneTimer) {
+                startSceneTimer.remove();
+                startSceneTimer = null;
+            }
+            this.scene.start('Game', {
+                socketManager,
+                playerId: data.playerId,
+                totalRounds: data.totalRounds,
+                startingEggs: data.startingEggs,
+                colorChoices: data.colorChoices || {},
+                recovery: data.recovery || null,
+            });
+        });
+
         socketManager.connect(window.location.origin);
 
         socketManager.on('connected', () => {
@@ -112,7 +132,11 @@ export class Boot extends Phaser.Scene {
                 this.showError(data.message);
             });
 
-            this.scene.start('Start', { socketManager });
+            startSceneTimer = this.time.delayedCall(300, () => {
+                if (!gameStartData) {
+                    this.scene.start('Start', { socketManager });
+                }
+            });
         });
 
         socketManager.on('disconnected', () => {

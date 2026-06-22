@@ -551,7 +551,7 @@ const DAY_FADE_DELAY_MS = 7100;
 let gameStarted = false;
 
 socket.on('roundStart', (data) => {
-    // Only auto-start in-game music on the very first round of a game
+    updateGameStatePanelFromRoundStart(data);
     if (!gameStarted) {
         gameStarted = true;
         wantGameMusic = true;
@@ -618,6 +618,7 @@ socket.on('adminRoundResult', (data) => {
         renderGameEnded(data);
         return;
     }
+    updateGameStatePanelFromResult(data);
     clearSfxTimers();
     // Schedule ostrich SFX at the moment each share animation starts (no repeats per round)
     data.trueActions.forEach((act, i) => {
@@ -733,6 +734,43 @@ function renderConnections(data) {
     html += `<span style="color:#FFD700;">${data.state.toUpperCase()}</span>`;
     html += `</div>`;
     connectionsContent.innerHTML = html;
+}
+
+function updateGameStatePanelFromResult(data) {
+    const g = data;
+    const phaseColor = g.phase === 'trust' ? '#4CAF50' : '#F44336';
+    const escTag = g.escalationLevel && g.escalationLevel !== 'none'
+        ? `<span class="tag tag-${g.escalationLevel}">${g.escalationLevel.toUpperCase()}</span>`
+        : '';
+
+    let html = '';
+    html += `<div class="row"><span>Round</span><span>${g.round} / 12</span></div>`;
+    html += `<div class="row"><span>Phase</span><span style="color:${phaseColor};">${g.phase.toUpperCase()} ${escTag}</span></div>`;
+    html += `<div class="row"><span>Round Active</span><span>No</span></div>`;
+    html += `<div class="row"><span>Submitted</span>`;
+    html += `<span>`;
+    for (const p of ['A', 'B', 'C']) {
+        const hasAction = g.trueActions && g.trueActions.some(a => a.player === p);
+        const dead = g.alive && g.alive[p] === false;
+        html += `<span class="${hasAction ? 'submitted' : 'pending'}">${p}: ${hasAction ? '✓' : dead ? '☠' : '✗'}</span> `;
+    }
+    html += `</span></div>`;
+    gameStateContent.innerHTML = html;
+}
+
+function updateGameStatePanelFromRoundStart(data) {
+    const phaseColor = data.phase === 'trust' ? '#4CAF50' : '#F44336';
+    let html = '';
+    html += `<div class="row"><span>Round</span><span>${data.round} / 12</span></div>`;
+    html += `<div class="row"><span>Phase</span><span style="color:${phaseColor};">${data.phase.toUpperCase()}</span></div>`;
+    html += `<div class="row"><span>Round Active</span><span>Yes</span></div>`;
+    html += `<div class="row"><span>Submitted</span>`;
+    html += `<span>`;
+    for (const p of ['A', 'B', 'C']) {
+        html += `<span class="pending">${p}: ✗</span> `;
+    }
+    html += `</span></div>`;
+    gameStateContent.innerHTML = html;
 }
 
 function renderGameState(data) {

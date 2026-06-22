@@ -22,6 +22,7 @@ class RoundResolver {
         this.gameActive = false;
         this.adminCallback = null;
         this.resetCallback = null;
+        this.stateChangeCallback = null;
         this.autoResetInterval = null;
         this.autoResetSecondsRemaining = 0;
         this.lighting = lighting || null;
@@ -66,6 +67,10 @@ class RoundResolver {
         };
 
         this.broadcastToAll('roundStart', payload);
+
+        if (this.stateChangeCallback) {
+            this.stateChangeCallback();
+        }
 
         if (this.lighting) {
             this.lighting.setDaytime(0);
@@ -218,6 +223,10 @@ class RoundResolver {
             this.adminCallback(adminPayload);
         }
 
+        if (this.stateChangeCallback) {
+            this.stateChangeCallback();
+        }
+
         if (this.gameState.round >= config.TOTAL_ROUNDS) {
             this.endGame();
         } else {
@@ -358,6 +367,10 @@ class RoundResolver {
         this.resetCallback = cb;
     }
 
+    setStateChangeCallback(cb) {
+        this.stateChangeCallback = cb;
+    }
+
     startAutoResetTimer() {
         if (config.AUTO_RESET_TIMEOUT_SECONDS <= 0) return;
         this.stopAutoResetTimer();
@@ -399,6 +412,19 @@ class RoundResolver {
             perPlayerIllusionScores: { ...this.perPlayerIllusionScores },
             roundHistory: state.roundHistory,
             autoResetSeconds: this.autoResetSecondsRemaining,
+        };
+    }
+
+    getRecoveryState(playerId) {
+        const state = this.gameState.getFullState();
+        return {
+            round: state.round,
+            phase: state.phase,
+            roundActive: this.gameState.isRoundActive(),
+            scores: { ...state.scores },
+            illusionScore: this.perPlayerIllusionScores[playerId],
+            alive: { ...this.gameState.alive },
+            actionsSubmitted: { ...state.actionSubmitted },
         };
     }
 

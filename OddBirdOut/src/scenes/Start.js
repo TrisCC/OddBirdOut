@@ -19,9 +19,21 @@ export class Start extends Phaser.Scene {
         const onGameAborted = () => {
             this.scene.start('Lobby', { socketManager: this.socketManager });
         };
+        const onGameStart = (data) => {
+            this.scene.start('Game', {
+                socketManager: this.socketManager,
+                playerId: data.playerId,
+                totalRounds: data.totalRounds,
+                startingEggs: data.startingEggs,
+                colorChoices: data.colorChoices || {},
+                recovery: data.recovery || null,
+            });
+        };
         this.socketManager.on('gameAborted', onGameAborted);
+        this.socketManager.on('gameStart', onGameStart);
         this.events.once('shutdown', () => {
             this.socketManager.off('gameAborted', onGameAborted);
+            this.socketManager.off('gameStart', onGameStart);
         });
 
         // Title placeholder — replace with actual title asset when ready

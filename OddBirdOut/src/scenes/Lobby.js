@@ -415,6 +415,7 @@ export class Lobby extends Phaser.Scene {
                 totalRounds: data.totalRounds,
                 startingEggs: data.startingEggs,
                 colorChoices: data.colorChoices || {},
+                recovery: data.recovery || null,
             });
         };
 

@@ -25,6 +25,7 @@ export class Game extends Phaser.Scene {
         this.totalRounds = data.totalRounds;
         this.startingEggs = data.startingEggs ?? 0;
         this.colorChoices = data.colorChoices || {};
+        this.recovery = data.recovery || null;
     }
 
     create() {
@@ -40,21 +41,23 @@ export class Game extends Phaser.Scene {
         this.buildOstriches();
         this.buildActionButtons();
         this.setupListeners();
-        this.currentRound = 0;
-        this.currentPhase = 'trust';
-        this.submitted = false;
-        this.eggSprites = [];
-        this.currentScores = { A: this.startingEggs, B: this.startingEggs, C: this.startingEggs };
-
-        // Fade from lobby night to day as soon as the game scene loads.
-        // animating=true blocks roundStart from being processed until the fade completes.
         addCreditsButton(this);
 
-        this.animating = true;
-        this.doSunriseTransition(() => {
-            this.animating = false;
-            this.processEventQueue();
-        });
+        if (this.recovery) {
+            this.applyRecoveryState(this.recovery);
+        } else {
+            this.currentRound = 0;
+            this.currentPhase = 'trust';
+            this.submitted = false;
+            this.eggSprites = [];
+            this.currentScores = { A: this.startingEggs, B: this.startingEggs, C: this.startingEggs };
+
+            this.animating = true;
+            this.doSunriseTransition(() => {
+                this.animating = false;
+                this.processEventQueue();
+            });
+        }
     }
 
     buildHUD() {
@@ -351,6 +354,45 @@ export class Game extends Phaser.Scene {
 
     applyGameEnd(data) {
         this.scene.start('GameOver', { ...data, socketManager: this.socketManager, colorChoices: this.colorChoices });
+    }
+
+    applyRecoveryState(data) {
+        this.currentRound = data.round;
+        this.currentPhase = data.phase;
+        this.submitted = !!(data.actionsSubmitted && data.actionsSubmitted[this.playerId]);
+
+        this.currentScores = { ...data.scores };
+        this.currentScores[this.playerId] = data.illusionScore;
+
+        for (const id of ['A', 'B', 'C']) {
+            if (data.alive && data.alive[id] === false) {
+                this.currentScores[id] = 0;
+            }
+            this.updateEggDisplay(id, this.currentScores[id]);
+        }
+
+        this.roundText.setText(`Round ${data.round} / ${this.totalRounds}`);
+
+        const isDead = data.alive && data.alive[this.playerId] === false;
+
+        if (isDead) {
+            this.disableButtons();
+            this.statusText.setText('');
+        } else if (data.roundActive && !this.submitted) {
+            this.enableButtons();
+            this.statusText.setText('');
+            this.startTimer(10000);
+        } else if (this.submitted) {
+            this.disableButtons();
+            this.statusText.setText('Waiting...');
+        } else {
+            this.disableButtons();
+            this.statusText.setText('');
+        }
+
+        this.bg.setTexture('bg_day');
+        this.animating = false;
+        this.processEventQueue();
     }
 
     crossFadeBg(toKey, duration, onComplete) {
