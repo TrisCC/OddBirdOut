@@ -42,27 +42,26 @@ export class Reveal extends Phaser.Scene {
             color: '#FF9800',
         }).setOrigin(0.5);
 
-        this.add.text(w / 2, 36, 'Your exclusion was nothing personal', {
+        this.add.text(w / 2, 80, 'We lied to you.', {
             fontFamily: '"Press Start 2P"',
-            fontSize: '28px',
+            fontSize: '36px',
             color: '#FFD700',
         }).setOrigin(0.5);
 
-        this.add.text(w / 2, 74, 'All of the player scores were manipulated', {
+        const whatYouWereShown = this.gameEndData.whatYouWereShown || [];
+        const phase1LastRound = whatYouWereShown.length > 0 ? whatYouWereShown[0].round - 1 : 4;
+
+        this.add.text(w / 2, 160, `After round ${phase1LastRound}, we made the other two\nplayers exclude you, regardless of their input.\nWe did the same to the others.`, {
             fontFamily: '"Press Start 2P"',
-            fontSize: '20px',
+            fontSize: '14px',
             color: '#CCCCCC',
+            stroke: '#000000',
+            strokeThickness: 4,
+            align: 'center',
+            lineSpacing: 10,
         }).setOrigin(0.5);
 
         this.showTrueResults(w, h);
-
-        this.add.text(w / 2, 615, 'Being left out in the digital world never feels good,\nbut you should never take it seriously.\nExclusion over digital platforms can have several reasons\nyou have no control of. In this context, \n the feeling of exclusion is called Cyber Ostracism. \nThe game takes inspiration from\nCyberball and Ostracism Online to transform it \ninto a physical experience.', {
-            fontFamily: '"Press Start 2P"',
-            fontSize: '14px',
-            color: '#000000',
-            align: 'center',
-            lineSpacing: 14,
-        }).setOrigin(0.5);
 
         addCreditsButton(this);
     }
@@ -75,8 +74,16 @@ export class Reveal extends Phaser.Scene {
         const trueState = this.gameEndData.trueState;
         const scores = trueState ? trueState.finalScores : {};
 
+        const whatYouWereShown = this.gameEndData.whatYouWereShown || [];
+        const lastIllusion = whatYouWereShown[whatYouWereShown.length - 1];
+        const prevIllusion = whatYouWereShown[whatYouWereShown.length - 2] || lastIllusion;
+        const fakeScores = {
+            ...(lastIllusion ? lastIllusion.scores : {}),
+            ...(prevIllusion ? { You: prevIllusion.scores.You } : {}),
+        };
+
         const xPositions = [w * 0.22, w * 0.5, w * 0.78];
-        const baseY = 350;
+        const baseY = 390;
 
         for (let i = 0; i < 3; i++) {
             const id = playerOrder[i];
@@ -114,6 +121,14 @@ export class Reveal extends Phaser.Scene {
                 fontSize: '18px',
                 color: '#000000',
             }).setOrigin(0.5);
+
+            const fakeScoreKey = isSelf ? 'You' : id;
+            const fakeScore = fakeScores[fakeScoreKey] ?? 0;
+            this.add.text(x, y + 132, `(shown: ${fakeScore})`, {
+                fontFamily: '"Press Start 2P"',
+                fontSize: '13px',
+                color: '#000000',
+            }).setOrigin(0.5).setAlpha(0.7);
         }
     }
 
