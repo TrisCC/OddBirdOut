@@ -419,9 +419,7 @@ export class Lobby extends Phaser.Scene {
         };
 
         const onGameAborted = () => {
-            this.localReady = false;
-            this.selectedColor = null;
-            this.socketManager.requestLobbyState();
+            this.scene.start('Start', { socketManager: this.socketManager });
         };
 
         const onPlayerDisconnected = (data) => {

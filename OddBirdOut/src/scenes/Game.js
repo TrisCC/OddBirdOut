@@ -225,7 +225,7 @@ export class Game extends Phaser.Scene {
             this.processEventQueue();
         };
         const onGameAborted = () => {
-            this.scene.start('Lobby', { socketManager: this.socketManager });
+            this.scene.start('Start', { socketManager: this.socketManager });
         };
         const onPlayerDisconnected = (data) => {
             this.statusText.setText(`Player ${data.playerId} disconnected`);

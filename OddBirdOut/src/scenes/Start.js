@@ -17,7 +17,7 @@ export class Start extends Phaser.Scene {
         this.add.image(w / 2, h / 2, 'bg_night').setDisplaySize(w, h);
 
         const onGameAborted = () => {
-            this.scene.start('Lobby', { socketManager: this.socketManager });
+            // already on the start screen — no-op
         };
         this.socketManager.on('gameAborted', onGameAborted);
         this.events.once('shutdown', () => {
