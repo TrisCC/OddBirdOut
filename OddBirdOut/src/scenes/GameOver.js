@@ -24,23 +24,42 @@ export class GameOver extends Phaser.Scene {
 
         this.add.image(w / 2, h / 2, 'bg_sunset').setDisplaySize(w, h);
 
-        if (this.socketManager) {
-            this.socketManager.on('gameAborted', () => {
-                this.scene.start('Start', { socketManager: this.socketManager });
-            });
-            this.socketManager.on('connected', () => {
-                this.socketManager.requestLobbyState();
-            });
-            this.socketManager.on('resetCountdown', (data) => {
-                this.updateResetCountdown(data.seconds);
-            });
-        }
-
-        this.resetCountdownText = this.add.text(w / 2, h - 24, '', {
+        this.resetCountdownText = this.add.text(w / 2, h - 28, '', {
             fontFamily: '"Press Start 2P"',
             fontSize: '14px',
             color: '#FF9800',
-        }).setOrigin(0.5);
+            stroke: '#000000',
+            strokeThickness: 4,
+            padding: { x: 6, y: 6 },
+        }).setOrigin(0.5).setDepth(10);
+
+        if (this.socketManager) {
+            this._onGameAborted = () => {
+                this.scene.start('Start', { socketManager: this.socketManager });
+            };
+            this._onConnected = () => {
+                this.socketManager.requestLobbyState();
+            };
+            this._onResetCountdown = (data) => {
+                this.updateResetCountdown(data.seconds);
+            };
+            this.socketManager.on('gameAborted', this._onGameAborted);
+            this.socketManager.on('connected', this._onConnected);
+            this.socketManager.on('resetCountdown', this._onResetCountdown);
+        }
+
+        const autoReset = this.gameEndData.autoResetSeconds;
+        if (typeof autoReset === 'number' && autoReset > 0) {
+            this.updateResetCountdown(autoReset);
+        }
+
+        this.events.once('shutdown', () => {
+            if (this.socketManager) {
+                this.socketManager.off('gameAborted', this._onGameAborted);
+                this.socketManager.off('connected', this._onConnected);
+                this.socketManager.off('resetCountdown', this._onResetCountdown);
+            }
+        });
 
         this.add.text(w / 2, 64, 'Were you left out?', {
             fontFamily: '"Press Start 2P"',

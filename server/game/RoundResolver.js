@@ -275,6 +275,8 @@ class RoundResolver {
         this.sessionLog.winner = winner;
         this.sessionLog.alive = { ...this.gameState.alive };
 
+        this.startAutoResetTimer();
+
         for (const playerId of ['A', 'B', 'C']) {
             const socketId = this.playerSockets[playerId];
             if (socketId) {
@@ -282,6 +284,7 @@ class RoundResolver {
                 this.io.to(socketId).emit('gameEnd', {
                     trueState,
                     ...illusionSummary,
+                    autoResetSeconds: this.autoResetSecondsRemaining,
                 });
             }
         }

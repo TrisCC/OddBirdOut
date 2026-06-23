@@ -2,6 +2,7 @@ import { generateAllTextures } from '../PlaceholderAssets.js';
 
 function createMockSocket(playerId) {
     const callbacks = {};
+    let countdownInterval = null;
 
     return {
         playerId,
@@ -22,6 +23,27 @@ function createMockSocket(playerId) {
 
         requestLobbyState() {
             if (this._lobbyData) this._fire('lobbyUpdate', this._lobbyData);
+        },
+
+        startPreviewCountdown(startSeconds) {
+            this.stopPreviewCountdown();
+            let remaining = startSeconds;
+            this._fire('resetCountdown', { seconds: remaining });
+            countdownInterval = setInterval(() => {
+                remaining--;
+                if (remaining > 0) {
+                    this._fire('resetCountdown', { seconds: remaining });
+                } else {
+                    this.stopPreviewCountdown();
+                }
+            }, 1000);
+        },
+
+        stopPreviewCountdown() {
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+                countdownInterval = null;
+            }
         },
 
         _fire(event, data) {
@@ -89,6 +111,7 @@ function getMockGameEndData(playerId) {
         },
         whatYouWereShown: getMockWhatYouWereShown(playerId),
         colorChoices: { A: 'red', B: 'blue', C: 'green' },
+        autoResetSeconds: 120,
     };
 }
 
@@ -257,19 +280,13 @@ export class PreviewBoot extends Phaser.Scene {
                 break;
             }
 
-            case 'reveal': {
-                this.scene.start('GameOver', {
-                    ...getMockGameEndData(playerId),
-                    socketManager: mock,
-                });
-                break;
-            }
-
+            case 'reveal':
             case 'gameover': {
                 this.scene.start('GameOver', {
                     ...getMockGameEndData(playerId),
                     socketManager: mock,
                 });
+                setTimeout(() => mock.startPreviewCountdown(120), 500);
                 break;
             }
 

@@ -79,7 +79,7 @@ export class Game extends Phaser.Scene {
             strokeThickness: 3,
         }).setOrigin(0.5).setDepth(20);
 
-        this.noTalkingText = this.add.text(this.scale.width / 2, 200, 'No talking to your\nopponents!', {
+        this.noTalkingText = this.add.text(this.scale.width / 2, 200, 'No talking to \nthe other players!', {
             fontFamily: '"Press Start 2P"',
             fontSize: '14px',
             color: '#FFD700',
