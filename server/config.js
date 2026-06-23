@@ -13,6 +13,9 @@ module.exports = {
     STATIC_DIR: path.join(__dirname, '..', 'OddBirdOut'),
     // Set to true to disable the round timer — rounds only advance once all players have acted
     DEBUG_MODE: false,
+    // When true, the round ends immediately once all alive players have submitted an action.
+    // When false (default), the round always lasts the full ROUND_DURATION_MS.
+    SKIP_ON_ALL_READY: true,
 
     // Polling intervals to keep clients and server state in sync
     LOBBY_POLL_INTERVAL_MS: 5000,

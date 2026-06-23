@@ -106,6 +106,13 @@ class RoundResolver {
 
         this.gameState.submitAction(playerId, action, target);
 
+        if (config.SKIP_ON_ALL_READY && this.gameState.hasAllOrDead()) {
+            if (this.roundTimer) {
+                clearTimeout(this.roundTimer);
+                this.roundTimer = null;
+            }
+            this.resolveRound();
+        }
     }
 
     resolveRound() {
