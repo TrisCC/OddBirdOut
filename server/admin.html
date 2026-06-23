@@ -489,6 +489,7 @@ let gameOverMode  = false;  // true while gameover/reveal music plays (no loop)
 
 let adminPrevScores = { A: 0, B: 0, C: 0 };
 let sfxTimers = [];
+let endGameTimeout = null;
 
 function clearSfxTimers() {
     for (const t of sfxTimers) clearTimeout(t);
@@ -608,7 +609,9 @@ socket.on('adminRoundResult', (data) => {
         gameOverMode = true;
         // Let last-round SFX and game music play through the resolution animation,
         // then switch to endgame music (Botswana, no loop)
-        setTimeout(() => {
+        clearTimeout(endGameTimeout);
+        endGameTimeout = setTimeout(() => {
+            endGameTimeout = null;
             wantGameMusic = false;
             gameAudio.pause();
             gameAudio.currentTime = 0;
@@ -699,6 +702,8 @@ btnConfirmYes.addEventListener('click', () => {
     renderHistory();
     renderIllusions(null);
     clearSfxTimers();
+    clearTimeout(endGameTimeout);
+    endGameTimeout = null;
     adminPrevScores = { A: 0, B: 0, C: 0 };
     wantMusic = false;
     wantGameMusic = false;
