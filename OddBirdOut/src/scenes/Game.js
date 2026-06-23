@@ -152,8 +152,8 @@ export class Game extends Phaser.Scene {
         const by = 590;
         const others = SIDE_ORDER[this.playerId];
 
-        this.btnShareLeft = this.createButton(sideX[0], by, 'btn_share', 'Share', 'share', others[0]);
-        this.btnShareRight = this.createButton(sideX[1], by, 'btn_share', 'Share', 'share', others[1]);
+        this.btnShareLeft = this.createButton(sideX[0], by, 'btn_share', 'Pair', 'share', others[0]);
+        this.btnShareRight = this.createButton(sideX[1], by, 'btn_share', 'Pair', 'share', others[1]);
 
         this.actionButtons = [this.btnShareLeft, this.btnShareRight];
     }

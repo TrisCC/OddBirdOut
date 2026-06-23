@@ -102,7 +102,7 @@ export class PreviewBoot extends Phaser.Scene {
         this.load.image('bg_night', 'assets/Sprites/bg_night.png');
         this.load.image('bg_day2night', 'assets/Sprites/bg_day2night.png');
         this.load.image('bg_day', 'assets/Sprites/bg_day.png');
-        this.load.image('obo_title', 'assets/Sprites/OBO title.png');
+        this.load.image('obo_title', 'assets/Sprites/OBO title.png?v=3');
 
         const FRAME = { frameWidth: 640, frameHeight: 640 };
         this.load.spritesheet('ostrich_blue',   'assets/Sprites/ostrich blue.png',   FRAME);

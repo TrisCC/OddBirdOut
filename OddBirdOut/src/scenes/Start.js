@@ -25,7 +25,7 @@ export class Start extends Phaser.Scene {
         });
 
         if (!this.textures.exists('obo_title')) {
-            this.load.image('obo_title', 'assets/Sprites/OBO title.png');
+            this.load.image('obo_title', 'assets/Sprites/OBO title.png?v=3');
             this.load.once('complete', () => this.scene.restart());
             this.load.start();
             return;

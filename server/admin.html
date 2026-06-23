@@ -603,18 +603,20 @@ socket.on('adminState', (data) => {
 
 socket.on('adminRoundResult', (data) => {
     if (data.phase === 'ended') {
-        clearSfxTimers();
         adminPrevScores = { A: 0, B: 0, C: 0 };
         gameEnded = true;
         gameOverMode = true;
-        wantGameMusic = false;
-        gameAudio.pause();
-        gameAudio.currentTime = 0;
-        // Play botswana once (no loop) through gameover and reveal
-        wantMusic = true;
-        lobbyAudio.loop = false;
-        lobbyAudio.currentTime = 0;
-        if (!manualMute) lobbyAudio.play().catch(() => {});
+        // Let last-round SFX and game music play through the resolution animation,
+        // then switch to endgame music (Botswana, no loop)
+        setTimeout(() => {
+            wantGameMusic = false;
+            gameAudio.pause();
+            gameAudio.currentTime = 0;
+            wantMusic = true;
+            lobbyAudio.loop = false;
+            lobbyAudio.currentTime = 0;
+            if (!manualMute) lobbyAudio.play().catch(() => {});
+        }, DAY_FADE_DELAY_MS);
         renderGameEnded(data);
         return;
     }
