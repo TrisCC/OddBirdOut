@@ -20,7 +20,9 @@ function createMockSocket(playerId) {
 
         emitPlayerAction() {},
 
-        requestLobbyState() {},
+        requestLobbyState() {
+            if (this._lobbyData) this._fire('lobbyUpdate', this._lobbyData);
+        },
 
         _fire(event, data) {
             if (!callbacks[event]) return;
@@ -100,6 +102,7 @@ export class PreviewBoot extends Phaser.Scene {
         this.load.image('bg_night', 'assets/Sprites/bg_night.png');
         this.load.image('bg_day2night', 'assets/Sprites/bg_day2night.png');
         this.load.image('bg_day', 'assets/Sprites/bg_day.png');
+        this.load.image('obo_title', 'assets/Sprites/OBO title.png');
 
         const FRAME = { frameWidth: 640, frameHeight: 640 };
         this.load.spritesheet('ostrich_blue',   'assets/Sprites/ostrich blue.png',   FRAME);
@@ -201,14 +204,12 @@ export class PreviewBoot extends Phaser.Scene {
 
         switch (preview) {
             case 'lobby': {
-                this.scene.start('Lobby', { socketManager: mock });
-                this.time.delayedCall(100, () => {
-                    mock._fire('lobbyUpdate', {
-                        connected: ['A', 'B', 'C'],
-                        ready: 3,
-                        total: 3,
-                    });
-                });
+                mock._lobbyData = {
+                    connected: ['A', 'B', 'C'],
+                    ready: ['A', 'B', 'C'],
+                    total: 3,
+                };
+                this.scene.start('Start', { socketManager: mock });
                 break;
             }
 

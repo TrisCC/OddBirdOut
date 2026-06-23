@@ -26,7 +26,7 @@ export class GameOver extends Phaser.Scene {
 
         if (this.socketManager) {
             this.socketManager.on('gameAborted', () => {
-                this.scene.start('Lobby', { socketManager: this.socketManager });
+                this.scene.start('Start', { socketManager: this.socketManager });
             });
             this.socketManager.on('connected', () => {
                 this.socketManager.requestLobbyState();

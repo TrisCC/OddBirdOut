@@ -17,28 +17,27 @@ export class Start extends Phaser.Scene {
         this.add.image(w / 2, h / 2, 'bg_night').setDisplaySize(w, h);
 
         const onGameAborted = () => {
-            this.scene.start('Lobby', { socketManager: this.socketManager });
+            // already on the start screen — no-op
         };
         this.socketManager.on('gameAborted', onGameAborted);
         this.events.once('shutdown', () => {
             this.socketManager.off('gameAborted', onGameAborted);
         });
 
-        // Title placeholder — replace with actual title asset when ready
-        const title = this.add.sprite(w / 2, h / 2 - 60, 'heart_frames', 0);
-        title.setDisplaySize(220, 220);
+        const title = this.add.image(w / 2, h / 2 + 50, 'obo_title');
+        title.setDisplaySize(w * 0.9, h * 0.9);
 
         this.tweens.add({
             targets: title,
-            scaleX: title.scaleX * 1.06,
-            scaleY: title.scaleY * 1.06,
+            scaleX: title.scaleX * 1.03,
+            scaleY: title.scaleY * 1.03,
             yoyo: true,
             repeat: -1,
-            duration: 900,
+            duration: 1200,
             ease: 'Sine.easeInOut',
         });
 
-        const tapText = this.add.text(w / 2, h / 2 + 130, 'Tap anywhere to start', {
+        const tapText = this.add.text(w / 2, h / 2 + 200, 'Tap anywhere to start', {
             fontFamily: '"Press Start 2P"',
             fontSize: '18px',
             color: '#FFFFFF',

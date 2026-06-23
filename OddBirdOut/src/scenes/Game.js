@@ -225,7 +225,7 @@ export class Game extends Phaser.Scene {
             this.processEventQueue();
         };
         const onGameAborted = () => {
-            this.scene.start('Lobby', { socketManager: this.socketManager });
+            this.scene.start('Start', { socketManager: this.socketManager });
         };
         const onPlayerDisconnected = (data) => {
             this.statusText.setText(`Player ${data.playerId} disconnected`);
@@ -240,8 +240,33 @@ export class Game extends Phaser.Scene {
                 }
             });
         };
+        const onDisconnected = () => {
+            this.statusText.setText('Connection lost. Reconnecting...');
+            this.statusText.setColor('#F44336');
+            this.disableButtons();
+        };
         const onConnected = () => {
             this.socketManager.requestLobbyState();
+        };
+        const onRoundSync = (data) => {
+            this.currentRound = data.round;
+            this.currentPhase = data.phase;
+            this.submitted = data.submitted;
+            this.roundText.setText(`Round ${data.round} / ${this.totalRounds}`);
+
+            if (data.scores) this.updateScores(data.scores);
+
+            if (data.submitted) {
+                this.disableButtons();
+                this.statusText.setText('Waiting...');
+            } else {
+                this.enableButtons();
+                this.statusText.setText('');
+                if (!data.debugMode && data.roundActive) {
+                    this.tweens.killAll();
+                    this.startTimer(data.roundDurationMs);
+                }
+            }
         };
 
         this.socketManager.on('roundStart',  onRoundStart);
@@ -250,7 +275,9 @@ export class Game extends Phaser.Scene {
         this.socketManager.on('gameAborted', onGameAborted);
         this.socketManager.on('playerDisconnected', onPlayerDisconnected);
         this.socketManager.on('playerReconnected',  onPlayerReconnected);
+        this.socketManager.on('disconnected',       onDisconnected);
         this.socketManager.on('connected',          onConnected);
+        this.socketManager.on('roundSync',          onRoundSync);
 
         this.events.once('shutdown', () => {
             this.socketManager.off('roundStart',  onRoundStart);
@@ -259,7 +286,9 @@ export class Game extends Phaser.Scene {
             this.socketManager.off('gameAborted', onGameAborted);
             this.socketManager.off('playerDisconnected', onPlayerDisconnected);
             this.socketManager.off('playerReconnected',  onPlayerReconnected);
+            this.socketManager.off('disconnected',       onDisconnected);
             this.socketManager.off('connected',          onConnected);
+            this.socketManager.off('roundSync',          onRoundSync);
         });
     }
 

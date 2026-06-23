@@ -249,7 +249,7 @@ OddBirdOut/
 | `playerReady` | `{ playerId: 'A' }` | Tablet announces it has tapped "Ready" in the lobby |
 | `playerAction` | `{ action: 'share', target: 'A'\|'B'\|'C' }` | Submitted action for current round — target must be the player's left or right neighbor |
 | `requestLobbyState` | _(none)_ | Client requests a fresh, targeted `lobbyUpdate` (sent on Lobby scene load to avoid missing the broadcast sent at connection time) |
-| `heartbeat` | _(none)_ | Client keeps the connection alive and verifies the server is reachable |
+| `playerColorChoice` | `{ color: 'red' }` | Player picks an ostrich color in the lobby |
 
 ### 5.2 Server → All Clients
 
@@ -263,8 +263,8 @@ OddBirdOut/
 
 | Event | Payload | Description |
 |-------|---------|-------------|
-| `heartbeatAck` | `{ timestamp: <number> }` | Server response to a client `heartbeat` |
 | `roundResult` | See below | Per-player fabricated round outcome |
+| `roundSync` | See below | State recovery sent to a reconnecting client during an active round |
 
 **`roundResult` payload (per-player, Phase 2 example):**
 ```json
@@ -283,6 +283,21 @@ OddBirdOut/
 ```
 
 During Phase 1 (Trust), `roundResult` is broadcast to all clients with the same truthful payload.
+
+**`roundSync` payload:**
+```json
+{
+  "round": 6,
+  "phase": "ostracism",
+  "submitted": true,
+  "roundActive": true,
+  "scores": { "You": 2, "B": 5, "C": 4 },
+  "roundDurationMs": 10000,
+  "debugMode": false
+}
+```
+
+Sent to a single reconnecting client during an active round so the frontend can resynchronise its HUD, button state, and score display without waiting for the next `roundResult`.
 
 ---
 
@@ -331,7 +346,7 @@ All audio uses Phaser's built-in audio manager. Placeholder: use Phaser-generate
   - Lobby: every 5 seconds
   - Active game: every 10 seconds
   - Post-game: every 30 seconds
-- Client heartbeat: every 10 seconds the client emits `heartbeat` and expects `heartbeatAck`. After 3 missed acks the client forces a reconnect.
+- Connection health: Socket.IO v4 built-in ping/pong handles connection monitoring. When a client reconnects mid-game, the server sends a `roundSync` event so the frontend can resynchronise its HUD, scores, and button state.
 
 ### 8.3 Game Reset
 - Manual restart: operator refreshes all 3 tablets and restarts the Node.js server process.
