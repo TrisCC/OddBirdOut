@@ -22,7 +22,7 @@ export class GameOver extends Phaser.Scene {
         const w = this.scale.width;
         const h = this.scale.height;
 
-        this.add.image(w / 2, h / 2, 'bg_night').setDisplaySize(w, h);
+        this.add.image(w / 2, h / 2, 'bg_sunset').setDisplaySize(w, h);
 
         if (this.socketManager) {
             this.socketManager.on('gameAborted', () => {
@@ -42,10 +42,12 @@ export class GameOver extends Phaser.Scene {
             color: '#FF9800',
         }).setOrigin(0.5);
 
-        this.add.text(w / 2, 48, 'Were you left out?', {
+        this.add.text(w / 2, 64, 'Were you left out?', {
             fontFamily: '"Press Start 2P"',
             fontSize: '40px',
             color: '#FFD700',
+            stroke: '#000000',
+            strokeThickness: 6,
         }).setOrigin(0.5);
 
         this.showFakeResults(w, h);
@@ -96,25 +98,31 @@ export class GameOver extends Phaser.Scene {
             }
 
             const label = isSelf ? 'You' : `Player ${id}`;
-            this.add.text(x, y - 90, label, {
+            this.add.text(x, y - 78, label, {
                 fontFamily: '"Press Start 2P"',
                 fontSize: '18px',
-                color: isSelf ? '#FFD700' : '#CCCCCC',
+                color: isSelf ? '#FFD700' : '#FFFFFF',
+                stroke: '#000000',
+                strokeThickness: 5,
             }).setOrigin(0.5);
 
             const scoreKey = isSelf ? 'You' : id;
             const score = fakeScores[scoreKey] ?? 0;
 
-            this.add.text(x, y + 80, `${score}`, {
+            this.add.text(x, y + 82, `${score}`, {
                 fontFamily: '"Press Start 2P"',
                 fontSize: '44px',
                 color: '#FFD700',
+                stroke: '#000000',
+                strokeThickness: 5,
             }).setOrigin(0.5);
 
-            this.add.text(x, y + 108, 'eggs', {
+            this.add.text(x, y + 110, 'eggs', {
                 fontFamily: '"Press Start 2P"',
                 fontSize: '18px',
-                color: '#000000',
+                color: '#FFFFFF',
+                stroke: '#000000',
+                strokeThickness: 4,
             }).setOrigin(0.5);
         }
     }

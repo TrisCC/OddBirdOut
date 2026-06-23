@@ -22,7 +22,7 @@ export class Reveal extends Phaser.Scene {
         const w = this.scale.width;
         const h = this.scale.height;
 
-        this.add.image(w / 2, h / 2, 'bg_night').setDisplaySize(w, h);
+        this.add.image(w / 2, h / 2, 'bg_sunset').setDisplaySize(w, h);
 
         if (this.socketManager) {
             this.socketManager.on('gameAborted', () => {
@@ -42,21 +42,23 @@ export class Reveal extends Phaser.Scene {
             color: '#FF9800',
         }).setOrigin(0.5);
 
-        this.add.text(w / 2, 80, 'We lied to you.', {
+        this.add.text(w / 2, 90, 'We lied to you.', {
             fontFamily: '"Press Start 2P"',
             fontSize: '36px',
             color: '#FFD700',
+            stroke: '#000000',
+            strokeThickness: 6,
         }).setOrigin(0.5);
 
         const whatYouWereShown = this.gameEndData.whatYouWereShown || [];
         const phase1LastRound = whatYouWereShown.length > 0 ? whatYouWereShown[0].round - 1 : 4;
 
-        this.add.text(w / 2, 160, `After round ${phase1LastRound}, we made the other two\nplayers exclude you, regardless of their input.\nWe did the same to the others.`, {
+        this.add.text(w / 2, 170, `After round ${phase1LastRound}, we made the other two\nplayers exclude you, regardless of their input.\nWe did the same to the others.`, {
             fontFamily: '"Press Start 2P"',
             fontSize: '14px',
-            color: '#CCCCCC',
+            color: '#FFFFFF',
             stroke: '#000000',
-            strokeThickness: 4,
+            strokeThickness: 5,
             align: 'center',
             lineSpacing: 10,
         }).setOrigin(0.5);
@@ -102,32 +104,40 @@ export class Reveal extends Phaser.Scene {
             }
 
             const label = isSelf ? 'You' : `Player ${id}`;
-            this.add.text(x, y - 90, label, {
+            this.add.text(x, y - 78, label, {
                 fontFamily: '"Press Start 2P"',
                 fontSize: '18px',
-                color: isSelf ? '#FFD700' : '#CCCCCC',
+                color: isSelf ? '#FFD700' : '#FFFFFF',
+                stroke: '#000000',
+                strokeThickness: 5,
             }).setOrigin(0.5);
 
             const score = scores[id] ?? 0;
 
-            this.add.text(x, y + 80, `${score}`, {
+            this.add.text(x, y + 82, `${score}`, {
                 fontFamily: '"Press Start 2P"',
                 fontSize: '44px',
                 color: '#FFD700',
+                stroke: '#000000',
+                strokeThickness: 5,
             }).setOrigin(0.5);
 
-            this.add.text(x, y + 108, 'eggs', {
+            this.add.text(x, y + 110, 'eggs', {
                 fontFamily: '"Press Start 2P"',
                 fontSize: '18px',
-                color: '#000000',
+                color: '#FFFFFF',
+                stroke: '#000000',
+                strokeThickness: 4,
             }).setOrigin(0.5);
 
             const fakeScoreKey = isSelf ? 'You' : id;
             const fakeScore = fakeScores[fakeScoreKey] ?? 0;
-            this.add.text(x, y + 132, `(shown: ${fakeScore})`, {
+            this.add.text(x, y + 134, `(shown: ${fakeScore})`, {
                 fontFamily: '"Press Start 2P"',
                 fontSize: '13px',
-                color: '#000000',
+                color: '#FFFFFF',
+                stroke: '#000000',
+                strokeThickness: 3,
             }).setOrigin(0.5).setAlpha(0.7);
         }
     }

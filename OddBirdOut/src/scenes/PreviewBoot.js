@@ -99,6 +99,7 @@ export class PreviewBoot extends Phaser.Scene {
     }
 
     preload() {
+        this.load.image('bg_sunset', 'assets/Sprites/bg_sunset.png');
         this.load.image('bg_night', 'assets/Sprites/bg_night.png');
         this.load.image('bg_day2night', 'assets/Sprites/bg_day2night.png');
         this.load.image('bg_day', 'assets/Sprites/bg_day.png');
