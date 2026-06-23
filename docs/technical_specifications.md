@@ -30,14 +30,13 @@ Each round, every player selects one action:
 |--------|--------|--------|
 | **Share** | Left or right neighbor | If both targeted players share with each other, both gain **+2 seeds** each |
 
-A player can only target their left or right neighbor, per the seating order (`SIDE_ORDER`). Dead players cannot act. A non-mutual share (the target doesn't share back) has no effect.
+A player can only target their left or right neighbor, per the seating order (`SIDE_ORDER`). A non-mutual share (the target doesn't share back) has no effect.
 
 ### 2.3 Scoring & Win Condition
 
-- All players start with **10 seeds** (configurable via `STARTING_SEEDS`).
-- Every round, all alive players lose **1 seed** at round start (configurable via `SEEDS_PER_ROUND_DRAIN`). Seeds act as "round lives."
-- When a player's seeds reach ≤ 0 after a round resolves, they **die** and cannot act in future rounds.
-- Death is **hidden** from all players — the ostracism illusion fabricates their continued presence.
+- All players start with **5 seeds** (configurable via `STARTING_SEEDS`).
+- Each round, every player **Shares** with their left or right neighbor (per `SIDE_ORDER`). If both targeted players share with each other, both gain **+1 seed**. Non-mutual shares have no effect.
+  - A player who has not acted when the timer expires defaults to sharing with the neighbour who has the fewest seeds, or hides (head-in-sand) if `DEFAULT_TO_HIDE` is enabled.
 - After round 12, the **player with the highest seed count wins the Golden Egg**.
 - In case of a tie, the Golden Egg is shared.
 
@@ -87,7 +86,7 @@ For Phase 2 (rounds 5–12), the algorithm generates, for each player P_i, an il
 
 **Per-player cumulative illusion scores** track what each player sees. These diverge from true scores in Phase 2 and are used to calculate the fabricated actions shown to each player.
 
-This fabrication is uniform across rounds 5–12 — there is no escalation in content, only the steadily decreasing illusion score. Death is hidden — truly dead players appear alive in all illusions.
+This fabrication is uniform across rounds 5–12 — there is no escalation in content, only the steadily decreasing illusion score.
 
 **Score targeting:** In the final round (12), the player's illusion score is forced to **exactly 0**, regardless of the drain math.
 

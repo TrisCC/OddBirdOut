@@ -100,13 +100,10 @@ function getMockGameEndData(playerId) {
     return {
         trueState: {
             finalScores: { A: 5, B: 8, C: 3 },
-            alive: { A: true, B: true, C: true },
         },
         revelation: {
             message: 'The system manipulated what every player saw.',
             trueFinalScores: { A: 5, B: 8, C: 3 },
-            trueAlive: { A: true, B: true, C: true },
-            deaths: [],
             trueActions: getMockTrueActions(),
         },
         whatYouWereShown: getMockWhatYouWereShown(playerId),

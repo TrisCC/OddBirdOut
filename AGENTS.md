@@ -69,8 +69,8 @@ The server owns **all** game state. The frontend is a dumb renderer — it sends
 ## Scoring System
 
 - All players start with **5 seeds** (configurable via `STARTING_SEEDS` in `config.js`).
-- Each round, every player **Shares** with their left or right neighbor (per `SIDE_ORDER`). If both targeted players share with each other, both gain **+2 seeds**. Non-mutual shares have no effect.
-- All alive players also lose **1 seed** per round (`SEEDS_PER_ROUND_DRAIN`).
+- Each round, every player **Shares** with their left or right neighbor (per `SIDE_ORDER`). If both targeted players share with each other, both gain **+1 seed**. Non-mutual shares have no effect.
+  - A player who has not acted when the timer expires defaults to sharing with the neighbour who has the fewest seeds, or hides (head-in-sand) if `DEFAULT_TO_HIDE` is enabled.
 - After round 12, player(s) with most seeds win the Golden Egg. Ties allowed.
 
 ### Ostracism Concealment (Phase 2)

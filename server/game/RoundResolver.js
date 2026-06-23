@@ -46,7 +46,6 @@ class RoundResolver {
                 startingEggs: config.STARTING_EGGS,
             },
             rounds: [],
-            deaths: [],
         };
     }
 
@@ -115,7 +114,7 @@ class RoundResolver {
 
         this.gameState.submitAction(playerId, action, target);
 
-        if (config.SKIP_ON_ALL_READY && this.gameState.hasAllOrDead()) {
+        if (config.SKIP_ON_ALL_READY && this.gameState.hasAll()) {
             if (this.roundTimer) {
                 clearTimeout(this.roundTimer);
                 this.roundTimer = null;
@@ -130,16 +129,6 @@ class RoundResolver {
         const trueActions = resolveResult.actions;
         const trueScores = { ...this.gameState.scores };
         const trueDeltas = { ...resolveResult.deltas };
-        const newlyDead = resolveResult.newlyDead || [];
-        const alive = { ...this.gameState.alive };
-
-        for (const playerId of newlyDead) {
-            this.sessionLog.deaths.push({
-                player: playerId,
-                round: this.gameState.round,
-                scoreAtDeath: trueScores[playerId],
-            });
-        }
 
         const preScores = {};
         for (const p of ['A', 'B', 'C']) {
@@ -152,8 +141,6 @@ class RoundResolver {
             trueActions: trueActions.map(a => ({ ...a })),
             trueScores: { ...trueScores },
             trueDeltas: { ...trueDeltas },
-            alive: { ...alive },
-            newlyDead: [...newlyDead],
             illusions: {},
         };
 
@@ -227,8 +214,6 @@ class RoundResolver {
                 trueActions: roundLog.trueActions,
                 trueScores: roundLog.trueScores,
                 trueDeltas,
-                alive: { ...alive },
-                newlyDead: [...newlyDead],
                 perPlayerIllusionScores: { ...this.perPlayerIllusionScores },
             };
 
@@ -251,11 +236,10 @@ class RoundResolver {
     }
 
     scheduleNextRound() {
-        const aliveCount = Object.values(this.gameState.alive).filter(v => v).length;
         const crossFadeMs = 2400;
         const perActionMs = 1800;
         const trailingMs = 500;
-        const clientAnimMs = crossFadeMs + aliveCount * perActionMs + trailingMs;
+        const clientAnimMs = crossFadeMs + 3 * perActionMs + trailingMs;
         const delay = Math.max(config.ROUND_RESOLVE_ANIMATION_MS, clientAnimMs);
 
         setTimeout(() => {
@@ -276,13 +260,11 @@ class RoundResolver {
         const trueState = {
             finalScores: { ...this.gameState.scores },
             winner,
-            alive: { ...this.gameState.alive },
         };
 
         this.sessionLog.endedAt = new Date().toISOString();
         this.sessionLog.finalScores = { ...this.gameState.scores };
         this.sessionLog.winner = winner;
-        this.sessionLog.alive = { ...this.gameState.alive };
 
         for (const playerId of ['A', 'B', 'C']) {
             const socketId = this.playerSockets[playerId];
@@ -305,7 +287,6 @@ class RoundResolver {
                 phase: 'ended',
                 trueScores: { ...this.gameState.scores },
                 winner: [...winner],
-                alive: { ...this.gameState.alive },
             });
         }
     }
@@ -326,8 +307,6 @@ class RoundResolver {
                 message: 'The system manipulated what every player saw.',
                 trueWinner: this.sessionLog.winner,
                 trueFinalScores: this.sessionLog.finalScores,
-                trueAlive: this.sessionLog.alive,
-                deaths: this.sessionLog.deaths,
                 trueActions: this.sessionLog.rounds.map(r => ({
                     round: r.round,
                     actions: r.trueActions,
@@ -420,7 +399,6 @@ class RoundResolver {
             round: state.round,
             phase: state.phase,
             roundActive: this.gameState.isRoundActive(),
-            alive: { ...this.gameState.alive },
             actionsSubmitted: state.actionSubmitted,
             trueScores: state.scores,
             escalationLevel: state.phase === 'trust' ? 'none' : getEscalationLevel(state.round),

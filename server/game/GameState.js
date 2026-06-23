@@ -6,7 +6,6 @@ class GameState {
         this.round = 1;
         this.phase = 'trust';
         this.scores = { A: STARTING_EGGS, B: STARTING_EGGS, C: STARTING_EGGS };
-        this.alive = { A: true, B: true, C: true };
         this.currentActions = [];
         this.actionSubmitted = { A: false, B: false, C: false };
         this.roundHistory = [];
@@ -16,10 +15,6 @@ class GameState {
 
     isRoundActive() {
         return this._roundActive;
-    }
-
-    isAlive(playerId) {
-        return this.alive[playerId];
     }
 
     queueAction(playerId, action, target) {
@@ -33,7 +28,7 @@ class GameState {
             }
         }
         this._actionQueue = [];
-        return this.hasAllOrDead();
+        return this.hasAll();
     }
 
     resetForNewRound() {
@@ -63,19 +58,14 @@ class GameState {
     }
 
     resolveRound() {
-        const newlyDead = [];
-
         const shareTarget = {};
         for (const act of this.currentActions) {
-            if (!this.alive[act.player]) continue;
-            if (act.action === 'share' && act.target && this.alive[act.target]) {
+            if (act.action === 'share' && act.target) {
                 shareTarget[act.player] = act.target;
             }
         }
 
         const deltas = { A: 0, B: 0, C: 0 };
-        const alivePlayers = ['A', 'B', 'C'].filter(p => this.alive[p]);
-
         const hidPlayers = new Set();
         for (const act of this.currentActions) {
             if (act.action === 'hide') {
@@ -83,41 +73,23 @@ class GameState {
             }
         }
 
-        if (alivePlayers.length === 3) {
-            const mutualPair = alivePlayers.find(p =>
-                shareTarget[p] && shareTarget[shareTarget[p]] === p
-            );
+        const mutualPair = ['A', 'B', 'C'].find(p =>
+            shareTarget[p] && shareTarget[shareTarget[p]] === p
+        );
 
-            if (mutualPair) {
-                const partner = shareTarget[mutualPair];
-                // The excluded player neither gains nor loses eggs this round
-                deltas[mutualPair] += 1;
-                deltas[partner] += 1;
-            } else {
-                // Three-way share: everyone gives and everyone receives
-                for (const p of alivePlayers) deltas[p] += 1;
-            }
+        if (mutualPair) {
+            const partner = shareTarget[mutualPair];
+            deltas[mutualPair] += 1;
+            deltas[partner] += 1;
         } else {
-            const counted = new Set();
-            for (const player of alivePlayers) {
-                const target = shareTarget[player];
-                if (!target || counted.has(player) || counted.has(target)) continue;
-                if (shareTarget[target] === player) {
-                    deltas[player] += 1;
-                    deltas[target] += 1;
-                    counted.add(player);
-                    counted.add(target);
-                }
-            }
+            for (const p of ['A', 'B', 'C']) deltas[p] += 1;
         }
 
         for (const player of ['A', 'B', 'C']) {
             if (hidPlayers.has(player)) {
                 deltas[player] = 0;
             }
-            if (this.alive[player]) {
-                this.scores[player] += deltas[player];
-            }
+            this.scores[player] += deltas[player];
         }
 
         const roundResult = {
@@ -126,23 +98,14 @@ class GameState {
             actions: this.currentActions.map(a => ({ ...a })),
             scores: { ...this.scores },
             deltas: { ...deltas },
-            alive: { ...this.alive },
-            newlyDead: [...newlyDead],
         };
 
         this.roundHistory.push(roundResult);
-        return { actions: [...this.currentActions], deltas, newlyDead: [...newlyDead] };
+        return { actions: [...this.currentActions], deltas };
     }
 
-    hasAllActions() {
+    hasAll() {
         return this.actionSubmitted.A && this.actionSubmitted.B && this.actionSubmitted.C;
-    }
-
-    hasAllOrDead() {
-        for (const p of ['A', 'B', 'C']) {
-            if (this.alive[p] && !this.actionSubmitted[p]) return false;
-        }
-        return true;
     }
 
     getWinner() {
@@ -156,7 +119,6 @@ class GameState {
             round: this.round,
             phase: this.phase,
             scores: { ...this.scores },
-            alive: { ...this.alive },
         };
     }
 
@@ -165,7 +127,6 @@ class GameState {
             round: this.round,
             phase: this.phase,
             scores: { ...this.scores },
-            alive: { ...this.alive },
             actionSubmitted: { ...this.actionSubmitted },
             currentActions: this.currentActions.map(a => ({ ...a })),
             roundHistory: this.roundHistory.map(r => ({
@@ -173,7 +134,6 @@ class GameState {
                 phase: r.phase,
                 scores: { ...r.scores },
                 deltas: { ...r.deltas },
-                alive: { ...r.alive },
             })),
         };
     }

@@ -16,7 +16,6 @@ export function generateAllTextures(scene) {
     generateBrokenHeart(scene);
     generateButton(scene, 'share', 0x4CAF50);
     generateButton(scene, 'ready', 0x4CAF50);
-    generateOstrichDead(scene);
     generatePanelBg(scene);
 }
 
@@ -129,40 +128,6 @@ function generateButton(scene, id, color) {
     g.fillRoundedRect(2, 2, w - 4, h / 2 - 2, { tl: 10, tr: 10, bl: 0, br: 0 });
 
     g.generateTexture(`btn_${id}`, w, h);
-    g.destroy();
-}
-
-function generateOstrichDead(scene) {
-    const g = scene.add.graphics();
-    const w = 120;
-    const h = 80;
-
-    g.fillStyle(0x888888);
-    g.fillRoundedRect(20, 24, 80, 48, 8);
-
-    g.fillStyle(0x444444);
-    g.fillRect(26, 10, 12, 20);
-    g.fillRect(82, 10, 12, 20);
-
-    g.fillStyle(0xFFFFFF);
-    g.fillRect(26, 30, 16, 16);
-    g.fillRect(76, 30, 16, 16);
-
-    g.fillStyle(0x000000);
-    g.lineStyle(3, 0x000000);
-    g.lineBetween(28, 32, 40, 44);
-    g.lineBetween(40, 32, 28, 44);
-    g.lineBetween(78, 32, 90, 44);
-    g.lineBetween(90, 32, 78, 44);
-
-    g.fillStyle(0xFFA000);
-    g.fillTriangle(44, 46, 52, 46, 48, 58);
-
-    g.fillStyle(0x888888);
-    g.fillRect(36, 72, 8, 12);
-    g.fillRect(76, 72, 8, 12);
-
-    g.generateTexture('ostrich_dead', w, h);
     g.destroy();
 }
 

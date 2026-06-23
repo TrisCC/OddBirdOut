@@ -425,11 +425,10 @@ td.ostracism-phase { color: #F44336; }
                     <th>A Score</th>
                     <th>B Score</th>
                     <th>C Score</th>
-                    <th>Dead</th>
                 </tr>
             </thead>
             <tbody id="historyBody">
-                <tr><td colspan="7" class="empty-state">No rounds completed yet</td></tr>
+                <tr><td colspan="6" class="empty-state">No rounds completed yet</td></tr>
             </tbody>
         </table>
     </div>
@@ -723,16 +722,14 @@ btnConfirmNo.addEventListener('click', () => {
 function renderConnections(data) {
     const roles = ['A', 'B', 'C'];
     const readySet = new Set(data.ready);
-    const alive = data.game ? data.game.alive : null;
     let html = '';
     for (const r of roles) {
         const connected = data.connected.includes(r);
         const ready = readySet.has(r);
         const dotClass = connected ? 'online' : 'offline';
-        const isDead = alive && alive[r] === false;
         html += `<div class="row">`;
         html += `<span><span class="status-dot ${dotClass}"></span>Player ${r}</span>`;
-        html += `<span style="color:#888;">${connected ? (ready ? 'Ready' : 'Connected') : 'Offline'}${isDead ? ' <span style="color:#F44336;">DEAD</span>' : ''}</span>`;
+        html += `<span style="color:#888;">${connected ? (ready ? 'Ready' : 'Connected') : 'Offline'}</span>`;
         html += `</div>`;
     }
     html += `<div class="row" style="margin-top:8px;border-top:1px solid #5D4037;padding-top:8px;">`;
@@ -763,8 +760,7 @@ function renderGameState(data) {
     html += `<span>`;
     for (const p of ['A', 'B', 'C']) {
         const sub = g.actionsSubmitted[p];
-        const dead = g.alive && g.alive[p] === false;
-        html += `<span class="${sub ? 'submitted' : 'pending'}">${p}: ${sub ? '✓' : dead ? '☠' : '✗'}</span> `;
+        html += `<span class="${sub ? 'submitted' : 'pending'}">${p}: ${sub ? '✓' : '✗'}</span> `;
     }
     html += `</span></div>`;
     html += `<div class="row"><span>Actions Submitted</span><span>${JSON.stringify(g.actionsSubmitted)}</span></div>`;
@@ -780,16 +776,14 @@ function renderGameState(data) {
 
 function renderGameEnded(data) {
     const s = data.trueScores;
-    const alive = data.alive || {};
-    scoreA.textContent = s.A + (alive.A === false ? ' ☠' : '');
-    scoreB.textContent = s.B + (alive.B === false ? ' ☠' : '');
-    scoreC.textContent = s.C + (alive.C === false ? ' ☠' : '');
+    scoreA.textContent = s.A;
+    scoreB.textContent = s.B;
+    scoreC.textContent = s.C;
 
     let html = '';
     html += `<div class="row"><span>Status</span><span style="color:#FFD700;">GAME OVER</span></div>`;
     html += `<div class="row"><span>Round</span><span>${data.round} / 12</span></div>`;
     html += `<div class="row"><span>Winner</span><span style="color:#FFD700;">${data.winner.join(', ')}</span></div>`;
-    html += `<div class="row"><span>Deaths</span><span style="color:#F44336;">${Object.entries(alive).filter(([,v]) => v === false).map(([k]) => k).join(', ') || 'None'}</span></div>`;
     gameStateContent.innerHTML = html;
 
     let illHtml = '';
@@ -880,7 +874,7 @@ function renderIllusions(data) {
 
 function renderHistory() {
     if (roundHistory.length === 0) {
-        historyBody.innerHTML = '<tr><td colspan="7" class="empty-state">No rounds completed yet</td></tr>';
+        historyBody.innerHTML = '<tr><td colspan="6" class="empty-state">No rounds completed yet</td></tr>';
         return;
     }
 
@@ -891,22 +885,13 @@ function renderHistory() {
             `${a.player}:${a.action[0].toUpperCase()}${a.target ? '→' + a.target : ''}`
         ).join(' ');
 
-        const aliveStatus = r.alive
-            ? ['A', 'B', 'C'].map(p => r.alive[p] === false ? `${p}☠` : p).join(' ')
-            : '—';
-
-        const newlyDead = r.newlyDead && r.newlyDead.length > 0
-            ? ` (${r.newlyDead.join(',')} died!)`
-            : '';
-
         html += `<tr>`;
         html += `<td>${r.round}</td>`;
-        html += `<td class="${phaseClass}">${r.phase}${newlyDead}</td>`;
+        html += `<td class="${phaseClass}">${r.phase}</td>`;
         html += `<td style="font-size:10px;">${actionNames}</td>`;
         html += `<td>${r.trueScores.A}</td>`;
         html += `<td>${r.trueScores.B}</td>`;
         html += `<td>${r.trueScores.C}</td>`;
-        html += `<td style="font-size:9px;">${aliveStatus}</td>`;
         html += `</tr>`;
     }
     historyBody.innerHTML = html;
