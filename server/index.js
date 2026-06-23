@@ -32,9 +32,10 @@ io.on('connection', (socket) => {
 });
 
 server.listen(config.PORT, () => {
-    console.log(`Odd Bird Out server running on port ${config.PORT}`);
-    console.log(`Admin dashboard at http://localhost:${config.PORT}/admin`);
-    console.log(`Serving static files from ${config.STATIC_DIR}`);
+    console.log(`[${new Date().toISOString()}] Odd Bird Out server running on port ${config.PORT}`);
+    console.log(`Static files: ${config.STATIC_DIR}`);
+    console.log(`Admin dashboard: http://localhost:${config.PORT}/admin`);
+    console.log(`Config: ${config.TOTAL_ROUNDS} rounds, phase1=${config.PHASE1_ROUNDS}, debug=${config.DEBUG_MODE}, DMX=${config.DMX_ENABLED}`);
 });
 
 process.on('SIGINT', () => {

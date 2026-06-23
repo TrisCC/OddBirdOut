@@ -51,6 +51,7 @@ class RoundResolver {
 
     startGame() {
         this.gameActive = true;
+        console.log(`[Round] Game started — session ${this.sessionId}`);
         this.startRound();
     }
 
@@ -61,6 +62,8 @@ class RoundResolver {
             this.resolveRound();
             return;
         }
+
+        console.log(`[Round] Round ${this.gameState.round}/${config.TOTAL_ROUNDS} started (${this.gameState.phase})`);
 
         const payload = {
             round: this.gameState.round,
@@ -84,8 +87,11 @@ class RoundResolver {
 
     onRoundTimeout() {
         const defaultAction = config.DEFAULT_TO_HIDE ? 'hide' : 'share';
+        const timedOutPlayers = [];
+
         for (const player of ['A', 'B', 'C']) {
             if (!this.gameState.actionSubmitted[player]) {
+                timedOutPlayers.push(player);
                 if (defaultAction === 'hide') {
                     this.gameState.submitAction(player, 'hide', null);
                 } else {
@@ -97,6 +103,11 @@ class RoundResolver {
                 }
             }
         }
+
+        if (timedOutPlayers.length > 0) {
+            console.log(`[Round] Round ${this.gameState.round} timed out — assigned ${defaultAction} to: ${timedOutPlayers.join(', ')}`);
+        }
+
         this.resolveRound();
     }
 
@@ -113,6 +124,7 @@ class RoundResolver {
         if (this.gameState.actionSubmitted[playerId]) return;
 
         this.gameState.submitAction(playerId, action, target);
+        console.log(`[Round] Player ${playerId} submitted: ${action} → ${target}`);
 
         if (config.SKIP_ON_ALL_READY && this.gameState.hasAll()) {
             if (this.roundTimer) {
@@ -129,6 +141,10 @@ class RoundResolver {
         const trueActions = resolveResult.actions;
         const trueScores = { ...this.gameState.scores };
         const trueDeltas = { ...resolveResult.deltas };
+
+        const actionSummary = trueActions.map(a => `${a.player}:${a.action}${a.target ? '→' + a.target : ''}`).join(' ');
+        const deltaSummary = ['A', 'B', 'C'].map(p => `${p}:${trueDeltas[p]}`).join(' ');
+        console.log(`[Round] Round ${this.gameState.round} resolved (${this.gameState.phase}) — scores: ${['A','B','C'].map(p => `${p}=${trueScores[p]}`).join(' ')} | deltas: ${deltaSummary} | actions: ${actionSummary}`);
 
         const preScores = {};
         for (const p of ['A', 'B', 'C']) {
@@ -164,6 +180,7 @@ class RoundResolver {
 
             this.broadcastToAll('roundResult', payload);
         } else {
+            console.log(`[Round] Fabricating ostracism illusions for all players`);
             for (const playerId of ['A', 'B', 'C']) {
                 const cumulativeIllusionScore = this.perPlayerIllusionScores[playerId];
                 const playerTrueAction = trueActions.find(a => a.player === playerId) || null;
@@ -257,6 +274,7 @@ class RoundResolver {
         }
 
         const winner = this.gameState.getWinner();
+        console.log(`[Round] Game ended — winners: ${winner.join(', ')} | final scores: ${['A','B','C'].map(p => `${p}=${this.gameState.scores[p]}`).join(' ')}`);
         const trueState = {
             finalScores: { ...this.gameState.scores },
             winner,
@@ -324,6 +342,7 @@ class RoundResolver {
 
         fs.mkdirSync(sessionsDir, { recursive: true });
         fs.writeFileSync(filepath, JSON.stringify(this.sessionLog, null, 2));
+        console.log(`[Round] Session log saved: ${filename}`);
     }
 
     broadcastToAll(event, data) {
@@ -331,11 +350,13 @@ class RoundResolver {
     }
 
     handleDisconnect(playerId) {
+        console.log(`[Round] Player ${playerId} disconnected during game — timer paused`);
         this.pauseTimer();
         this.broadcastToAll('playerDisconnected', { playerId });
     }
 
     handleReconnect(playerId) {
+        console.log(`[Round] Player ${playerId} reconnected during game — timer resumed`);
         this.broadcastToAll('playerReconnected', { playerId });
         if (this.gameActive) {
             this.resumeTimer();
@@ -367,6 +388,7 @@ class RoundResolver {
 
     startAutoResetTimer() {
         if (config.AUTO_RESET_TIMEOUT_SECONDS <= 0) return;
+        console.log(`[Round] Auto-reset in ${config.AUTO_RESET_TIMEOUT_SECONDS}s`);
         this.stopAutoResetTimer();
         this.autoResetSecondsRemaining = config.AUTO_RESET_TIMEOUT_SECONDS;
         this.broadcastToAll('resetCountdown', { seconds: this.autoResetSecondsRemaining });
@@ -428,6 +450,7 @@ class RoundResolver {
     }
 
     forceEnd() {
+        console.log('[Round] Game force-ended');
         if (this.roundTimer) {
             clearTimeout(this.roundTimer);
             this.roundTimer = null;

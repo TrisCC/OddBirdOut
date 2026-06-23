@@ -68,10 +68,14 @@ class GameRoom {
     handleConnection(socket) {
         if (socket.handshake.query.admin === 'true') {
             this.adminSockets.add(socket.id);
+            console.log(`[GameRoom] Admin connected (${socket.id})`);
             socket.on('adminReset', () => this.forceReset());
             socket.on('adminStart', () => this.adminStartGame());
             socket.on('adminForceStart', () => this.adminForceStartGame());
-            socket.on('disconnect', () => this.adminSockets.delete(socket.id));
+            socket.on('disconnect', () => {
+                this.adminSockets.delete(socket.id);
+                console.log(`[GameRoom] Admin disconnected (${socket.id})`);
+            });
             socket.emit('adminState', this.getAdminState());
             return;
         }
@@ -79,6 +83,7 @@ class GameRoom {
         const playerId = (socket.handshake.query.player || '').toUpperCase();
 
         if (!VALID_ROLES.includes(playerId)) {
+            console.log(`[GameRoom] Rejected invalid role from ${socket.id}: "${playerId}"`);
             socket.emit('errorMessage', { message: 'Invalid role. Use ?player=A, B, or C' });
             socket.disconnect(true);
             return;
@@ -92,6 +97,7 @@ class GameRoom {
         if (this.players[playerId]) {
             const existing = this.io.sockets.sockets.get(this.players[playerId]);
             if (existing && existing.connected) {
+                console.log(`[GameRoom] Rejected duplicate role ${playerId} from ${socket.id}`);
                 socket.emit('errorMessage', { message: `Role ${playerId} is already taken` });
                 socket.disconnect(true);
                 return;
@@ -100,6 +106,7 @@ class GameRoom {
         }
 
         this.players[playerId] = socket.id;
+        console.log(`[GameRoom] Player ${playerId} connected (${socket.id})`);
 
         socket.on('playerReady', () => {
             console.log(`[AutoStart] Received playerReady from ${playerId}`);
@@ -118,6 +125,7 @@ class GameRoom {
         delete this.reconnectTimers[playerId];
 
         this.players[playerId] = socket.id;
+        console.log(`[GameRoom] Player ${playerId} reconnected (${socket.id})`);
 
         if (this.roundResolver) {
             this.roundResolver.playerSockets[playerId] = socket.id;
@@ -162,6 +170,7 @@ class GameRoom {
 
     onPlayerColorChoice(playerId, color) {
         if (!this.VALID_COLORS.includes(color)) return;
+        console.log(`[GameRoom] Player ${playerId} chose color: ${color}`);
 
         // Reject only if a ready player already holds this color
         for (const [pid, col] of Object.entries(this.colorChoices)) {
@@ -191,6 +200,7 @@ class GameRoom {
         delete this.players[playerId];
         this.readyPlayers.delete(playerId);
         this.cancelAutoStartTimer();
+        console.log(`[GameRoom] Player ${playerId} disconnected (${socket.id})`);
 
         if (this.roundResolver) {
             this.roundResolver.handleDisconnect(playerId);
@@ -209,6 +219,7 @@ class GameRoom {
 
     startGame() {
         this.roundResolver = new RoundResolver(this.io, { ...this.players }, this.lighting);
+        console.log(`[GameRoom] Game starting — session ${this.roundResolver.sessionId}`);
         this.roundResolver.setAdminCallback((data) => {
             this.broadcastToAdmins('adminRoundResult', data);
         });
@@ -239,6 +250,7 @@ class GameRoom {
     }
 
     endGameDueToDisconnect(playerId) {
+        console.log(`[GameRoom] Game aborted — Player ${playerId} did not reconnect within ${config.RECONNECT_TIMEOUT_MS}ms`);
         this.broadcastToAll('gameAborted', {
             reason: `Player ${playerId} disconnected and did not reconnect.`,
         });
@@ -267,6 +279,7 @@ class GameRoom {
     }
 
     reset() {
+        console.log('[GameRoom] Resetting to lobby state');
         this.cancelAutoStartTimer();
         this.roundResolver = null;
         this.readyPlayers.clear();
@@ -282,6 +295,7 @@ class GameRoom {
     }
 
     forceReset() {
+        console.log('[GameRoom] Force-reset by admin');
         if (this.roundResolver) {
             this.roundResolver.stopAutoResetTimer();
             this.roundResolver.forceEnd();
@@ -295,6 +309,7 @@ class GameRoom {
     adminStartGame() {
         if (this.roundResolver) return;
         if (!this.allPlayersReady()) return;
+        console.log('[GameRoom] Admin triggered game start');
         this.cancelAutoStartTimer();
         this.startGame();
     }
@@ -302,6 +317,7 @@ class GameRoom {
     adminForceStartGame() {
         if (this.roundResolver) return;
         if (Object.keys(this.players).length < 3) return;
+        console.log('[GameRoom] Admin triggered force-start (bypassing ready check)');
         this.cancelAutoStartTimer();
         this.startGame();
     }
