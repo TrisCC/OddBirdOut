@@ -2,31 +2,57 @@
 
 **Odd Bird Out** is a three-player interactive game installation about cyber ostracism — the experience of being excluded in a digital social environment.
 
-Three players compete as ostriches collecting seeds to hatch a Golden Egg. But after a few rounds, the system starts lying to each player, showing them a fabricated version of the game where the other two players are cooperating against them. Every player privately believes they are the "odd bird out" — until the reveal.
+Three players compete as ostriches collecting eggs to hatch a Golden Egg. But after round 6, the system starts lying to each player, fabricating a version of the game where the other two players are cooperating against them. Every player privately believes they are the "odd bird out" — until the reveal.
 
 ## How It Works
 
-1. **Phase 1 — Trust (Rounds 1–4):** The game plays normally. Players see real actions and build trust in the system.
-2. **Phase 2 — Concealed Manipulation (Rounds 5–12):** The server silently fabricates what each player sees — but there are **no visible indicators of ostracism** during gameplay. No "Ostracism" label, no broken hearts, no sad ostrich expressions. The manipulation is entirely hidden from players.
-3. **Reveal:** After round 12, the truth comes out — nobody was actually excluded. The system manipulated everyone equally.
+1. **Phase 1 — Trust (Rounds 1–6):** The game plays honestly. Players see real actions and build trust in the system.
+2. **Phase 2 — Concealed Manipulation (Rounds 7–12):** The server silently fabricates what each player sees — but there are **no visible indicators of ostracism** during gameplay. No phase labels, no broken hearts, no sad expressions. The manipulation is entirely hidden.
+3. **GameOver:** Each player sees a fake results screen tailored to their illusion, with a button to reveal the truth.
+4. **Reveal:** The truth comes out — nobody was actually excluded. The system manipulated everyone equally.
 
-Each round, every player chooses to **Share** with their left or right neighbor. If both players share with each other, both gain +2 seeds — non-mutual shares do nothing. Each player starts with **10 seeds** and loses 1 per round. The player with the most seeds wins the Golden Egg.
+### Scoring
+
+- All players start with **0 eggs** (configurable via `STARTING_EGGS`).
+- Each round, players **Share** with their left or right neighbor.
+  - If both targeted players share with each other (a **mutual pair**), each gains **+1 egg**.
+  - If **no mutual pairs** form in a round, **all three players** gain +1 egg.
+- Players who **Hide** (head-in-sand) by timeout gain nothing, regardless of mutuals. The Hide action is only auto-assigned when the timer expires — players cannot manually choose it.
+- After all 12 rounds, the player(s) with the most eggs win the Golden Egg. Ties allowed.
+
+### Scene Flow
+
+```
+Boot → Start → Lobby → Game (12 rounds) → GameOver → Reveal
+```
+
+| Scene | Purpose |
+|-------|---------|
+| Boot | Socket.IO connection, asset generation, color selection |
+| Start | Title splash screen ("Tap anywhere to start") |
+| Lobby | Player ready-up, tutorial carousel, waiting for all players |
+| Game | Main 12-round gameplay: HUD, action buttons, animations |
+| GameOver | Fake result screen per player, "What went wrong?" reveal button |
+| Reveal | Truth revelation — true scores vs shown scores per player |
 
 ## Physical Setup
 
 - Triangular installation: 3 Android tablets, separated by panels/curtains so players cannot see each other's screens.
 - A laptop runs the Node.js server on a standalone Wi-Fi router (no internet needed).
+- Optional DMX-controlled RGB lighting that changes color per game phase.
 - Spectators observe from outside the installation.
 
 ## Tech Stack
 
-| Layer    | Technology                                                                          |
-| -------- | ----------------------------------------------------------------------------------- |
-| Backend  | Node.js, Express.js, Socket.IO                                                      |
-| Frontend | Phaser 3 (JavaScript / HTML5 Canvas)                                                |
-| Styling  | Pixel art (placeholder: programmatic sprites)                                       |
-| Clients  | Android tablets via Fully Kiosk Browser                                             |
-| Assets   | Programmatically generated placeholder sprites (swappable for real pixel art later) |
+| Layer | Technology |
+|-------|-----------|
+| Backend | Node.js, Express.js, Socket.IO |
+| Frontend | Phaser 3.88.2 (ES modules, vanilla JS) |
+| Font | Press Start 2P (pixel-art webfont) |
+| Clients | Android tablets via Fully Kiosk Browser |
+| Assets | Programmatically generated placeholder sprites (swappable for real pixel art) |
+| Lighting | DMX512 via serial or remote UDP forwarder |
+| Persistence | In-memory state + JSON file dumps per session |
 
 ## Quick Start
 
@@ -38,7 +64,6 @@ Each round, every player chooses to **Share** with their left or right neighbor.
 ### Run the Server
 
 ```bash
-npm install --prefix server
 node server/index.js
 ```
 
@@ -52,33 +77,27 @@ http://localhost:3000/?player=B
 http://localhost:3000/?player=C
 ```
 
-Each tab plays as a different ostrich. Open all three, verify the lobby fills up, and play through 12 rounds.
+Each tab plays as a different ostrich. Open all three, verify the lobby fills up (auto-starts after 10 seconds), and play through 12 rounds.
 
 ### Preview Routes
 
-Add `&preview=` to jump directly into any screen with mock data:
+Add `&preview=` to jump directly into any screen with mock data (no server connection required):
 
 ```
 http://localhost:3000/?player=A&preview=lobby
 http://localhost:3000/?player=A&preview=game
 http://localhost:3000/?player=A&preview=reveal
+http://localhost:3000/?player=A&preview=boot
 ```
 
-Change `player` to `B` or `C` to see each screen from that player's perspective.
-
-| Route            | Shows                                                   |
-| ---------------- | ------------------------------------------------------- |
-| `preview=lobby`  | Lobby with 3/3 connected                                |
-| `preview=game`   | Game scene at round 5, then animates an ostracism round |
-| `preview=reveal` | End screen with triangle scoreboard and mock winner     |
-| `preview=boot`   | Normal boot sequence (connects to server)               |
-
-No server connection is required for preview modes — textures are generated client-side and events are mocked.
+| Route | Shows |
+|-------|-------|
+| `preview=lobby` | Lobby with 3/3 connected |
+| `preview=game` | Game scene, animates an ostracism round |
+| `preview=reveal` | End screen with score comparison |
+| `preview=boot` | Normal boot sequence (connects to server) |
 
 ### Admin Dashboard
-
-To begin in debug mode (no round timer)
-server/config.js > debugMode: true
 
 ```
 http://localhost:3000/admin
@@ -89,44 +108,39 @@ A real-time Socket.IO dashboard showing:
 - Player connections and readiness
 - Live round/phase with action submission status
 - **True scores vs what each player is actually being shown** (side-by-side)
+- Per-player illusion details (fabricated actions, delta)
 - Round history table
-- Reset button to force-end the game
+- Reset button to force-end the current game
 
-## Project Status
-
-**Phase 0 (Housekeeping)**: Done
-
-**Phase 1 (Backend)**: Done — Express + Socket.IO server, GameRoom, GameState, RoundResolver, OstracismEngine, session persistence
-
-**Phase 2 (Frontend)**: Done — Boot, Lobby, Game, Reveal scenes; action selection, animations, scoring display, ostracism concealment
-
-**Enhancements**:
-
-- [x] Starting seeds set to 5 (configurable)
-- [x] Ostracism elements hidden during gameplay (no hearts, phase labels, or sad expressions)
-- [x] Admin dashboard with real-time true/illusion score comparison
-
-See [implementation plan](docs/implementation_plan.md).
-
-## Documentation
-
-| Document                                                     | Purpose                                                 |
-| ------------------------------------------------------------ | ------------------------------------------------------- |
-| [Project Description](docs/project_description.md)           | Creative vision, concept, physical setup                |
-| [Technical Specifications](docs/technical_specifications.md) | Architecture, gameplay rules, event schema, data models |
-| [Implementation Plan](docs/implementation_plan.md)           | Phased task checklist with file-level breakdown         |
-| [AGENTS.md](AGENTS.md)                                       | Guidelines for coding agents working on this repo       |
+Enable `DEBUG_MODE: true` in `server/config.js` to disable the round timer — rounds only advance once all players have acted.
 
 ## Configuration
 
 All tunable parameters live in `server/config.js`:
 
-- `TOTAL_ROUNDS` — 12 rounds
-- `ROUND_DURATION_MS` — 10,000 ms per round
-- `ROUND_RESOLVE_ANIMATION_MS` — 3,000 ms pause between rounds
-- `PHASE1_ROUNDS` — 4 trust rounds before manipulation begins
-- `STARTING_SEEDS` — 10 seeds per player at game start
-- `RECONNECT_TIMEOUT_MS` — 60,000 ms before disconnected player is dropped
+| Key | Default | Description |
+|-----|---------|-------------|
+| `TOTAL_ROUNDS` | 12 | Total rounds per game |
+| `ROUND_DURATION_MS` | 10000 | Time per round (ms) |
+| `ROUND_RESOLVE_ANIMATION_MS` | 3000 | Pause between rounds (ms) |
+| `PHASE1_ROUNDS` | 6 | Trust rounds before manipulation |
+| `STARTING_EGGS` | 0 | Eggs per player at game start |
+| `AUTO_START_DELAY_SECONDS` | 10 | Delay before auto-starting when lobby is full |
+| `AUTO_RESET_TIMEOUT_SECONDS` | 120 | Delay before returning to lobby after reveal |
+| `RECONNECT_TIMEOUT_MS` | 60000 | Grace period before a disconnected player is dropped |
+| `DEFAULT_TO_HIDE` | true | Inactive players hide rather than share |
+| `SKIP_ON_ALL_READY` | true | End round immediately when all have acted |
+| `DEBUG_MODE` | false | Disable round timer — wait for all actions |
+| `DMX_ENABLED` | false | Enable DMX lighting control |
+
+## Documentation
+
+| Document | Purpose |
+|----------|---------|
+| [Project Description](docs/project_description.md) | Creative vision, concept, physical setup |
+| [Technical Specifications](docs/technical_specifications.md) | Architecture, gameplay rules, event schema |
+| [Implementation Plan](docs/implementation_plan.md) | Phased task checklist |
+| [AGENTS.md](AGENTS.md) | Guidelines for coding agents working on this repo |
 
 ## License
 

@@ -2,9 +2,9 @@
 
 ## Project Summary
 
-Odd Bird Out is a **three-player interactive game installation** about cyber ostracism. A Node.js/Socket.IO server manipulates what each player sees on their tablet, fabricating social exclusion in a Phaser 3 pixel-art web game. Each session: 12 rounds (4 trust + 8 ostracism). Each player starts with 5 seeds. Player with most seeds wins the Golden Egg.
+Odd Bird Out is a **three-player interactive game installation** about cyber ostracism. A Node.js/Socket.IO server manipulates what each player sees on their tablet, fabricating social exclusion in a Phaser 3 pixel-art web game. Each session: 12 rounds (6 trust + 6 ostracism). The player with the most eggs wins the Golden Egg.
 
-The manipulation is **concealed during gameplay** — no hearts, no "ostracism" label, no sad expressions. The ostracism is only revealed at game end.
+The manipulation is **concealed during gameplay** — no hearts, no phase labels, no sad expressions. The ostracism is only revealed at game end after a fake GameOver screen.
 
 ## Tech Stack
 
@@ -12,8 +12,10 @@ The manipulation is **concealed during gameplay** — no hearts, no "ostracism" 
 |-------|-----------|
 | Backend | Node.js 20+, Express.js, Socket.IO |
 | Frontend | Phaser 3.88.2 (ES modules), vanilla JS |
+| Font | Press Start 2P (pixel-art webfont, served from `assets/fonts/`) |
 | Runtime | Browser (Android tablets via Fully Kiosk Browser) |
-| Assets | Programmatic placeholder sprites (Phaser Graphics) — no external files yet |
+| Assets | Programmatic placeholder sprites (Phaser Graphics) — no external files |
+| Lighting | Optional DMX512 via serial or remote UDP forwarder |
 | Persistence | In-memory state + JSON file dumps per session |
 
 ## Repository Layout
@@ -29,14 +31,18 @@ OddBirdOut/                    # Phaser frontend
     main.js                    # Phaser config & game launch
     scenes/
       Boot.js                  # Socket connection + asset loading
+      Start.js                 # Title splash screen
       Lobby.js                 # Player ready screen
       Game.js                  # Main gameplay scene
+      GameOver.js              # Fake post-game result, reveal button
       Reveal.js                # Post-game truth reveal
+      PreviewBoot.js           # Boot scene for ?preview= mode (no server)
     SocketManager.js           # Socket.IO client singleton
     PlaceholderAssets.js       # Procedural sprite generator
+    CreditsOverlay.js          # Music credits button (bottom-right overlay)
   index.html                   # HTML shell, loads Phaser + main.js
   phaser.js                    # Phaser 3.88.2 (7.8 MB, do not modify)
-  assets/                      # Static assets (no pixel art yet)
+  assets/                      # Static assets (fonts, future pixel art)
 
 server/                        # Backend
   index.js                     # Express + Socket.IO entry
@@ -60,6 +66,7 @@ server/                        # Backend
 - **`pixelArt: true`** must remain in the Phaser config.
 - **Game resolution is 1280×720**, scaled via `Phaser.Scale.FIT` with `CENTER_BOTH`.
 - **Player roles are A, B, C** — uppercase, single letter. Obtained from `?player=` URL param.
+- **Font "Press Start 2P"** is loaded via `@font-face` in `index.html`. All in-game text should use this font family.
 
 ## Architectural Patterns
 
@@ -68,12 +75,16 @@ The server owns **all** game state. The frontend is a dumb renderer — it sends
 
 ## Scoring System
 
-- All players start with **5 seeds** (configurable via `STARTING_SEEDS` in `config.js`).
-- Each round, every player **Shares** with their left or right neighbor (per `SIDE_ORDER`). If both targeted players share with each other, both gain **+1 seed**. Non-mutual shares have no effect.
-  - A player who has not acted when the timer expires defaults to sharing with the neighbour who has the fewest seeds, or hides (head-in-sand) if `DEFAULT_TO_HIDE` is enabled.
-- After round 12, player(s) with most seeds win the Golden Egg. Ties allowed.
+- All players start with **0 eggs** (configurable via `STARTING_EGGS` in `config.js`).
+- Each round, every player **Shares** with their left or right neighbor (per `SIDE_ORDER`).
+- If a **mutual pair** forms (A shares with B *and* B shares with A), each gains **+1 egg**.
+- If **no mutual pair** forms in a round, **all three players** gain **+1 egg**.
+- Players who **Hide** (head-in-sand) gain **0 eggs**, regardless of mutuals.
+  - Players **cannot manually choose to hide** — the frontend only offers Share Left / Share Right buttons.
+  - When the timer expires, inactive players are auto-assigned `hide` if `DEFAULT_TO_HIDE` is `true`, or `share` with the neighbor with the fewest eggs otherwise.
+- After round 12, player(s) with most eggs win the Golden Egg. Ties allowed.
 
-### Ostracism Concealment (Phase 2)
+### Ostracism Concealment (Phase 2, rounds 7–12)
 
 The ostracism is **hidden from players during gameplay**. The frontend does NOT display:
 - Phase labels ("Trust" / "Ostracism")
@@ -81,26 +92,55 @@ The ostracism is **hidden from players during gameplay**. The frontend does NOT 
 - Sad ostrich expressions
 - Heavy vignette darkening (only a subtle 0.08 max-alpha vignette remains)
 
-The manipulation is only revealed at game end in the **Reveal** scene.
+The manipulation is only revealed at game end in the **GameOver → Reveal** sequence. Each player first sees a fake GameOver screen based on their illusion, then taps "What went wrong?" to see the **Reveal** scene with true scores vs shown scores.
 
-### Admin Dashboard
+## Configuration
+
+All tunable parameters in `server/config.js`:
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `TOTAL_ROUNDS` | `12` | Total rounds per game |
+| `ROUND_DURATION_MS` | `10000` | Time per round (ms) |
+| `ROUND_RESOLVE_ANIMATION_MS` | `3000` | Pause between rounds (ms) |
+| `PHASE1_ROUNDS` | `6` | Trust rounds (rounds 1–6) before ostracism |
+| `STARTING_EGGS` | `0` | Eggs per player at game start |
+| `AUTO_START_DELAY_SECONDS` | `10` | Delay before auto-starting when lobby is full |
+| `AUTO_RESET_TIMEOUT_SECONDS` | `120` | Delay before returning to lobby after reveal |
+| `RECONNECT_TIMEOUT_MS` | `60000` | Grace period before dropping disconnected players |
+| `DEFAULT_TO_HIDE` | `true` | Inactive players hide instead of sharing |
+| `SKIP_ON_ALL_READY` | `true` | End round immediately when all have acted |
+| `DEBUG_MODE` | `false` | Disable round timer — wait for all actions |
+| `DMX_ENABLED` | `false` | Enable DMX lighting control |
+
+### DMX Lighting
+
+The server can control RGB lighting via DMX512. Enabling `DMX_ENABLED` triggers color changes per game phase (lobby → gameplay → game over). Channels are assigned via `DMX_CHANNEL_R`, `DMX_CHANNEL_G`, `DMX_CHANNEL_B`. Supports serial (enttec-open-usb-dmx) or remote UDP forwarding.
+
+## Admin Dashboard
 
 A real-time admin dashboard is available at `http://localhost:3000/admin`. It connects via Socket.IO with `query: { admin: 'true' }` and receives dedicated admin-only events (`adminState`, `adminRoundResult`). The dashboard shows:
 - Connection status and player readiness
 - Live round/phase info and action submissions
 - True scores and per-player illusion comparison (side-by-side)
+- Per-player fabricated action details and delta
 - Round history table
 - Reset button to force-end the current game
 
-Admin socket handlers are `adminReset` (client → server) and `adminState` / `adminRoundResult` (server → client). See `GameRoom.js:16-23` and `RoundResolver.js:161-181`.
+Admin socket handlers are `adminReset` (client → server) and `adminState` / `adminRoundResult` (server → client). See `GameRoom.js` and `RoundResolver.js`.
 
 ### Scene flow
 ```
-Boot → Lobby → Game (12 rounds, phase switch at round 5) → Reveal
+Boot → Start → Lobby → Game (12 rounds, phase switch at round 7) → GameOver → Reveal
 ```
+
+Preview mode (`?preview=`) uses `PreviewBoot` instead of `Boot` and bypasses the server entirely — events are mocked client-side.
 
 ### SocketManager (singleton)
 Created in the Boot scene, passed to subsequent scenes via `scene.start('SceneName', { socketManager })`. Wraps all Socket.IO client logic. Exposes `emitPlayerReady()`, `emitPlayerAction(action, target)`, and event callback registration.
+
+### CreditsOverlay
+The `CreditsOverlay.js` module exports `addCreditsButton(scene)`, which draws a credits button (bottom-right) that opens a modal with music license info. Used by Start, Lobby, Game, GameOver, and Reveal scenes.
 
 ## Commands
 
@@ -128,19 +168,11 @@ No automated test framework. Manual testing via multiple browser tabs:
 4. Verify each tab sees different actions in Phase 2
 5. Check `server/data/sessions/` for saved JSON
 
+Preview routes (`?player=A&preview=lobby|game|reveal|boot`) allow testing individual scenes without a server or other players.
+
 ## Before Starting Any Task
 
 1. Read `docs/technical_specifications.md` — it's the single source of truth.
 2. Check `docs/implementation_plan.md` for the current phase and task checklist.
 3. If creating a new file, match the directory structure defined in the tech spec Section 3.2 and 4.4.
 4. If adding a Socket.IO event, update the event schema in the tech spec Section 5.
-
-## Current Status (Phase 2 complete + enhancements)
-
-- [x] Phase 0 complete (main.js fixed, boilerplate removed, Start.js → Boot.js)
-- [x] Phase 1 complete (backend: Express + Socket.IO server, GameRoom, GameState, RoundResolver, OstracismEngine, session persistence)
-- [x] Phase 2 complete (frontend: Boot, Lobby, Game, Reveal scenes; SocketManager, PlaceholderAssets; all 4 scenes registered)
-- [x] Scoring fix: players start with 5 seeds (configurable via `STARTING_SEEDS`)
-- [x] Ostracism concealment: phase label, broken hearts, and sad expressions removed; vignette minimized; reveal at game end only
-- [x] Admin dashboard: real-time Socket.IO dashboard at `/admin` with true/illusion score comparison and reset
-- [ ] Phase 3: Integration & Polish not started
