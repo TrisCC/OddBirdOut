@@ -133,7 +133,7 @@ export class GameOver extends Phaser.Scene {
         bg.fillRoundedRect(btnX - btnW / 2 + 4, btnY - btnH / 2 + 4,
             btnW - 8, btnH / 2 - 4, { tl: 12, tr: 12, bl: 0, br: 0 });
 
-        const btnText = this.add.text(btnX, btnY, 'Find out the truth', {
+        const btnText = this.add.text(btnX, btnY, 'What went wrong?', {
             fontFamily: '"Press Start 2P"',
             fontSize: '20px',
             color: '#FFFFFF',
