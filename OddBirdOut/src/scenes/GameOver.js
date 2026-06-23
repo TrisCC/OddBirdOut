@@ -48,11 +48,6 @@ export class GameOver extends Phaser.Scene {
             this.socketManager.on('resetCountdown', this._onResetCountdown);
         }
 
-        const autoReset = this.gameEndData.autoResetSeconds;
-        if (typeof autoReset === 'number' && autoReset > 0) {
-            this.updateResetCountdown(autoReset);
-        }
-
         this.events.once('shutdown', () => {
             if (this.socketManager) {
                 this.socketManager.off('gameAborted', this._onGameAborted);

@@ -111,7 +111,6 @@ function getMockGameEndData(playerId) {
         },
         whatYouWereShown: getMockWhatYouWereShown(playerId),
         colorChoices: { A: 'red', B: 'blue', C: 'green' },
-        autoResetSeconds: 120,
     };
 }
 

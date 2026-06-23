@@ -102,6 +102,7 @@ export class Game extends Phaser.Scene {
         this.eggDisplays = {};
         this.eggCountTexts = {};
         this.ostrichPositions = {};
+        this.ostrichColors = {};
 
         const positions = [
             { x: sideX[0], y: sideY, id: playerOrder[0], scale: 1.0, eggDx: -40, eggDy: 40,  eggSize: 50 },
@@ -114,6 +115,7 @@ export class Game extends Phaser.Scene {
             const isSelf = id === this.playerId;
             const colorKey = this.colorChoices[id];
             const textureKey = colorKey ? `ostrich_${colorKey}` : 'ostrich_red';
+            this.ostrichColors[id] = colorKey || 'red';
             const displaySize = isSelf ? 130 : 100;
             const sprite = this.add.sprite(pos.x, pos.y, textureKey, 0);
             sprite.setDisplaySize(displaySize, displaySize);
@@ -547,6 +549,11 @@ export class Game extends Phaser.Scene {
                 this.time.delayedCall(delay, () => {
                     this.playShareAnim(giverSprite, giverId, targetId, sideX, sideY);
                 });
+            } else if (act.action === 'hide') {
+                const color = this.ostrichColors[giverId] || 'red';
+                this.time.delayedCall(delay, () => {
+                    this.playHideAnim(giverSprite, color);
+                });
             }
 
             delay += STEP_DELAY;
@@ -616,6 +623,40 @@ export class Game extends Phaser.Scene {
             duration: 150,
             yoyo: true,
             ease: 'Sine.easeOut',
+        });
+    }
+
+    playHideAnim(sprite, color) {
+        if (!sprite) return;
+
+        const sandKey = `ostrich_${color}_sand`;
+        const sandAnimFwd = `sand_${color}`;
+        const sandAnimRev = `sand_${color}_rev`;
+
+        if (!this.anims.exists(sandAnimRev)) {
+            this.anims.create({
+                key: sandAnimRev,
+                frames: this.anims.generateFrameNumbers(sandKey, { start: 5, end: 0 }),
+                frameRate: 6,
+                repeat: 0,
+            });
+        }
+
+        const origAnim = sprite.anims.currentAnim ? sprite.anims.currentAnim.key : null;
+
+        sprite.setTexture(sandKey, 0);
+        sprite.play(sandAnimFwd);
+
+        sprite.once('animationcomplete', () => {
+            sprite.play(sandAnimRev);
+            sprite.once('animationcomplete', () => {
+                const origTexture = `ostrich_${color}`;
+                sprite.setTexture(origTexture, 0);
+                const idleKey = `idle_${color}`;
+                if (this.anims.exists(idleKey)) {
+                    sprite.play(idleKey);
+                }
+            });
         });
     }
 

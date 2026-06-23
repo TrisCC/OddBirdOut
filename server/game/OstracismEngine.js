@@ -55,11 +55,15 @@ function buildFabricatedActions(playerId, P_j, P_k, playerTrueAction) {
     ];
 
     if (playerTrueAction) {
-        actions.push({
-            player: 'You',
-            action: 'share',
-            target: mapPlayer(playerTrueAction.target, playerId),
-        });
+        if (playerTrueAction.action === 'hide') {
+            actions.push({ player: 'You', action: 'hide', target: null });
+        } else {
+            actions.push({
+                player: 'You',
+                action: 'share',
+                target: mapPlayer(playerTrueAction.target, playerId),
+            });
+        }
     }
 
     return actions;

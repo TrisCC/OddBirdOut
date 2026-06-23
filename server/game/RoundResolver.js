@@ -84,9 +84,18 @@ class RoundResolver {
     }
 
     onRoundTimeout() {
+        const defaultAction = config.DEFAULT_TO_HIDE ? 'hide' : 'share';
         for (const player of ['A', 'B', 'C']) {
             if (!this.gameState.actionSubmitted[player]) {
-                this.gameState.submitAction(player, 'share', SIDE_ORDER[player][0]);
+                if (defaultAction === 'hide') {
+                    this.gameState.submitAction(player, 'hide', null);
+                } else {
+                    const [left, right] = SIDE_ORDER[player];
+                    const leftScore = this.gameState.scores[left];
+                    const rightScore = this.gameState.scores[right];
+                    const target = leftScore <= rightScore ? left : right;
+                    this.gameState.submitAction(player, 'share', target);
+                }
             }
         }
         this.resolveRound();
@@ -275,8 +284,6 @@ class RoundResolver {
         this.sessionLog.winner = winner;
         this.sessionLog.alive = { ...this.gameState.alive };
 
-        this.startAutoResetTimer();
-
         for (const playerId of ['A', 'B', 'C']) {
             const socketId = this.playerSockets[playerId];
             if (socketId) {
@@ -284,7 +291,6 @@ class RoundResolver {
                 this.io.to(socketId).emit('gameEnd', {
                     trueState,
                     ...illusionSummary,
-                    autoResetSeconds: this.autoResetSecondsRemaining,
                 });
             }
         }

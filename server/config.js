@@ -17,13 +17,18 @@ module.exports = {
     // When false (default), the round always lasts the full ROUND_DURATION_MS.
     SKIP_ON_ALL_READY: true,
 
+    // When true, players who haven't acted when the timer expires will hide
+    // (head-in-sand) instead of sharing with their left neighbour.
+    DEFAULT_TO_HIDE: true,
+
     // Polling intervals to keep clients and server state in sync
     LOBBY_POLL_INTERVAL_MS: 5000,
     GAME_POLL_INTERVAL_MS: 10000,
     POSTGAME_POLL_INTERVAL_MS: 30000,
     CLIENT_HEARTBEAT_INTERVAL_MS: 10000,
 
-    // DMX lighting
+    // DMX lighting — set to false to fully disable all DMX communication
+    DMX_ENABLED: false,
     DMX_DEVICE: '/dev/ttyUSB0',
     DMX_DRIVER: 'enttec-open-usb-dmx',
     DMX_UDMX_VID: 0x16c0,

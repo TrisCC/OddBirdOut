@@ -5,6 +5,7 @@ class DmxLighting {
 
     constructor() {
         this.available = false;
+        this.disabled = false;
         this.backend = null;
         this.animationTimer = null;
         this.targetRgb = { r: 0, g: 0, b: 0 };
@@ -20,6 +21,12 @@ class DmxLighting {
         ];
         this._testStartTime = 0;
         this._testCycleMs = 10000;
+
+        if (!config.DMX_ENABLED) {
+            this.disabled = true;
+            console.log('DMX lighting disabled (DMX_ENABLED=false)');
+            return;
+        }
 
         if (config.DMX_REMOTE_ENABLED) {
             this._tryRemoteDmx();
@@ -181,6 +188,7 @@ class DmxLighting {
     }
 
     getState() {
+        if (this.disabled) return { available: false, disabled: true };
         if (!this.available) return { available: false };
 
         let mode = this.state;

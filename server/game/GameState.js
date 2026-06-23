@@ -76,6 +76,13 @@ class GameState {
         const deltas = { A: 0, B: 0, C: 0 };
         const alivePlayers = ['A', 'B', 'C'].filter(p => this.alive[p]);
 
+        const hidPlayers = new Set();
+        for (const act of this.currentActions) {
+            if (act.action === 'hide') {
+                hidPlayers.add(act.player);
+            }
+        }
+
         if (alivePlayers.length === 3) {
             const mutualPair = alivePlayers.find(p =>
                 shareTarget[p] && shareTarget[shareTarget[p]] === p
@@ -105,6 +112,9 @@ class GameState {
         }
 
         for (const player of ['A', 'B', 'C']) {
+            if (hidPlayers.has(player)) {
+                deltas[player] = 0;
+            }
             if (this.alive[player]) {
                 this.scores[player] += deltas[player];
             }

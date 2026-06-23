@@ -920,9 +920,12 @@ function renderLighting(state) {
 
     if (!state || !state.available) {
         panel.classList.remove('hidden');
+        const msg = (state && state.disabled)
+            ? 'DMX disabled in server config'
+            : 'No DMX device connected';
         content.innerHTML = '<div style="display:flex;align-items:center;gap:10px;">'
             + '<span class="dmx-mode-tag offline">OFFLINE</span>'
-            + '<span style="color:#666;font-size:12px;">No DMX device connected</span>'
+            + '<span style="color:#666;font-size:12px;">' + msg + '</span>'
             + '</div>';
         return;
     }
