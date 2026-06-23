@@ -30,6 +30,11 @@ class RoundResolver {
             B: config.STARTING_EGGS,
             C: config.STARTING_EGGS,
         };
+        this.perPlayerLastScores = {
+            A: { A: config.STARTING_EGGS, B: config.STARTING_EGGS, C: config.STARTING_EGGS },
+            B: { A: config.STARTING_EGGS, B: config.STARTING_EGGS, C: config.STARTING_EGGS },
+            C: { A: config.STARTING_EGGS, B: config.STARTING_EGGS, C: config.STARTING_EGGS },
+        };
         this.sessionId = uuidv4();
         this.sessionLog = {
             sessionId: this.sessionId,
@@ -146,6 +151,7 @@ class RoundResolver {
         if (this.gameState.phase === 'trust') {
             for (const playerId of ['A', 'B', 'C']) {
                 this.perPlayerIllusionScores[playerId] = trueScores[playerId];
+                this.perPlayerLastScores[playerId] = { ...trueScores };
             }
 
             const mappedActions = trueActions.map(a => ({ ...a }));
@@ -175,6 +181,12 @@ class RoundResolver {
                 );
 
                 this.perPlayerIllusionScores[playerId] = illusion.illusionScoreAfter;
+
+                const storedScores = {};
+                for (const [k, v] of Object.entries(illusion.scores)) {
+                    storedScores[k === 'You' ? playerId : k] = v;
+                }
+                this.perPlayerLastScores[playerId] = storedScores;
 
                 const socketId = this.playerSockets[playerId];
                 if (socketId) {
@@ -399,6 +411,25 @@ class RoundResolver {
             perPlayerIllusionScores: { ...this.perPlayerIllusionScores },
             roundHistory: state.roundHistory,
             autoResetSeconds: this.autoResetSecondsRemaining,
+        };
+    }
+
+    getRoundSync(playerId) {
+        const submitted = this.gameState.actionSubmitted[playerId] || false;
+        const stored = this.perPlayerLastScores[playerId] || {};
+        const mappedScores = {};
+        for (const [k, v] of Object.entries(stored)) {
+            mappedScores[k === playerId ? 'You' : k] = v;
+        }
+
+        return {
+            round: this.gameState.round,
+            phase: this.gameState.phase,
+            submitted,
+            roundActive: this.gameState.isRoundActive(),
+            scores: mappedScores,
+            roundDurationMs: config.ROUND_DURATION_MS,
+            debugMode: config.DEBUG_MODE,
         };
     }
 

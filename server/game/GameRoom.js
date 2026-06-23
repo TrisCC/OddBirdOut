@@ -108,7 +108,6 @@ class GameRoom {
         socket.on('playerColorChoice', (data) => this.onPlayerColorChoice(playerId, data && data.color));
         socket.on('playerAction', (data) => this.onPlayerAction(playerId, data));
         socket.on('requestLobbyState', () => socket.emit('lobbyUpdate', this.getLobbyState()));
-        socket.on('heartbeat', () => socket.emit('heartbeatAck', { timestamp: Date.now() }));
         socket.on('disconnect', () => this.onDisconnect(socket, playerId));
 
         this.broadcastLobbyUpdate();
@@ -120,8 +119,6 @@ class GameRoom {
 
         this.players[playerId] = socket.id;
 
-        // Keep the RoundResolver's socket map current so ostracism-phase
-        // per-player roundResult events reach the reconnected socket.
         if (this.roundResolver) {
             this.roundResolver.playerSockets[playerId] = socket.id;
         }
@@ -140,8 +137,11 @@ class GameRoom {
         socket.on('playerColorChoice', (data) => this.onPlayerColorChoice(playerId, data && data.color));
         socket.on('playerAction', (data) => this.onPlayerAction(playerId, data));
         socket.on('requestLobbyState', () => socket.emit('lobbyUpdate', this.getLobbyState()));
-        socket.on('heartbeat', () => socket.emit('heartbeatAck', { timestamp: Date.now() }));
         socket.on('disconnect', () => this.onDisconnect(socket, playerId));
+
+        if (this.roundResolver && this.roundResolver.gameActive) {
+            socket.emit('roundSync', this.roundResolver.getRoundSync(playerId));
+        }
 
         this.broadcastLobbyUpdate();
 
