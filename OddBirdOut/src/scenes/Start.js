@@ -24,6 +24,13 @@ export class Start extends Phaser.Scene {
             this.socketManager.off('gameAborted', onGameAborted);
         });
 
+        if (!this.textures.exists('obo_title')) {
+            this.load.image('obo_title', 'assets/Sprites/OBO title.png');
+            this.load.once('complete', () => this.scene.restart());
+            this.load.start();
+            return;
+        }
+
         const title = this.add.image(w / 2, h / 2 + 50, 'obo_title');
         title.setDisplaySize(w * 0.9, h * 0.9);
 

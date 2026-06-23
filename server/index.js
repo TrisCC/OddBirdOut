@@ -10,7 +10,13 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-app.use(express.static(config.STATIC_DIR));
+app.use(express.static(config.STATIC_DIR, {
+    setHeaders: (res, filePath) => {
+        if (filePath.includes('/assets/Sprites/')) {
+            res.set('Cache-Control', 'no-cache');
+        }
+    }
+}));
 
 app.get('/admin', (req, res) => {
     res.sendFile(path.join(__dirname, 'admin.html'));
