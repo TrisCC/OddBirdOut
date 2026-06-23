@@ -106,13 +106,6 @@ class RoundResolver {
 
         this.gameState.submitAction(playerId, action, target);
 
-        if (this.gameState.hasAllOrDead()) {
-            if (this.roundTimer) {
-                clearTimeout(this.roundTimer);
-                this.roundTimer = null;
-            }
-            this.resolveRound();
-        }
     }
 
     resolveRound() {
@@ -242,11 +235,18 @@ class RoundResolver {
     }
 
     scheduleNextRound() {
+        const aliveCount = Object.values(this.gameState.alive).filter(v => v).length;
+        const crossFadeMs = 2400;
+        const perActionMs = 1800;
+        const trailingMs = 500;
+        const clientAnimMs = crossFadeMs + aliveCount * perActionMs + trailingMs;
+        const delay = Math.max(config.ROUND_RESOLVE_ANIMATION_MS, clientAnimMs);
+
         setTimeout(() => {
             if (this.gameActive) {
                 this.startRound();
             }
-        }, config.ROUND_RESOLVE_ANIMATION_MS);
+        }, delay);
     }
 
     endGame() {
