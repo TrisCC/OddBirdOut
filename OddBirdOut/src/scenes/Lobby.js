@@ -23,8 +23,8 @@ const CAROUSEL_SLIDES = [
         desc: 'Each round, pick a player on your left or right',
         render(scene, container) {
             const btnScale = 0.42;
-            const labelStyle = { fontFamily: '"Press Start 2P"', fontSize: '8px', color: '#FFFFFF' };
-            const arrowStyle = { fontFamily: '"Press Start 2P"', fontSize: '14px', color: '#FFD700' };
+            const labelStyle = { fontFamily: '"Press Start 2P"', fontSize: '8px', color: '#FFFFFF', padding: { top: 2, bottom: 2 } };
+            const arrowStyle = { fontFamily: '"Press Start 2P"', fontSize: '14px', color: '#FFD700', padding: { top: 4, bottom: 4 } };
             const others = SIDE_ORDER[scene.playerId] || ['B', 'C'];
             const bird = scene.add.sprite(0, 0, 'ostrich_red', 0).setDisplaySize(72, 72);
             const shareLeft = scene.add.image(-170, 0, 'btn_share').setScale(btnScale);
@@ -52,7 +52,7 @@ const CAROUSEL_SLIDES = [
         title: '12 Rounds',
         desc: 'Make your choice before time runs out each round',
         render(scene, container) {
-            const roundStyle = { fontFamily: '"Press Start 2P"', fontSize: '11px', color: '#FFD700' };
+            const roundStyle = { fontFamily: '"Press Start 2P"', fontSize: '11px', color: '#FFD700', padding: { top: 3, bottom: 3 } };
             const roundText = scene.add.text(0, -18, 'Round  4 / 12', roundStyle).setOrigin(0.5);
             const barW = 280, barH = 10, barX = -barW / 2, barY = 2;
             const barBg = scene.add.graphics();
@@ -61,15 +61,15 @@ const CAROUSEL_SLIDES = [
             const barFill = scene.add.graphics();
             barFill.fillStyle(0x4CAF50);
             barFill.fillRoundedRect(barX, barY, barW * 0.4, barH, 4);
-            const secsLeft = scene.add.text(0, 18, '~15 seconds',
-                { fontFamily: '"Press Start 2P"', fontSize: '9px', color: '#AAAAAA' }).setOrigin(0.5);
+            const secsLeft = scene.add.text(0, 18,                 '10 seconds',
+                { fontFamily: '"Press Start 2P"', fontSize: '9px', color: '#AAAAAA', padding: { top: 3, bottom: 3 } }).setOrigin(0.5);
             container.add([roundText, barBg, barFill, secsLeft]);
         },
     },
 ];
 
-const CAROUSEL_Y = 643;
-const DOT_Y = 736;
+const CAROUSEL_Y = 655;
+const DOT_Y = 754;
 const BIRD_Y = 252;
 const COLOR_ROW_Y = [387, 455];
 const READY_BTN_Y = 515;
@@ -107,34 +107,34 @@ export class Lobby extends Phaser.Scene {
         this.add.image(w / 2, h / 2, 'bg_night').setDisplaySize(w, h);
         this.add.rectangle(w / 2, h / 2, w, h, 0x000000).setAlpha(0.4);
 
-        this.add.text(w / 2, 52, `You are Player ${this.playerId}`, {
-            fontFamily: '"Press Start 2P"',
-            fontSize: '16px',
-            color: '#FFFFFF',
-        }).setOrigin(0.5);
+        const PAD = { top: 4, bottom: 4 };
 
-        this.statusText = this.add.text(w / 2, 90, 'Waiting for players...', {
+        this.statusText = this.add.text(w / 2, 62, 'Waiting for players...', {
             fontFamily: '"Press Start 2P"',
             fontSize: '12px',
             color: '#AAAAAA',
+            padding: PAD,
         }).setOrigin(0.5);
 
-        this.countText = this.add.text(w / 2, 118, '0 / 3 connected', {
+        this.countText = this.add.text(w / 2, 86, '0 / 3 connected', {
             fontFamily: '"Press Start 2P"',
             fontSize: '14px',
             color: '#FFD700',
+            padding: PAD,
         }).setOrigin(0.5);
 
-        this.readyText = this.add.text(w / 2, 144, '0 / 3 ready', {
+        this.readyText = this.add.text(w / 2, 110, '0 / 3 ready', {
             fontFamily: '"Press Start 2P"',
             fontSize: '11px',
             color: '#AAAAAA',
+            padding: PAD,
         }).setOrigin(0.5);
 
-        this.autoStartText = this.add.text(w / 2, 168, '', {
+        this.autoStartText = this.add.text(w / 2, 134, '', {
             fontFamily: '"Press Start 2P"',
             fontSize: '12px',
             color: '#4CAF50',
+            padding: PAD,
         }).setOrigin(0.5);
 
         for (let i = 0; i < 3; i++) {
@@ -149,12 +149,23 @@ export class Lobby extends Phaser.Scene {
                     fontFamily: '"Press Start 2P"',
                     fontSize: '8px',
                     color: isSelf ? '#FFD700' : '#AAAAAA',
+                    padding: { top: 2, bottom: 2 },
                 }).setOrigin(0.5);
             this.birdLabels[role] = label;
         }
 
         this.buildColorPicker();
         this.buildReadyButton();
+
+        this.add.text(w / 2, 575, 'How to play', {
+            fontFamily: '"Press Start 2P"',
+            fontSize: '13px',
+            color: '#FFD700',
+            stroke: '#000000',
+            strokeThickness: 3,
+            padding: { top: 4, bottom: 4 },
+        }).setOrigin(0.5).setDepth(10);
+
         this.createCarousel();
         this.setupSocketListeners(w, h);
         addCreditsButton(this);
@@ -260,6 +271,7 @@ export class Lobby extends Phaser.Scene {
             fontFamily: '"Press Start 2P"',
             fontSize: '13px',
             color: '#FFFFFF',
+            padding: { top: 4, bottom: 4 },
         }).setOrigin(0.5);
 
         this.readyBtnZone = this.add.zone(cx, cy, BTN_W, BTN_H).setInteractive();
@@ -443,6 +455,7 @@ export class Lobby extends Phaser.Scene {
                 fontFamily: '"Press Start 2P"',
                 fontSize: '12px',
                 color: '#F44336',
+                padding: { top: 4, bottom: 4 },
             }).setOrigin(0.5);
         };
 
@@ -484,7 +497,7 @@ export class Lobby extends Phaser.Scene {
         this.carousel = this.add.container(w / 2, CAROUSEL_Y);
         const bg = this.add.graphics();
         bg.fillStyle(0x000000, 0.45);
-        bg.fillRoundedRect(-340, -90, 680, 180, 18);
+        bg.fillRoundedRect(-340, -110, 680, 220, 18);
         this.carousel.add(bg);
 
         this.slideContent = this.add.container(0, -20);
@@ -506,14 +519,34 @@ export class Lobby extends Phaser.Scene {
         this.input.on('pointermove', (pointer) => this.onPointerMove(pointer));
         this.input.on('pointerup', (pointer) => this.onPointerUp(pointer));
 
+        this.startCarouselTimer();
         this.showSlide(0);
+    }
+
+    startCarouselTimer() {
+        if (this.carouselTimer) this.carouselTimer.destroy();
+        this.carouselTimer = this.time.addEvent({
+            delay: 5000,
+            callback: () => {
+                if (!this.isTransitioning && !this.isDragging) {
+                    this.transitionTo(this.carouselIndex + 1, -1);
+                }
+            },
+            loop: true,
+        });
+    }
+
+    resetCarouselTimer() {
+        if (this.carouselTimer) {
+            this.carouselTimer.reset({ delay: 5000, callback: this.carouselTimer.callback, loop: true });
+        }
     }
 
     isInCarousel(pointer) {
         const cx = this.carousel.x;
         const cy = this.carousel.y;
         return pointer.x > cx - 350 && pointer.x < cx + 350 &&
-               pointer.y > cy - 100 && pointer.y < cy + 100;
+               pointer.y > cy - 120 && pointer.y < cy + 120;
     }
 
     onPointerDown(pointer) {
@@ -530,6 +563,7 @@ export class Lobby extends Phaser.Scene {
         this.isDragging = true;
         this.dragStartX = pointer.x;
         this.dragStartContentX = this.slideContent.x;
+        this.resetCarouselTimer();
     }
 
     onPointerMove(pointer) {
@@ -549,6 +583,7 @@ export class Lobby extends Phaser.Scene {
         } else if (dx > threshold) {
             this.transitionTo(this.carouselIndex - 1, 1);
         } else {
+            this.resetCarouselTimer();
             this.tweens.add({
                 targets: this.slideContent,
                 x: 0,
@@ -560,6 +595,7 @@ export class Lobby extends Phaser.Scene {
 
     onDotClick(index) {
         if (index === this.carouselIndex || this.isTransitioning) return;
+        this.resetCarouselTimer();
         const dir = index > this.carouselIndex ? -1 : 1;
         this.transitionTo(index, dir);
     }
@@ -583,11 +619,11 @@ export class Lobby extends Phaser.Scene {
                 const slide = this.carouselSlides[this.carouselIndex];
                 slide.render(this, this.slideContent);
 
-                const titleStyle = { fontFamily: '"Press Start 2P"', fontSize: '10px', color: '#FFFFFF' };
+                const titleStyle = { fontFamily: '"Press Start 2P"', fontSize: '10px', color: '#FFFFFF', padding: { top: 3, bottom: 3 } };
                 const title = this.add.text(0, 72, slide.title, titleStyle).setOrigin(0.5);
                 this.slideContent.add(title);
 
-                const descStyle = { fontFamily: '"Press Start 2P"', fontSize: '7px', color: '#CCCCCC' };
+                const descStyle = { fontFamily: '"Press Start 2P"', fontSize: '7px', color: '#CCCCCC', padding: { top: 2, bottom: 2 } };
                 const desc = this.add.text(0, 88, slide.desc, descStyle).setOrigin(0.5);
                 this.slideContent.add(desc);
 
@@ -598,7 +634,10 @@ export class Lobby extends Phaser.Scene {
                     x: 0,
                     duration: 180,
                     ease: 'Cubic.easeOut',
-                    onComplete: () => { this.isTransitioning = false; },
+                    onComplete: () => {
+                        this.isTransitioning = false;
+                        this.resetCarouselTimer();
+                    },
                 });
             },
         });
@@ -612,11 +651,11 @@ export class Lobby extends Phaser.Scene {
         const slide = this.carouselSlides[this.carouselIndex];
         slide.render(this, this.slideContent);
 
-        const titleStyle = { fontFamily: '"Press Start 2P"', fontSize: '10px', color: '#FFFFFF' };
+        const titleStyle = { fontFamily: '"Press Start 2P"', fontSize: '10px', color: '#FFFFFF', padding: { top: 3, bottom: 3 } };
         const title = this.add.text(0, 72, slide.title, titleStyle).setOrigin(0.5);
         this.slideContent.add(title);
 
-        const descStyle = { fontFamily: '"Press Start 2P"', fontSize: '7px', color: '#CCCCCC' };
+        const descStyle = { fontFamily: '"Press Start 2P"', fontSize: '7px', color: '#CCCCCC', padding: { top: 2, bottom: 2 } };
         const desc = this.add.text(0, 88, slide.desc, descStyle).setOrigin(0.5);
         this.slideContent.add(desc);
 
