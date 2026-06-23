@@ -12,7 +12,7 @@ module.exports = {
     AUTO_START_DELAY_SECONDS: 10,
     STATIC_DIR: path.join(__dirname, '..', 'OddBirdOut'),
     // Set to true to disable the round timer — rounds only advance once all players have acted
-    DEBUG_MODE: true,
+    DEBUG_MODE: false,
 
     // Polling intervals to keep clients and server state in sync
     LOBBY_POLL_INTERVAL_MS: 5000,

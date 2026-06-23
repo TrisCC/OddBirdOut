@@ -78,6 +78,15 @@ export class Game extends Phaser.Scene {
             stroke: '#FFFFFF',
             strokeThickness: 3,
         }).setOrigin(0.5).setDepth(20);
+
+        this.noTalkingText = this.add.text(this.scale.width / 2, 200, 'No talking to your\nopponents!', {
+            fontFamily: '"Press Start 2P"',
+            fontSize: '14px',
+            color: '#FFD700',
+            stroke: '#000000',
+            strokeThickness: 4,
+            align: 'center',
+        }).setOrigin(0.5).setDepth(50).setVisible(false);
     }
 
     buildOstriches() {
@@ -253,6 +262,7 @@ export class Game extends Phaser.Scene {
             this.currentPhase = data.phase;
             this.submitted = data.submitted;
             this.roundText.setText(`Round ${data.round} / ${this.totalRounds}`);
+            this.noTalkingText.setVisible(data.round <= 4);
 
             if (data.scores) this.updateScores(data.scores);
 
@@ -319,6 +329,7 @@ export class Game extends Phaser.Scene {
         this.submitted = false;
 
         this.roundText.setText(`Round ${data.round} / ${this.totalRounds}`);
+        this.noTalkingText.setVisible(data.round <= 4);
 
         this.statusText.setText('');
         this.enableButtons();

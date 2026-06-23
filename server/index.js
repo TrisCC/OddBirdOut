@@ -12,7 +12,7 @@ const io = new Server(server);
 
 app.use(express.static(config.STATIC_DIR, {
     setHeaders: (res, filePath) => {
-        if (filePath.includes('/assets/Sprites/')) {
+        if (filePath.includes('/assets/Sprites/') || filePath.endsWith('.js') || filePath.endsWith('.html')) {
             res.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
             res.set('Pragma', 'no-cache');
             res.set('Expires', '0');
