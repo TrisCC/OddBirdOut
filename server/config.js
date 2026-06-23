@@ -26,6 +26,11 @@ module.exports = {
     DMX_UDMX_VID: 0x16c0,
     DMX_UDMX_PID: 0x05dc,
 
+    // Remote DMX forwarder configuration
+    DMX_REMOTE_ENABLED: false,
+    DMX_REMOTE_HOST: '127.0.0.1',
+    DMX_REMOTE_PORT: 5120,
+
     // Per-channel assignments (1-based DMX addresses)
     // Common PAR DMX modes:
     //   3-channel: R=1, G=2, B=3

@@ -1,0 +1,13 @@
+{
+  "name": "dmx_node",
+  "version": "1.0.0",
+  "description": "Network DMX Receiver and Forwarder for OddBirdOut",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "usb": "^1.9.2",
+    "dmx": "^0.2.6"
+  }
+}

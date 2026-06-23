@@ -1,3 +1,4 @@
+const dgram = require('dgram');
 const config = require('../config');
 
 class DmxLighting {
@@ -20,8 +21,13 @@ class DmxLighting {
         this._testStartTime = 0;
         this._testCycleMs = 10000;
 
-        this._tryUdmx();
-        if (!this.available) this._trySerialDmx();
+        if (config.DMX_REMOTE_ENABLED) {
+            this._tryRemoteDmx();
+        } else {
+            this._tryUdmx();
+            if (!this.available) this._trySerialDmx();
+        }
+
         if (!this.available) {
             if (config.DMX_TEST_MODE) {
                 console.error('DMX test mode enabled but no device found.');
@@ -35,6 +41,16 @@ class DmxLighting {
         }
 
         this._startAnimationLoop();
+    }
+
+    _tryRemoteDmx() {
+        try {
+            this.backend = new RemoteDmxBackend();
+            this.available = true;
+            console.log(`DMX lighting ready via remote forwarder (${config.DMX_REMOTE_HOST}:${config.DMX_REMOTE_PORT})`);
+        } catch (err) {
+            console.warn('Remote DMX backend unavailable:', err.message);
+        }
     }
 
     _tryUdmx() {
@@ -190,6 +206,43 @@ class DmxLighting {
     }
 }
 
+class RemoteDmxBackend {
+
+    constructor() {
+        this.client = dgram.createSocket('udp4');
+        this.buffer = Buffer.alloc(512, 0);
+        this._sendModeChannel();
+    }
+
+    writeRGB(r, g, b) {
+        this.buffer[config.DMX_CHANNEL_R - 1] = r;
+        this.buffer[config.DMX_CHANNEL_G - 1] = g;
+        this.buffer[config.DMX_CHANNEL_B - 1] = b;
+        this._sendBuffer();
+    }
+
+    _setChannel(channel, value) {
+        this.buffer[channel - 1] = value;
+        this._sendBuffer();
+    }
+
+    _sendBuffer() {
+        this.client.send(this.buffer, 0, this.buffer.length, config.DMX_REMOTE_PORT, config.DMX_REMOTE_HOST, (err) => {
+            if (err) { /* silently ignore */ }
+        });
+    }
+
+    _sendModeChannel() {
+        if (!config.DMX_CHANNEL_MODE || config.DMX_CHANNEL_MODE <= 0) return;
+        this.buffer[config.DMX_CHANNEL_MODE - 1] = config.DMX_MODE_VALUE;
+        this._sendBuffer();
+    }
+
+    close() {
+        try { this.client.close(); } catch (e) {}
+    }
+}
+
 class UdmxBackend {
 
     constructor(usb) {
@@ -205,24 +258,32 @@ class UdmxBackend {
         if (iface.isKernelDriverActive()) iface.detachKernelDriver();
         iface.claim();
 
+        this.buffer = Buffer.alloc(512, 0);
         this._sendModeChannel();
     }
 
     writeRGB(r, g, b) {
-        this._setChannel(config.DMX_CHANNEL_R, r);
-        this._setChannel(config.DMX_CHANNEL_G, g);
-        this._setChannel(config.DMX_CHANNEL_B, b);
+        this.buffer[config.DMX_CHANNEL_R - 1] = r;
+        this.buffer[config.DMX_CHANNEL_G - 1] = g;
+        this.buffer[config.DMX_CHANNEL_B - 1] = b;
+        this._sendBuffer();
     }
 
     _setChannel(channel, value) {
-        this.device.controlTransfer(0x40, 2, channel, 0, Buffer.from([value]), (err) => {
+        this.buffer[channel - 1] = value;
+        this._sendBuffer();
+    }
+
+    _sendBuffer() {
+        this.device.controlTransfer(0x40, 1, 1, 0, this.buffer, (err) => {
             if (err) { /* silently ignore */ }
         });
     }
 
     _sendModeChannel() {
         if (!config.DMX_CHANNEL_MODE || config.DMX_CHANNEL_MODE <= 0) return;
-        this._setChannel(config.DMX_CHANNEL_MODE, config.DMX_MODE_VALUE);
+        this.buffer[config.DMX_CHANNEL_MODE - 1] = config.DMX_MODE_VALUE;
+        this._sendBuffer();
     }
 
     close() {
