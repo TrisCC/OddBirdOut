@@ -10,23 +10,26 @@
     <article class="pixel-card">
       <h3>The Magic Circle</h3>
       <p>
-        A game can create a protective "magic circle" — a sense that "it's only
-        a game" — which gives players emotional distance. We addressed this by
-        making sure exclusion happens even when a player <strong>genuinely
-        cooperates</strong>, keeping competition light, and limiting
-        communication between players so the uncertainty remains.
+        A game can create a protective "magic circle", a sense that "it's only a
+        game", which gives players emotional distance. We addressed this by
+        making sure exclusion happens even when a player <strong
+          >genuinely cooperates</strong
+        >, keeping competition light, and limiting communication between players
+        so the uncertainty remains. Being able to choose a color for you
+        character also adds a small personal touch to the game, which makes the
+        ostracism feel more personal.
       </p>
     </article>
 
     <article class="pixel-card">
       <h3>The Tension</h3>
       <p>
-        The elements that make the installation fun — competition and a clear
-        goal — are also the ones that can <strong>weaken the feeling of
-        ostracism</strong> by giving players a rational explanation for being
-        left out. We cannot claim the exhibition reproduces the measured
-        effects of a controlled study, but the experience is grounded in
-        established paradigms that show how little manipulation is needed.
+        The competetive elements that make the installation fun are also the
+        ones that can <strong>weaken the feeling of ostracism</strong> by giving
+        players a rational explanation for being left out. We cannot claim the exhibition
+        reproduces the measured effects of a controlled study, but the experience
+        is grounded in established paradigms that show how little manipulation is
+        needed.
       </p>
     </article>
 
@@ -35,8 +38,8 @@
       <p>
         Does the short exposure (12 rounds, ~3 minutes of gameplay) create a
         strong enough emotional response? Will the "game" framing cause people
-        to dismiss the ostracism as part of the rules? These are questions
-        we continue to explore as we observe how visitors interact with the
+        to dismiss the ostracism as part of the rules? These are questions we
+        continue to explore as we observe how visitors interact with the
         installation.
       </p>
     </article>
@@ -45,9 +48,8 @@
       <h3>Future Work</h3>
       <p>
         We see potential in extending the concept beyond three players, adding
-        more nuanced social interactions, or incorporating real-time biometric
-        feedback to study the physical effects of digital ostracism. The
-        installation could also be adapted for educational settings to teach
+        more nuanced social interactionsto study the effects of cyber ostracism.
+        The installation could also be adapted for educational settings to teach
         about the psychological impact of social media dynamics.
       </p>
     </article>
@@ -63,9 +65,10 @@
     <h3>References</h3>
     <ul>
       <li>
-        Williams, K. D., &amp; Jarvis, B. (2006). Cyberball: A program for use in
-        research on interpersonal ostracism and acceptance. <em>Behavior Research
-        Methods</em>, <em>38</em>(1), 174–180.
+        Williams, K. D., &amp; Jarvis, B. (2006). Cyberball: A program for use
+        in research on interpersonal ostracism and acceptance. <em
+          >Behavior Research Methods</em
+        >, <em>38</em>(1), 174–180.
       </li>
       <li>
         Wolf, W., Levordashka, A., Ruff, J. R., Kraaijeveld, S., Lueckmann, J.,
@@ -77,8 +80,17 @@
 </section>
 
 <style>
-  .content-section { opacity: 0; transform: translateY(30px); transition: opacity 0.8s ease-out, transform 0.8s ease-out; }
-  .content-section.visible { opacity: 1; transform: translateY(0); }
+  .content-section {
+    opacity: 0;
+    transform: translateY(30px);
+    transition:
+      opacity 0.8s ease-out,
+      transform 0.8s ease-out;
+  }
+  .content-section.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
 
   .reflection-grid {
     display: grid;
@@ -103,8 +115,12 @@
     animation: bob 2s ease-in-out infinite;
   }
 
-  .divider-egg:nth-child(2) { animation-delay: 0.3s; }
-  .divider-egg:nth-child(3) { animation-delay: 0.6s; }
+  .divider-egg:nth-child(2) {
+    animation-delay: 0.3s;
+  }
+  .divider-egg:nth-child(3) {
+    animation-delay: 0.6s;
+  }
 
   .references {
     max-width: 750px;
@@ -137,6 +153,8 @@
   }
 
   @media (max-width: 768px) {
-    .reflection-grid { grid-template-columns: 1fr; }
+    .reflection-grid {
+      grid-template-columns: 1fr;
+    }
   }
 </style>

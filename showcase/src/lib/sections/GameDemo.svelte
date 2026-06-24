@@ -7,28 +7,28 @@
   const slides = [
     {
       src: `${base}assets/screenshots/sc_start.png`,
-      alt: 'Start screen — title splash',
-      label: 'Start Screen',
-      desc: 'Each player taps to begin. The game assigns one of three ostrich colors.'
+      alt: "Start screen — title splash",
+      label: "Start Screen",
+      desc: "Each player taps the screen to enter the game.",
     },
     {
       src: `${base}assets/screenshots/sc_lobby.png`,
-      alt: 'Lobby — all players ready up',
-      label: 'Lobby',
-      desc: 'Players ready up and learn the rules: Share with a neighbor to collect eggs together.'
+      alt: "Lobby — all players ready up",
+      label: "Lobby",
+      desc: "Players choose a color and ready up and learn the rules.",
     },
     {
       src: `${base}assets/screenshots/sc_game.png`,
-      alt: 'Gameplay — sharing eggs',
-      label: 'Gameplay (Trust Phase)',
-      desc: 'In the trust phase (rounds 1–6), the game plays honestly. Every player sees real actions. Partners who share with each other each gain an egg.'
+      alt: "Gameplay — sharing eggs",
+      label: "Gameplay",
+      desc: "During the game, partners who share with each other each gain an egg. The objective is to collect as many eggs as possible.",
     },
     {
       src: `${base}assets/screenshots/sc_gameover.png`,
-      alt: 'Game Over — fake results screen',
-      label: 'End Screen',
-      desc: 'After 12 rounds, each player sees their results — or what they <em>think</em> are their results.'
-    }
+      alt: "Game Over — results screen",
+      label: "End Screen",
+      desc: "After 12 rounds, each player sees their results, or what they <em>think</em> are their results.",
+    },
   ];
 
   function nextSlide() {
@@ -52,16 +52,22 @@
   <h2>The Game: Odd Bird Out</h2>
 
   <p class="section-intro">
-    Three players stand around a central triangular structure, each at their
-    own tablet, separated by panels so nobody can see the others' screens.
-    Players take the role of <strong>ostriches collecting eggs</strong>. Every
-    round, each player chooses a neighbor to share with. Mutual pairs gain
-    eggs — but someone might get left out.
+    Three players stand around a central triangular structure, each with their
+    own Android tablet in front of them, separated by panels so nobody can see
+    the others' screens. Players take the role of <strong
+      >ostriches collecting eggs</strong
+    >. Every round, each player chooses a neighbor to share with. Mutual pairs
+    gain eggs and if everyone plays right, everyone can end up with an equal
+    amount of eggs. It might also happen that someone gets left out.
   </p>
 
   <div class="demo-layout">
     <div class="carousel">
-      <button class="carousel-btn" onclick={prevSlide} aria-label="Previous slide">&lsaquo;</button>
+      <button
+        class="carousel-btn"
+        onclick={prevSlide}
+        aria-label="Previous slide">&lsaquo;</button
+      >
 
       <div class="slide-frame">
         <img
@@ -78,29 +84,43 @@
             <button
               class="dot"
               class:active={i === currentSlide}
-              onclick={() => currentSlide = i}
+              onclick={() => (currentSlide = i)}
               aria-label="Go to slide {i + 1}"
             ></button>
           {/each}
         </div>
       </div>
 
-      <button class="carousel-btn" onclick={nextSlide} aria-label="Next slide">&rsaquo;</button>
+      <button class="carousel-btn" onclick={nextSlide} aria-label="Next slide"
+        >&rsaquo;</button
+      >
     </div>
 
     <aside class="egg-counter pixel-card">
       <div class="ostrich-row" aria-hidden="true">
-        <img src="{base}assets/sprites/ostrich blue.png" alt="" class="mini-ostrich" />
-        <img src="{base}assets/sprites/ostrich green.png" alt="" class="mini-ostrich" />
-        <img src="{base}assets/sprites/ostrich orange.png" alt="" class="mini-ostrich" />
+        <img
+          src="{base}assets/sprites/ostrich blue.png"
+          alt=""
+          class="mini-ostrich"
+        />
+        <img
+          src="{base}assets/sprites/ostrich green.png"
+          alt=""
+          class="mini-ostrich"
+        />
+        <img
+          src="{base}assets/sprites/ostrich orange.png"
+          alt=""
+          class="mini-ostrich"
+        />
       </div>
 
       <h3>Egg Counter</h3>
       <p class="counter-label">How it works:</p>
       <p class="counter-desc">
-        If two players <strong>share with each other</strong>, they each gain
-        +1 egg. If nobody forms a mutual pair, <strong>everyone gets +1</strong>.
-        Players who hide gain nothing.
+        If two players <strong>share with each other</strong>, they each gain +1
+        egg. If nobody forms a mutual pair,
+        <strong>everyone gets +1</strong>.
       </p>
 
       <div class="counter-display">
@@ -113,15 +133,17 @@
           <img src="{base}assets/sprites/1egg.png" alt="" class="btn-egg" />
           Share (+1)
         </button>
-        <button class="pixel-btn reset" onclick={resetEggs}>
-          Reset
-        </button>
+        <button class="pixel-btn reset" onclick={resetEggs}> Reset </button>
       </div>
 
       <div class="decorative-eggs" aria-hidden="true">
         {#each Array(eggs > 6 ? 6 : eggs) as _}
-          <img src="{base}assets/sprites/1egg.png" alt="" class="float-egg"
-            style="animation-delay: {Math.random() * 2}s" />
+          <img
+            src="{base}assets/sprites/1egg.png"
+            alt=""
+            class="float-egg"
+            style="animation-delay: {Math.random() * 2}s"
+          />
         {/each}
       </div>
     </aside>
@@ -138,7 +160,9 @@
   .content-section {
     opacity: 0;
     transform: translateY(30px);
-    transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+    transition:
+      opacity 0.8s ease-out,
+      transform 0.8s ease-out;
   }
   .content-section.visible {
     opacity: 1;
@@ -172,7 +196,9 @@
     font-family: var(--pixel);
     cursor: pointer;
     padding: 8px 16px;
-    transition: color 0.2s, border-color 0.2s;
+    transition:
+      color 0.2s,
+      border-color 0.2s;
     flex-shrink: 0;
   }
 
@@ -224,7 +250,9 @@
     background: transparent;
     cursor: pointer;
     padding: 0;
-    transition: background 0.2s, border-color 0.2s;
+    transition:
+      background 0.2s,
+      border-color 0.2s;
   }
 
   .dot.active {
@@ -249,8 +277,12 @@
     animation: bob 2s ease-in-out infinite;
   }
 
-  .mini-ostrich:nth-child(2) { animation-delay: 0.3s; }
-  .mini-ostrich:nth-child(3) { animation-delay: 0.6s; }
+  .mini-ostrich:nth-child(2) {
+    animation-delay: 0.3s;
+  }
+  .mini-ostrich:nth-child(3) {
+    animation-delay: 0.6s;
+  }
 
   .counter-label {
     font-family: var(--pixel);
@@ -274,7 +306,7 @@
     font-size: 56px;
     color: var(--gold);
     display: block;
-    text-shadow: 3px 3px 0px rgba(0,0,0,0.5);
+    text-shadow: 3px 3px 0px rgba(0, 0, 0, 0.5);
   }
 
   .egg-label {
@@ -295,7 +327,7 @@
     font-size: 12px;
     background: var(--green);
     color: #fff;
-    border: 3px solid #2E7D32;
+    border: 3px solid #2e7d32;
     padding: 10px 16px;
     cursor: pointer;
     display: flex;
@@ -307,7 +339,7 @@
 
   .pixel-btn:active {
     transform: translate(2px, 2px);
-    box-shadow: 1px 1px 0px rgba(0,0,0,0.4);
+    box-shadow: 1px 1px 0px rgba(0, 0, 0, 0.4);
   }
 
   .pixel-btn.reset {
@@ -339,8 +371,12 @@
     animation: bob 2s ease-in-out infinite;
   }
 
-  .divider-heart:nth-child(2) { animation-delay: 0.3s; }
-  .divider-heart:nth-child(3) { animation-delay: 0.6s; }
+  .divider-heart:nth-child(2) {
+    animation-delay: 0.3s;
+  }
+  .divider-heart:nth-child(3) {
+    animation-delay: 0.6s;
+  }
 
   @media (max-width: 768px) {
     .demo-layout {

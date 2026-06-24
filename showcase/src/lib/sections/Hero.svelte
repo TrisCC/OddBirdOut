@@ -4,7 +4,10 @@
 </script>
 
 <section class="hero">
-  <div class="hero-bg" style="background-image: url('{base}assets/bg_day.png')"></div>
+  <div
+    class="hero-bg"
+    style="background-image: url('{base}assets/bg_day.png')"
+  ></div>
   <div class="starfield" aria-hidden="true"></div>
 
   <div class="hero-content fade-in visible">
@@ -16,7 +19,9 @@
 
     <h2 class="subtitle">An Exploration of Cyber Ostracism</h2>
 
-    <p class="authors">By Tristan Cotino, Aidan Ferentinos &amp; Huub Speijkers</p>
+    <p class="authors">
+      Tristan Cotino &amp; Aidan Ferentinos &amp; Huub Speijkers
+    </p>
 
     <button class="scroll-btn" onclick={onScrollClick}>
       <span>Discover the story</span>
@@ -54,7 +59,7 @@
   }
 
   .hero-bg::after {
-    content: '';
+    content: "";
     position: absolute;
     inset: 0;
     background: linear-gradient(
@@ -70,19 +75,22 @@
     position: absolute;
     inset: 0;
     z-index: 1;
-    background-image:
-      radial-gradient(2px 2px at 10% 20%, rgba(255,255,255,0.8), transparent),
-      radial-gradient(1px 1px at 25% 60%, rgba(255,255,255,0.6), transparent),
-      radial-gradient(2px 2px at 45% 15%, rgba(255,255,255,0.7), transparent),
-      radial-gradient(1px 1px at 60% 40%, rgba(255,255,255,0.5), transparent),
-      radial-gradient(2px 2px at 75% 70%, rgba(255,255,255,0.8), transparent),
-      radial-gradient(1px 1px at 85% 25%, rgba(255,255,255,0.6), transparent),
-      radial-gradient(2px 2px at 90% 55%, rgba(255,255,255,0.7), transparent),
-      radial-gradient(1px 1px at 15% 80%, rgba(255,255,255,0.5), transparent),
-      radial-gradient(2px 2px at 35% 35%, rgba(255,255,255,0.6), transparent),
-      radial-gradient(1px 1px at 55% 85%, rgba(255,255,255,0.5), transparent),
-      radial-gradient(2px 2px at 70% 10%, rgba(255,255,255,0.7), transparent),
-      radial-gradient(1px 1px at 5% 45%, rgba(255,255,255,0.4), transparent);
+    background-image: radial-gradient(
+        2px 2px at 10% 20%,
+        rgba(255, 255, 255, 0.8),
+        transparent
+      ),
+      radial-gradient(1px 1px at 25% 60%, rgba(255, 255, 255, 0.6), transparent),
+      radial-gradient(2px 2px at 45% 15%, rgba(255, 255, 255, 0.7), transparent),
+      radial-gradient(1px 1px at 60% 40%, rgba(255, 255, 255, 0.5), transparent),
+      radial-gradient(2px 2px at 75% 70%, rgba(255, 255, 255, 0.8), transparent),
+      radial-gradient(1px 1px at 85% 25%, rgba(255, 255, 255, 0.6), transparent),
+      radial-gradient(2px 2px at 90% 55%, rgba(255, 255, 255, 0.7), transparent),
+      radial-gradient(1px 1px at 15% 80%, rgba(255, 255, 255, 0.5), transparent),
+      radial-gradient(2px 2px at 35% 35%, rgba(255, 255, 255, 0.6), transparent),
+      radial-gradient(1px 1px at 55% 85%, rgba(255, 255, 255, 0.5), transparent),
+      radial-gradient(2px 2px at 70% 10%, rgba(255, 255, 255, 0.7), transparent),
+      radial-gradient(1px 1px at 5% 45%, rgba(255, 255, 255, 0.4), transparent);
     animation: twinkle 3s ease-in-out infinite;
   }
 
@@ -169,6 +177,9 @@
   }
 
   @media (max-width: 768px) {
-    .ostrich-left, .ostrich-right { display: none; }
+    .ostrich-left,
+    .ostrich-right {
+      display: none;
+    }
   }
 </style>
