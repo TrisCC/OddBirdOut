@@ -19,8 +19,7 @@ const OSTRICH_COLORS = [
 
 const CAROUSEL_SLIDES = [
     {
-        title: 'Choose a Neighbor',
-        desc: 'Each round, pick a player on your left or right',
+        desc: 'Choose a neighbor to pair with — left or right',
         render(scene, container) {
             const btnScale = 0.42;
             const labelStyle = { fontFamily: '"Press Start 2P"', fontSize: '8px', color: '#FFFFFF', padding: { top: 2, bottom: 2 } };
@@ -41,16 +40,14 @@ const CAROUSEL_SLIDES = [
         },
     },
     {
-        title: 'Partner Up to Collect Eggs',
-        desc: 'If your partner also chooses you, you both gain an egg',
+        desc: 'If your partner chooses you too, you both gain an egg',
         render(scene, container) {
             const egg = scene.add.image(0, 0, 'egg').setScale(4);
             container.add(egg);
         },
     },
     {
-        title: '12 Rounds',
-        desc: 'Make your choice before time runs out each round',
+        desc: '12 rounds — choose before time runs out',
         render(scene, container) {
             const roundStyle = { fontFamily: '"Press Start 2P"', fontSize: '11px', color: '#FFD700', padding: { top: 3, bottom: 3 } };
             const roundText = scene.add.text(0, -18, 'Round  4 / 12', roundStyle).setOrigin(0.5);
@@ -159,7 +156,7 @@ export class Lobby extends Phaser.Scene {
 
         this.add.text(w / 2, 575, 'How to play', {
             fontFamily: '"Press Start 2P"',
-            fontSize: '13px',
+            fontSize: '16px',
             color: '#FFD700',
             stroke: '#000000',
             strokeThickness: 3,
@@ -497,7 +494,7 @@ export class Lobby extends Phaser.Scene {
         this.carousel = this.add.container(w / 2, CAROUSEL_Y);
         const bg = this.add.graphics();
         bg.fillStyle(0x000000, 0.45);
-        bg.fillRoundedRect(-340, -110, 680, 220, 18);
+        bg.fillRoundedRect(-480, -110, 960, 220, 18);
         this.carousel.add(bg);
 
         this.slideContent = this.add.container(0, -20);
@@ -545,7 +542,7 @@ export class Lobby extends Phaser.Scene {
     isInCarousel(pointer) {
         const cx = this.carousel.x;
         const cy = this.carousel.y;
-        return pointer.x > cx - 350 && pointer.x < cx + 350 &&
+        return pointer.x > cx - 480 && pointer.x < cx + 480 &&
                pointer.y > cy - 120 && pointer.y < cy + 120;
     }
 
@@ -619,12 +616,8 @@ export class Lobby extends Phaser.Scene {
                 const slide = this.carouselSlides[this.carouselIndex];
                 slide.render(this, this.slideContent);
 
-                const titleStyle = { fontFamily: '"Press Start 2P"', fontSize: '10px', color: '#FFFFFF', padding: { top: 3, bottom: 3 } };
-                const title = this.add.text(0, 72, slide.title, titleStyle).setOrigin(0.5);
-                this.slideContent.add(title);
-
-                const descStyle = { fontFamily: '"Press Start 2P"', fontSize: '7px', color: '#CCCCCC', padding: { top: 2, bottom: 2 } };
-                const desc = this.add.text(0, 88, slide.desc, descStyle).setOrigin(0.5);
+                const descStyle = { fontFamily: '"Press Start 2P"', fontSize: '14px', color: '#FFFFFF', padding: { top: 3, bottom: 3 } };
+                const desc = this.add.text(0, 82, slide.desc, descStyle).setOrigin(0.5).setWordWrapWidth(880);
                 this.slideContent.add(desc);
 
                 this.updateDots();
@@ -651,12 +644,8 @@ export class Lobby extends Phaser.Scene {
         const slide = this.carouselSlides[this.carouselIndex];
         slide.render(this, this.slideContent);
 
-        const titleStyle = { fontFamily: '"Press Start 2P"', fontSize: '10px', color: '#FFFFFF', padding: { top: 3, bottom: 3 } };
-        const title = this.add.text(0, 72, slide.title, titleStyle).setOrigin(0.5);
-        this.slideContent.add(title);
-
-        const descStyle = { fontFamily: '"Press Start 2P"', fontSize: '7px', color: '#CCCCCC', padding: { top: 2, bottom: 2 } };
-        const desc = this.add.text(0, 88, slide.desc, descStyle).setOrigin(0.5);
+        const descStyle = { fontFamily: '"Press Start 2P"', fontSize: '14px', color: '#FFFFFF', padding: { top: 3, bottom: 3 } };
+        const desc = this.add.text(0, 82, slide.desc, descStyle).setOrigin(0.5).setWordWrapWidth(880);
         this.slideContent.add(desc);
 
         this.updateDots();

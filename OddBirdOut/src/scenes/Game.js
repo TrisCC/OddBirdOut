@@ -160,7 +160,7 @@ export class Game extends Phaser.Scene {
 
     buildActionButtons() {
         const sideX = [250, 1030];
-        const by = 590;
+        const by = 520;
         const others = SIDE_ORDER[this.playerId];
 
         this.btnShareLeft = this.createButton(sideX[0], by, 'btn_share', 'Pair', 'share', others[0]);
@@ -177,8 +177,10 @@ export class Game extends Phaser.Scene {
 
         const labelText = this.add.text(0, 0, label, {
             fontFamily: '"Press Start 2P"',
-            fontSize: '13px',
+            fontSize: '14px',
             color: '#FFFFFF',
+            stroke: '#000000',
+            strokeThickness: 4,
         }).setOrigin(0.5);
         container.add(labelText);
 

@@ -67,14 +67,14 @@ export class Reveal extends Phaser.Scene {
         const whatYouWereShown = this.gameEndData.whatYouWereShown || [];
         const phase1LastRound = whatYouWereShown.length > 0 ? whatYouWereShown[0].round - 1 : 4;
 
-        this.add.text(w / 2, 170, `After round ${phase1LastRound}, we made the other two\nplayers exclude you, regardless of their input.\nWe did the same to the others.`, {
+        this.add.text(w / 2, 200, `After round ${phase1LastRound}, we made the other two\nplayers exclude you, regardless of their input.\nWe did the same to the others.`, {
             fontFamily: '"Press Start 2P"',
-            fontSize: '14px',
+            fontSize: '22px',
             color: '#FFFFFF',
             stroke: '#000000',
             strokeThickness: 5,
             align: 'center',
-            lineSpacing: 10,
+            lineSpacing: 14,
         }).setOrigin(0.5);
 
         this.showTrueResults(w, h);
@@ -99,7 +99,7 @@ export class Reveal extends Phaser.Scene {
         };
 
         const xPositions = [w * 0.22, w * 0.5, w * 0.78];
-        const baseY = 390;
+        const baseY = 440;
 
         for (let i = 0; i < 3; i++) {
             const id = playerOrder[i];

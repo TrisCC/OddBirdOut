@@ -151,6 +151,8 @@ export class GameOver extends Phaser.Scene {
         const bg = this.add.graphics();
         bg.fillStyle(0x2E7D32);
         bg.fillRoundedRect(btnX - btnW / 2, btnY - btnH / 2, btnW, btnH, radius);
+        bg.lineStyle(3, 0x000000, 1);
+        bg.strokeRoundedRect(btnX - btnW / 2, btnY - btnH / 2, btnW, btnH, radius);
         bg.fillStyle(0x000000, 0.12);
         bg.fillRoundedRect(btnX - btnW / 2 + 4, btnY - btnH / 2 + 4,
             btnW - 8, btnH / 2 - 4, { tl: 12, tr: 12, bl: 0, br: 0 });
@@ -159,6 +161,8 @@ export class GameOver extends Phaser.Scene {
             fontFamily: '"Press Start 2P"',
             fontSize: '20px',
             color: '#FFFFFF',
+            stroke: '#000000',
+            strokeThickness: 4,
         }).setOrigin(0.5);
 
         const hitZone = this.add.zone(btnX, btnY, btnW, btnH)
