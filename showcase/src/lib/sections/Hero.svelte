@@ -1,4 +1,5 @@
 <script>
+  import SpriteAnim from '../SpriteAnim.svelte';
   let { onScrollClick } = $props();
   const base = import.meta.env.BASE_URL;
 </script>
@@ -30,10 +31,10 @@
   </div>
 
   <div class="ostrich-left" aria-hidden="true">
-    <img src="{base}assets/sprites/ostrich green.png" alt="" />
+    <SpriteAnim src="{base}assets/sprites/ostrich green.png" frames={3} fps={4} alt="" class="ostrich-sprite" />
   </div>
   <div class="ostrich-right" aria-hidden="true">
-    <img src="{base}assets/sprites/ostrich orange.png" alt="" />
+    <SpriteAnim src="{base}assets/sprites/ostrich orange.png" frames={3} fps={4} alt="" class="ostrich-sprite" />
   </div>
 </section>
 
@@ -170,10 +171,9 @@
     animation-delay: 0.5s;
   }
 
-  .ostrich-left img,
-  .ostrich-right img {
+  :global(.ostrich-sprite) {
     width: clamp(50px, 8vw, 100px);
-    image-rendering: pixelated;
+    height: clamp(50px, 8vw, 100px);
   }
 
   @media (max-width: 768px) {

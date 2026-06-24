@@ -1,4 +1,5 @@
 <script>
+  import SpriteAnim from '../SpriteAnim.svelte';
   let { visible } = $props();
   const base = import.meta.env.BASE_URL;
 </script>
@@ -56,7 +57,7 @@
   </div>
 
   <div class="decorative-divider" aria-hidden="true">
-    <img src="{base}assets/sprites/1egg.png" alt="" class="divider-egg" />
+    <SpriteAnim src="{base}assets/sprites/1egg.png" frames={4} fps={6} alt="" class="divider-egg" />
     <img src="{base}assets/sprites/2egg.png" alt="" class="divider-egg" />
     <img src="{base}assets/sprites/3egg.png" alt="" class="divider-egg" />
   </div>
@@ -109,16 +110,18 @@
     line-height: 1.6;
   }
 
-  .divider-egg {
+  :global(.divider-egg) {
     width: 28px;
+    height: 28px;
     image-rendering: pixelated;
     animation: bob 2s ease-in-out infinite;
+    vertical-align: middle;
   }
 
-  .divider-egg:nth-child(2) {
+  :global(.divider-egg:nth-child(2)) {
     animation-delay: 0.3s;
   }
-  .divider-egg:nth-child(3) {
+  :global(.divider-egg:nth-child(3)) {
     animation-delay: 0.6s;
   }
 

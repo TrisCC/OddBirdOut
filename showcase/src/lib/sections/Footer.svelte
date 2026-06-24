@@ -33,7 +33,7 @@
       <p>
         Created by Tristan Cotino, Aidan Ferentinos and Huub Speijkers for the
         course Science to Experience which is part of the Master Creative
-        Intelligence and Technology, June 2026
+        Intelligence and Technology at Leiden University, June 2026
       </p>
     </div>
   </div>

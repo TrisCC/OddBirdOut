@@ -1,4 +1,5 @@
 <script>
+  import SpriteAnim from '../SpriteAnim.svelte';
   let { visible } = $props();
   const base = import.meta.env.BASE_URL;
 </script>
@@ -67,21 +68,9 @@
   </div>
 
   <div class="decorative-divider" aria-hidden="true">
-    <img
-      src="{base}assets/sprites/blue ostrich in sand.png"
-      alt=""
-      class="divider-sprite"
-    />
-    <img
-      src="{base}assets/sprites/red ostrich in sand.png"
-      alt=""
-      class="divider-sprite"
-    />
-    <img
-      src="{base}assets/sprites/green ostrich in sand.png"
-      alt=""
-      class="divider-sprite"
-    />
+    <SpriteAnim src="{base}assets/sprites/blue ostrich in sand.png" frames={6} fps={6} alt="" class="divider-sprite" />
+    <SpriteAnim src="{base}assets/sprites/red ostrich in sand.png" frames={6} fps={6} alt="" class="divider-sprite" />
+    <SpriteAnim src="{base}assets/sprites/green ostrich in sand.png" frames={6} fps={6} alt="" class="divider-sprite" />
   </div>
 
   <p class="bridge">
@@ -139,28 +128,20 @@
     font-size: 16px;
   }
 
-  .insight {
-    border-left: 4px solid var(--gold);
-    padding-left: 16px;
-    margin-top: 16px;
-    color: var(--gold);
-    font-size: 15px;
-  }
-
-  .divider-sprite {
+  :global(.divider-sprite) {
     width: 60px;
-    image-rendering: pixelated;
+    height: 60px;
     animation: bob 2s ease-in-out infinite;
     animation-delay: var(--bob-delay, 0s);
   }
 
-  .divider-sprite:nth-child(1) {
+  :global(.divider-sprite:nth-child(1)) {
     --bob-delay: 0s;
   }
-  .divider-sprite:nth-child(2) {
+  :global(.divider-sprite:nth-child(2)) {
     --bob-delay: 0.4s;
   }
-  .divider-sprite:nth-child(3) {
+  :global(.divider-sprite:nth-child(3)) {
     --bob-delay: 0.8s;
   }
 

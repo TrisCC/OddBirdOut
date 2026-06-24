@@ -1,4 +1,5 @@
 <script>
+  import SpriteAnim from "../SpriteAnim.svelte";
   let { visible } = $props();
   let currentSlide = $state(0);
   let eggs = $state(0);
@@ -98,18 +99,24 @@
 
     <aside class="egg-counter pixel-card">
       <div class="ostrich-row" aria-hidden="true">
-        <img
+        <SpriteAnim
           src="{base}assets/sprites/ostrich blue.png"
+          frames={3}
+          fps={4}
           alt=""
           class="mini-ostrich"
         />
-        <img
+        <SpriteAnim
           src="{base}assets/sprites/ostrich green.png"
+          frames={3}
+          fps={4}
           alt=""
           class="mini-ostrich"
         />
-        <img
+        <SpriteAnim
           src="{base}assets/sprites/ostrich orange.png"
+          frames={3}
+          fps={4}
           alt=""
           class="mini-ostrich"
         />
@@ -130,7 +137,13 @@
 
       <div class="counter-actions">
         <button class="pixel-btn" onclick={addEgg}>
-          <img src="{base}assets/sprites/1egg.png" alt="" class="btn-egg" />
+          <SpriteAnim
+            src="{base}assets/sprites/1egg.png"
+            frames={4}
+            fps={6}
+            alt=""
+            class="btn-egg"
+          />
           Share (+1)
         </button>
         <button class="pixel-btn reset" onclick={resetEggs}> Reset </button>
@@ -138,8 +151,10 @@
 
       <div class="decorative-eggs" aria-hidden="true">
         {#each Array(eggs > 6 ? 6 : eggs) as _}
-          <img
+          <SpriteAnim
             src="{base}assets/sprites/1egg.png"
+            frames={4}
+            fps={6}
             alt=""
             class="float-egg"
             style="animation-delay: {Math.random() * 2}s"
@@ -150,9 +165,27 @@
   </div>
 
   <div class="decorative-divider" aria-hidden="true">
-    <img src="{base}assets/sprites/heart.png" alt="" class="divider-heart" />
-    <img src="{base}assets/sprites/heart.png" alt="" class="divider-heart" />
-    <img src="{base}assets/sprites/heart.png" alt="" class="divider-heart" />
+    <SpriteAnim
+      src="{base}assets/sprites/heart.png"
+      frames={4}
+      fps={6}
+      alt=""
+      class="divider-heart"
+    />
+    <SpriteAnim
+      src="{base}assets/sprites/heart.png"
+      frames={4}
+      fps={6}
+      alt=""
+      class="divider-heart"
+    />
+    <SpriteAnim
+      src="{base}assets/sprites/heart.png"
+      frames={4}
+      fps={6}
+      alt=""
+      class="divider-heart"
+    />
   </div>
 </section>
 
@@ -271,16 +304,16 @@
     margin-bottom: 20px;
   }
 
-  .mini-ostrich {
+  :global(.mini-ostrich) {
     width: 50px;
-    image-rendering: pixelated;
+    height: 50px;
     animation: bob 2s ease-in-out infinite;
   }
 
-  .mini-ostrich:nth-child(2) {
+  :global(.mini-ostrich:nth-child(2)) {
     animation-delay: 0.3s;
   }
-  .mini-ostrich:nth-child(3) {
+  :global(.mini-ostrich:nth-child(3)) {
     animation-delay: 0.6s;
   }
 
@@ -347,9 +380,9 @@
     border-color: var(--text-dim);
   }
 
-  .btn-egg {
+  :global(.btn-egg) {
     width: 20px;
-    image-rendering: pixelated;
+    height: 20px;
   }
 
   .decorative-eggs {
@@ -359,22 +392,22 @@
     flex-wrap: wrap;
   }
 
-  .float-egg {
+  :global(.float-egg) {
     width: 24px;
-    image-rendering: pixelated;
+    height: 24px;
     animation: bob 2s ease-in-out infinite;
   }
 
-  .divider-heart {
+  :global(.divider-heart) {
     width: 32px;
-    image-rendering: pixelated;
+    height: 32px;
     animation: bob 2s ease-in-out infinite;
   }
 
-  .divider-heart:nth-child(2) {
+  :global(.divider-heart:nth-child(2)) {
     animation-delay: 0.3s;
   }
-  .divider-heart:nth-child(3) {
+  :global(.divider-heart:nth-child(3)) {
     animation-delay: 0.6s;
   }
 
