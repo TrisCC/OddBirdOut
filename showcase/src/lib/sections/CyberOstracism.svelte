@@ -1,5 +1,6 @@
 <script>
   let { visible } = $props();
+  const base = import.meta.env.BASE_URL;
 </script>
 
 <section id="cyber-ostracism" class="content-section {visible ? 'visible' : ''}">
@@ -65,9 +66,9 @@
   </div>
 
   <div class="decorative-divider" aria-hidden="true">
-    <img src="/assets/sprites/blue ostrich in sand.png" alt="" class="divider-sprite" />
-    <img src="/assets/sprites/red ostrich in sand.png" alt="" class="divider-sprite" />
-    <img src="/assets/sprites/green ostrich in sand.png" alt="" class="divider-sprite" />
+    <img src="{base}assets/sprites/blue ostrich in sand.png" alt="" class="divider-sprite" />
+    <img src="{base}assets/sprites/red ostrich in sand.png" alt="" class="divider-sprite" />
+    <img src="{base}assets/sprites/green ostrich in sand.png" alt="" class="divider-sprite" />
   </div>
 
   <p class="bridge">

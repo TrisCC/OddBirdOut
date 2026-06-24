@@ -1,5 +1,6 @@
 <script>
   let { visible } = $props();
+  const base = import.meta.env.BASE_URL;
 </script>
 
 <section id="conclusion" class="content-section {visible ? 'visible' : ''}">
@@ -53,9 +54,9 @@
   </div>
 
   <div class="decorative-divider" aria-hidden="true">
-    <img src="/assets/sprites/1egg.png" alt="" class="divider-egg" />
-    <img src="/assets/sprites/2egg.png" alt="" class="divider-egg" />
-    <img src="/assets/sprites/3egg.png" alt="" class="divider-egg" />
+    <img src="{base}assets/sprites/1egg.png" alt="" class="divider-egg" />
+    <img src="{base}assets/sprites/2egg.png" alt="" class="divider-egg" />
+    <img src="{base}assets/sprites/3egg.png" alt="" class="divider-egg" />
   </div>
 
   <div class="references">

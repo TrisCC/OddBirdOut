@@ -1,15 +1,16 @@
 <script>
   let { onScrollClick } = $props();
+  const base = import.meta.env.BASE_URL;
 </script>
 
 <section class="hero">
-  <div class="hero-bg"></div>
+  <div class="hero-bg" style="background-image: url('{base}assets/bg_day.png')"></div>
   <div class="starfield" aria-hidden="true"></div>
 
   <div class="hero-content fade-in visible">
     <img
       class="title-img"
-      src="/assets/obo-title.png"
+      src="{base}assets/obo-title.png"
       alt="Odd Bird Out"
     />
 
@@ -24,10 +25,10 @@
   </div>
 
   <div class="ostrich-left" aria-hidden="true">
-    <img src="/assets/sprites/ostrich green.png" alt="" />
+    <img src="{base}assets/sprites/ostrich green.png" alt="" />
   </div>
   <div class="ostrich-right" aria-hidden="true">
-    <img src="/assets/sprites/ostrich orange.png" alt="" />
+    <img src="{base}assets/sprites/ostrich orange.png" alt="" />
   </div>
 </section>
 
@@ -48,7 +49,7 @@
   .hero-bg {
     position: absolute;
     inset: 0;
-    background: url('/assets/bg_day.png') center / cover no-repeat;
+    background: center / cover no-repeat;
     z-index: 0;
   }
 

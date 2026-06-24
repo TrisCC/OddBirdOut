@@ -1,6 +1,7 @@
 <script>
   let { visible } = $props();
   let revealActive = $state(false);
+  const base = import.meta.env.BASE_URL;
 
   const illusions = [
     {
@@ -49,23 +50,23 @@
         <p>{ill.desc}</p>
         <div class="mini-scene" aria-hidden="true">
           {#if ill.id === 'A'}
-            <img src="/assets/sprites/ostrich green.png" alt="" class="scene-ostrich scene-ostrich--ally" />
-            <img src="/assets/sprites/heart.png" alt="" class="scene-heart" />
-            <img src="/assets/sprites/ostrich orange.png" alt="" class="scene-ostrich scene-ostrich--ally" />
+            <img src="{base}assets/sprites/ostrich green.png" alt="" class="scene-ostrich scene-ostrich--ally" />
+            <img src="{base}assets/sprites/heart.png" alt="" class="scene-heart" />
+            <img src="{base}assets/sprites/ostrich orange.png" alt="" class="scene-ostrich scene-ostrich--ally" />
             <div class="scene-gap"></div>
-            <img src="/assets/sprites/ostrich blue.png" alt="" class="scene-ostrich scene-ostrich--leftout" />
+            <img src="{base}assets/sprites/ostrich blue.png" alt="" class="scene-ostrich scene-ostrich--leftout" />
           {:else if ill.id === 'B'}
-            <img src="/assets/sprites/ostrich green.png" alt="" class="scene-ostrich scene-ostrich--ally" />
-            <img src="/assets/sprites/heart.png" alt="" class="scene-heart" />
-            <img src="/assets/sprites/ostrich orange.png" alt="" class="scene-ostrich scene-ostrich--ally" />
+            <img src="{base}assets/sprites/ostrich green.png" alt="" class="scene-ostrich scene-ostrich--ally" />
+            <img src="{base}assets/sprites/heart.png" alt="" class="scene-heart" />
+            <img src="{base}assets/sprites/ostrich orange.png" alt="" class="scene-ostrich scene-ostrich--ally" />
             <div class="scene-gap"></div>
-            <img src="/assets/sprites/ostrich blue.png" alt="" class="scene-ostrich scene-ostrich--leftout" />
+            <img src="{base}assets/sprites/ostrich blue.png" alt="" class="scene-ostrich scene-ostrich--leftout" />
           {:else}
-            <img src="/assets/sprites/ostrich green.png" alt="" class="scene-ostrich scene-ostrich--ally" />
-            <img src="/assets/sprites/heart.png" alt="" class="scene-heart" />
-            <img src="/assets/sprites/ostrich blue.png" alt="" class="scene-ostrich scene-ostrich--ally" />
+            <img src="{base}assets/sprites/ostrich green.png" alt="" class="scene-ostrich scene-ostrich--ally" />
+            <img src="{base}assets/sprites/heart.png" alt="" class="scene-heart" />
+            <img src="{base}assets/sprites/ostrich blue.png" alt="" class="scene-ostrich scene-ostrich--ally" />
             <div class="scene-gap"></div>
-            <img src="/assets/sprites/ostrich orange.png" alt="" class="scene-ostrich scene-ostrich--leftout" />
+            <img src="{base}assets/sprites/ostrich orange.png" alt="" class="scene-ostrich scene-ostrich--leftout" />
           {/if}
         </div>
       </div>
@@ -85,7 +86,7 @@
     {#if revealActive}
       <div class="truth-card pixel-card reveal-enter">
         <div class="reveal-screenshot">
-          <img src="/assets/screenshots/sc_reveal.png" alt="Reveal screen showing true scores" />
+          <img src="{base}assets/screenshots/sc_reveal.png" alt="Reveal screen showing true scores" />
         </div>
         <div class="truth-text">
           <h3>The Reveal</h3>

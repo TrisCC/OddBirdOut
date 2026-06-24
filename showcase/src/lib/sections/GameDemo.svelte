@@ -2,28 +2,29 @@
   let { visible } = $props();
   let currentSlide = $state(0);
   let eggs = $state(0);
+  const base = import.meta.env.BASE_URL;
 
   const slides = [
     {
-      src: '/assets/screenshots/sc_start.png',
+      src: `${base}assets/screenshots/sc_start.png`,
       alt: 'Start screen — title splash',
       label: 'Start Screen',
       desc: 'Each player taps to begin. The game assigns one of three ostrich colors.'
     },
     {
-      src: '/assets/screenshots/sc_lobby.png',
+      src: `${base}assets/screenshots/sc_lobby.png`,
       alt: 'Lobby — all players ready up',
       label: 'Lobby',
       desc: 'Players ready up and learn the rules: Share with a neighbor to collect eggs together.'
     },
     {
-      src: '/assets/screenshots/sc_game.png',
+      src: `${base}assets/screenshots/sc_game.png`,
       alt: 'Gameplay — sharing eggs',
       label: 'Gameplay (Trust Phase)',
       desc: 'In the trust phase (rounds 1–6), the game plays honestly. Every player sees real actions. Partners who share with each other each gain an egg.'
     },
     {
-      src: '/assets/screenshots/sc_gameover.png',
+      src: `${base}assets/screenshots/sc_gameover.png`,
       alt: 'Game Over — fake results screen',
       label: 'End Screen',
       desc: 'After 12 rounds, each player sees their results — or what they <em>think</em> are their results.'
@@ -89,9 +90,9 @@
 
     <aside class="egg-counter pixel-card">
       <div class="ostrich-row" aria-hidden="true">
-        <img src="/assets/sprites/ostrich blue.png" alt="" class="mini-ostrich" />
-        <img src="/assets/sprites/ostrich green.png" alt="" class="mini-ostrich" />
-        <img src="/assets/sprites/ostrich orange.png" alt="" class="mini-ostrich" />
+        <img src="{base}assets/sprites/ostrich blue.png" alt="" class="mini-ostrich" />
+        <img src="{base}assets/sprites/ostrich green.png" alt="" class="mini-ostrich" />
+        <img src="{base}assets/sprites/ostrich orange.png" alt="" class="mini-ostrich" />
       </div>
 
       <h3>Egg Counter</h3>
@@ -109,7 +110,7 @@
 
       <div class="counter-actions">
         <button class="pixel-btn" onclick={addEgg}>
-          <img src="/assets/sprites/1egg.png" alt="" class="btn-egg" />
+          <img src="{base}assets/sprites/1egg.png" alt="" class="btn-egg" />
           Share (+1)
         </button>
         <button class="pixel-btn reset" onclick={resetEggs}>
@@ -119,7 +120,7 @@
 
       <div class="decorative-eggs" aria-hidden="true">
         {#each Array(eggs > 6 ? 6 : eggs) as _}
-          <img src="/assets/sprites/1egg.png" alt="" class="float-egg"
+          <img src="{base}assets/sprites/1egg.png" alt="" class="float-egg"
             style="animation-delay: {Math.random() * 2}s" />
         {/each}
       </div>
@@ -127,9 +128,9 @@
   </div>
 
   <div class="decorative-divider" aria-hidden="true">
-    <img src="/assets/sprites/heart.png" alt="" class="divider-heart" />
-    <img src="/assets/sprites/heart.png" alt="" class="divider-heart" />
-    <img src="/assets/sprites/heart.png" alt="" class="divider-heart" />
+    <img src="{base}assets/sprites/heart.png" alt="" class="divider-heart" />
+    <img src="{base}assets/sprites/heart.png" alt="" class="divider-heart" />
+    <img src="{base}assets/sprites/heart.png" alt="" class="divider-heart" />
   </div>
 </section>
 
