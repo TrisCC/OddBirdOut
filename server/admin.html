@@ -341,6 +341,59 @@ td.ostracism-phase { color: #F44336; }
 }
 
 .reset-confirm { display: inline-block; }
+
+.volume-row {
+    display: flex;
+    align-items: center;
+    padding: 6px 0;
+    gap: 12px;
+}
+
+.volume-label {
+    width: 120px;
+    font-size: 12px;
+    color: #ccc;
+    flex-shrink: 0;
+}
+
+.volume-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    flex: 1;
+    height: 6px;
+    border-radius: 3px;
+    background: #1a1209;
+    outline: none;
+    cursor: pointer;
+}
+
+.volume-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #FFD700;
+    border: 2px solid #5D4037;
+    cursor: pointer;
+}
+
+.volume-slider::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #FFD700;
+    border: 2px solid #5D4037;
+    cursor: pointer;
+}
+
+.volume-val {
+    width: 36px;
+    font-size: 11px;
+    color: #FFD700;
+    text-align: right;
+    flex-shrink: 0;
+}
 </style>
 </head>
 <body>
@@ -393,6 +446,30 @@ td.ostracism-phase { color: #F44336; }
 <div class="panel panel-full" id="dmxPanel">
     <h3>DMX Lighting</h3>
     <div id="dmxContent"></div>
+</div>
+
+<div class="panel panel-full">
+    <h3>Audio Volume</h3>
+    <div class="volume-row">
+        <span class="volume-label">Lobby Music</span>
+        <input type="range" class="volume-slider" id="volLobbyMusic" min="0" max="100" value="70">
+        <span class="volume-val" id="volLobbyMusicVal">70%</span>
+    </div>
+    <div class="volume-row">
+        <span class="volume-label">Game Music</span>
+        <input type="range" class="volume-slider" id="volGameMusic" min="0" max="100" value="70">
+        <span class="volume-val" id="volGameMusicVal">70%</span>
+    </div>
+    <div class="volume-row">
+        <span class="volume-label">Reveal Music</span>
+        <input type="range" class="volume-slider" id="volRevealMusic" min="0" max="100" value="70">
+        <span class="volume-val" id="volRevealMusicVal">70%</span>
+    </div>
+    <div class="volume-row">
+        <span class="volume-label">Sound Effects</span>
+        <input type="range" class="volume-slider" id="volSfx" min="0" max="100" value="70">
+        <span class="volume-val" id="volSfxVal">70%</span>
+    </div>
 </div>
 
 <div class="panel panel-full">
@@ -472,6 +549,24 @@ let roundHistory = [];
 let gameEnded = false;
 let manualMute = true;
 
+const volLobbyMusic = document.getElementById('volLobbyMusic');
+const volGameMusic = document.getElementById('volGameMusic');
+const volRevealMusic = document.getElementById('volRevealMusic');
+const volSfx = document.getElementById('volSfx');
+const volLobbyMusicVal = document.getElementById('volLobbyMusicVal');
+const volGameMusicVal = document.getElementById('volGameMusicVal');
+const volRevealMusicVal = document.getElementById('volRevealMusicVal');
+const volSfxVal = document.getElementById('volSfxVal');
+
+let volumeSettings = {
+    lobbyMusic: 0.7,
+    gameMusic: 0.7,
+    revealMusic: 0.7,
+    sfx: 0.7,
+};
+let musicContext = null;
+let volumeSendTimer = null;
+
 const lobbyAudio = document.getElementById('lobbyAudio');
 const gameAudio  = document.getElementById('gameAudio');
 const ostrichAudios = [
@@ -497,6 +592,7 @@ function clearSfxTimers() {
 
 function playSfx(audio) {
     if (manualMute) return;
+    audio.volume = volumeSettings.sfx;
     audio.currentTime = 0;
     audio.play().catch(() => {});
 }
@@ -513,8 +609,10 @@ function updateMusicButton() {
 updateMusicButton(); // apply initial muted state to button
 
 function playMusic() {
-    if (gameOverMode) return;  // gameover music manages itself; don't override loop setting
+    if (gameOverMode) return;
     wantMusic = true;
+    musicContext = 'lobby';
+    applyVolumes();
     lobbyAudio.loop = true;
     if (manualMute) return;
     lobbyAudio.play().catch(() => {});
@@ -532,18 +630,70 @@ btnMusicToggle.addEventListener('click', () => {
     if (manualMute) {
         lobbyAudio.pause();
         lobbyAudio.currentTime = 0;
-        gameAudio.pause(); // keep currentTime so it resumes from same spot
+        gameAudio.pause();
     } else {
+        applyVolumes();
         if (wantMusic) lobbyAudio.play().catch(() => {});
         if (wantGameMusic && gameAudio.paused) gameAudio.play().catch(() => {});
     }
 });
 
+function applyVolumes() {
+    const s = volumeSettings;
+    lobbyAudio.volume = musicContext === 'reveal' ? s.revealMusic : s.lobbyMusic;
+    gameAudio.volume = s.gameMusic;
+    ostrichAudios.forEach(a => a.volume = s.sfx);
+    eggAudio.volume = s.sfx;
+}
+
+function sendVolumes() {
+    clearTimeout(volumeSendTimer);
+    volumeSendTimer = setTimeout(() => {
+        socket.emit('adminSetVolume', { ...volumeSettings });
+    }, 200);
+}
+
+function updateVolumeUI() {
+    const s = volumeSettings;
+    volLobbyMusic.value = Math.round(s.lobbyMusic * 100);
+    volGameMusic.value = Math.round(s.gameMusic * 100);
+    volRevealMusic.value = Math.round(s.revealMusic * 100);
+    volSfx.value = Math.round(s.sfx * 100);
+    volLobbyMusicVal.textContent = Math.round(s.lobbyMusic * 100) + '%';
+    volGameMusicVal.textContent = Math.round(s.gameMusic * 100) + '%';
+    volRevealMusicVal.textContent = Math.round(s.revealMusic * 100) + '%';
+    volSfxVal.textContent = Math.round(s.sfx * 100) + '%';
+}
+
+function onVolumeSliderChange(key, value) {
+    volumeSettings[key] = value / 100;
+    applyVolumes();
+    updateVolumeUI();
+    sendVolumes();
+}
+
+volLobbyMusic.addEventListener('input', () => {
+    volLobbyMusicVal.textContent = volLobbyMusic.value + '%';
+    onVolumeSliderChange('lobbyMusic', parseInt(volLobbyMusic.value));
+});
+volGameMusic.addEventListener('input', () => {
+    volGameMusicVal.textContent = volGameMusic.value + '%';
+    onVolumeSliderChange('gameMusic', parseInt(volGameMusic.value));
+});
+volRevealMusic.addEventListener('input', () => {
+    volRevealMusicVal.textContent = volRevealMusic.value + '%';
+    onVolumeSliderChange('revealMusic', parseInt(volRevealMusic.value));
+});
+volSfx.addEventListener('input', () => {
+    volSfxVal.textContent = volSfx.value + '%';
+    onVolumeSliderChange('sfx', parseInt(volSfx.value));
+});
+
 // Unlock autoplay on first interaction (browser policy)
 document.addEventListener('click', () => {
     if (manualMute) return;
-    if (wantMusic && lobbyAudio.paused) lobbyAudio.play().catch(() => {});
-    if (wantGameMusic && gameAudio.paused) gameAudio.play().catch(() => {});
+    if (wantMusic && lobbyAudio.paused) { applyVolumes(); lobbyAudio.play().catch(() => {}); }
+    if (wantGameMusic && gameAudio.paused) { applyVolumes(); gameAudio.play().catch(() => {}); }
 });
 
 // Night fade (1200ms) + 3 actions×1800ms + 500ms tail = 7100ms to day-fade start
@@ -551,10 +701,11 @@ const DAY_FADE_DELAY_MS = 7100;
 let gameStarted = false;
 
 socket.on('roundStart', (data) => {
-    // Only auto-start in-game music on the very first round of a game
     if (!gameStarted) {
         gameStarted = true;
         wantGameMusic = true;
+        musicContext = 'game';
+        applyVolumes();
         if (!manualMute) gameAudio.play().catch(() => {});
     }
 });
@@ -574,6 +725,11 @@ socket.on('disconnect', () => {
 });
 
 socket.on('adminState', (data) => {
+    if (data.volume) {
+        volumeSettings = { ...volumeSettings, ...data.volume };
+        updateVolumeUI();
+        applyVolumes();
+    }
     renderConnections(data);
     renderGameState(data);
     renderTrueScores(data);
@@ -601,6 +757,13 @@ socket.on('adminState', (data) => {
     }
 });
 
+socket.on('adminVolume', (data) => {
+    if (!data) return;
+    volumeSettings = { ...volumeSettings, ...data };
+    updateVolumeUI();
+    applyVolumes();
+});
+
 socket.on('adminRoundResult', (data) => {
     if (data.phase === 'ended') {
         adminPrevScores = { A: 0, B: 0, C: 0 };
@@ -615,6 +778,8 @@ socket.on('adminRoundResult', (data) => {
             gameAudio.pause();
             gameAudio.currentTime = 0;
             wantMusic = true;
+            musicContext = 'reveal';
+            applyVolumes();
             lobbyAudio.loop = false;
             lobbyAudio.currentTime = 0;
             if (!manualMute) lobbyAudio.play().catch(() => {});
@@ -671,6 +836,8 @@ function resetStartBtn(btn, label, color) {
 btnStart.addEventListener('click', () => {
     socket.emit('adminStart');
     stopMusic();
+    musicContext = 'game';
+    applyVolumes();
     autoStartCountdownEl.style.display = 'none';
     btnStart.disabled = true;
     btnStart.textContent = 'STARTING...';
@@ -680,6 +847,8 @@ btnStart.addEventListener('click', () => {
 btnForceStart.addEventListener('click', () => {
     socket.emit('adminForceStart');
     stopMusic();
+    musicContext = 'game';
+    applyVolumes();
     autoStartCountdownEl.style.display = 'none';
     btnForceStart.disabled = true;
     btnForceStart.textContent = 'STARTING...';
@@ -708,6 +877,7 @@ btnConfirmYes.addEventListener('click', () => {
     wantGameMusic = false;
     gameOverMode = false;
     gameStarted = false;
+    musicContext = null;
     lobbyAudio.pause();
     lobbyAudio.currentTime = 0;
     gameAudio.pause();

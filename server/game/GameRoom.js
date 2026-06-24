@@ -1,5 +1,6 @@
 const config = require('../config');
 const { RoundResolver } = require('./RoundResolver');
+const volumeStore = require('./VolumeStore');
 
 const VALID_ROLES = ['A', 'B', 'C'];
 
@@ -72,11 +73,16 @@ class GameRoom {
             socket.on('adminReset', () => this.forceReset());
             socket.on('adminStart', () => this.adminStartGame());
             socket.on('adminForceStart', () => this.adminForceStartGame());
+            socket.on('adminSetVolume', (data) => {
+                volumeStore.setAll(data);
+                this.broadcastToAdmins('adminVolume', volumeStore.getAll());
+            });
             socket.on('disconnect', () => {
                 this.adminSockets.delete(socket.id);
                 console.log(`[GameRoom] Admin disconnected (${socket.id})`);
             });
             socket.emit('adminState', this.getAdminState());
+            socket.emit('adminVolume', volumeStore.getAll());
             return;
         }
 
@@ -381,6 +387,7 @@ class GameRoom {
             totalRounds: config.TOTAL_ROUNDS,
             game: null,
             lighting: this.lighting ? this.lighting.getState() : null,
+            volume: volumeStore.getAll(),
         };
 
         if (this.roundResolver) {
