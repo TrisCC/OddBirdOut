@@ -1,0 +1,167 @@
+@font-face {
+  font-family: 'Press Start 2P';
+  src: url('/assets/fonts/PressStart2P.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --bg-dark: #2B1E10;
+  --bg-deeper: #1A0F0A;
+  --bg-card: rgba(26, 15, 10, 0.92);
+  --green: #4CAF50;
+  --blue: #42A5F5;
+  --orange: #FF9800;
+  --gold: #FFD700;
+  --red: #E53935;
+  --text: #F3F4F6;
+  --text-dim: #9CA3AF;
+  --text-h: #FFFFFF;
+  --pixel: 'Press Start 2P', monospace;
+  --body: system-ui, -apple-system, sans-serif;
+  --border-pixel: 4px solid;
+  --shadow-pixel: 4px 4px 0px rgba(0, 0, 0, 0.4);
+  --radius: 0;
+}
+
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  background: var(--bg-dark);
+}
+
+body {
+  font-family: var(--body);
+  font-size: 18px;
+  line-height: 1.7;
+  color: var(--text);
+  background: var(--bg-dark);
+  -webkit-font-smoothing: antialiased;
+}
+
+#app {
+  overflow-x: hidden;
+}
+
+section {
+  position: relative;
+  padding: 120px 24px;
+  max-width: 1126px;
+  margin: 0 auto;
+}
+
+h1, h2, h3 {
+  font-family: var(--pixel);
+  color: var(--text-h);
+  line-height: 1.4;
+  text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.6);
+}
+
+h1 { font-size: 40px; letter-spacing: -1px; }
+h2 { font-size: 26px; margin-bottom: 32px; }
+h3 { font-size: 18px; margin-bottom: 16px; }
+
+p { margin-bottom: 20px; }
+
+a {
+  color: var(--gold);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+a:hover { color: var(--orange); }
+
+strong { color: var(--text-h); }
+
+.pixel-card {
+  background: var(--bg-card);
+  border: var(--border-pixel) var(--bg-deeper);
+  box-shadow: var(--shadow-pixel);
+  padding: 32px;
+  border-image: repeating-linear-gradient(
+    0deg, var(--green), var(--green) 2px, var(--bg-deeper) 2px, var(--bg-deeper) 4px
+  ) 4;
+}
+
+.decorative-divider {
+  position: relative;
+  height: 32px;
+  margin: -16px 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.decorative-divider::before,
+.decorative-divider::after {
+  content: '';
+  flex: 1;
+  height: 4px;
+  background: repeating-linear-gradient(
+    90deg, var(--gold), var(--gold) 4px, transparent 4px, transparent 8px
+  );
+}
+
+.fade-in {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+
+.fade-in.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@keyframes bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+
+@keyframes breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-40px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(40px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes countUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.parallax-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+
+@media (max-width: 768px) {
+  section { padding: 80px 16px; }
+  h1 { font-size: 24px; }
+  h2 { font-size: 18px; }
+  h3 { font-size: 14px; }
+  body { font-size: 16px; }
+  .pixel-card { padding: 20px; }
+}
