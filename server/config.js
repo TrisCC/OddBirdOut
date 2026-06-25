@@ -8,7 +8,7 @@ module.exports = {
     PHASE1_ROUNDS: 6,
     STARTING_EGGS: 0,
     RECONNECT_TIMEOUT_MS: 60000,
-    AUTO_RESET_TIMEOUT_SECONDS: 120,
+    AUTO_RESET_TIMEOUT_SECONDS: 90,
     AUTO_START_DELAY_SECONDS: 10,
     STATIC_DIR: path.join(__dirname, '..', 'OddBirdOut'),
     // Set to true to disable the round timer — rounds only advance once all players have acted
