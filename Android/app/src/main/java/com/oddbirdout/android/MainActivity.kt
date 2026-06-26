@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.graphics.Color
+import android.graphics.PorterDuff
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
@@ -28,6 +29,7 @@ import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.FrameLayout
+import android.widget.ImageView
 import android.widget.LinearLayout
 import androidx.activity.ComponentActivity
 import androidx.activity.addCallback
@@ -47,8 +49,8 @@ import androidx.core.view.WindowInsetsControllerCompat
 class MainActivity : ComponentActivity() {
 
     private lateinit var webView: WebView
-    private lateinit var wifiView: WifiIndicatorView
-    private lateinit var batteryView: BatteryIndicatorView
+    private lateinit var wifiIcon: ImageView
+    private lateinit var batteryIcon: ImageView
     private var batteryReceiver: BroadcastReceiver? = null
     private var isPageLoaded = false
     private var isNetworkAvailable = false
@@ -261,19 +263,23 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    // ── Status bar (battery + wifi indicators) ───────────────────────
+    // ── Status bar (battery + wifi icons) ────────────────────────────
 
     private fun createStatusBar(): LinearLayout = LinearLayout(this).apply {
         orientation = LinearLayout.HORIZONTAL
         gravity = Gravity.CENTER_VERTICAL
 
-        batteryView = BatteryIndicatorView(context).apply {
+        batteryIcon = ImageView(context).apply {
             layoutParams = LinearLayout.LayoutParams(dp(48), dp(48))
+            scaleType = ImageView.ScaleType.CENTER
+            setPadding(dp(12), dp(12), dp(12), dp(12))
         }
-        addView(batteryView)
+        addView(batteryIcon)
 
-        wifiView = WifiIndicatorView(context).apply {
+        wifiIcon = ImageView(context).apply {
             layoutParams = LinearLayout.LayoutParams(dp(48), dp(48))
+            scaleType = ImageView.ScaleType.CENTER
+            setPadding(dp(12), dp(12), dp(12), dp(12))
             setOnLongClickListener {
                 isPageLoaded = false
                 setWifiRefreshing()
@@ -283,15 +289,35 @@ class MainActivity : ComponentActivity() {
                 true
             }
         }
-        addView(wifiView)
+        addView(wifiIcon)
+    }
+
+    private fun updateBatteryIcon(level: Int, charging: Boolean) {
+        val (res, color) = when {
+            charging -> R.drawable.sharp_battery_charging_80_2_24 to COLOR_GREEN
+            level > 80 -> R.drawable.sharp_battery_android_full_24 to COLOR_GREEN
+            level > 35 -> R.drawable.sharp_battery_android_4_24 to COLOR_YELLOW
+            else -> R.drawable.sharp_battery_android_1_24 to COLOR_RED
+        }
+        batteryIcon.setImageResource(res)
+        batteryIcon.setColorFilter(color, PorterDuff.Mode.SRC_IN)
     }
 
     private fun updateWifiState() {
-        if (isPageLoaded) wifiView.setOnline() else wifiView.setOffline()
+        when {
+            isPageLoaded -> setWifiIcon(R.drawable.sharp_android_wifi_3_bar_24, COLOR_ONLINE)
+            isNetworkAvailable -> setWifiIcon(R.drawable.sharp_android_wifi_3_bar_alert_24, COLOR_OFFLINE)
+            else -> setWifiIcon(R.drawable.sharp_android_wifi_3_bar_off_24, COLOR_OFFLINE)
+        }
     }
 
     private fun setWifiRefreshing() {
-        wifiView.setRefreshing()
+        setWifiIcon(R.drawable.sharp_android_wifi_3_bar_question_24, COLOR_REFRESHING)
+    }
+
+    private fun setWifiIcon(res: Int, color: Int) {
+        wifiIcon.setImageResource(res)
+        wifiIcon.setColorFilter(color, PorterDuff.Mode.SRC_IN)
     }
 
     private fun startBatteryMonitor() {
@@ -304,7 +330,7 @@ class MainActivity : ComponentActivity() {
                 val pct = if (scale > 0) (level * 100 / scale) else 50
                 val charging = status == BatteryManager.BATTERY_STATUS_CHARGING ||
                     status == BatteryManager.BATTERY_STATUS_FULL
-                batteryView.setBatteryState(pct, charging)
+                updateBatteryIcon(pct, charging)
             }
         }
         batteryReceiver = receiver
@@ -460,5 +486,11 @@ class MainActivity : ComponentActivity() {
 
     companion object {
         const val DEFAULT_URL = "http://localhost:3000"
+        const val COLOR_GREEN = 0xFF4CAF50.toInt()
+        const val COLOR_YELLOW = 0xFFFFC107.toInt()
+        const val COLOR_RED = 0xFFF44336.toInt()
+        const val COLOR_ONLINE = COLOR_GREEN
+        const val COLOR_REFRESHING = COLOR_YELLOW
+        const val COLOR_OFFLINE = COLOR_RED
     }
 }

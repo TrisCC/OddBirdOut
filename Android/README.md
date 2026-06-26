@@ -17,10 +17,11 @@ WebView wrapper that loads the OddBirdOut web game in a locked-down kiosk enviro
     - **Green** — charging or >80%
     - **Yellow** — 35%–80%
     - **Red** — <35%
-  - **WiFi** (right) — classic arcs + dot icon:
-    - **Green** — page loaded, network connected
-    - **Yellow** — page loading / refreshing
-    - **Red** — page failed to load or no network
+  - **WiFi** (right) — 4-state icon:
+    - **Green / 3 bars** — page loaded
+    - **Yellow / question** — page loading / refreshing
+    - **Red / alert** — page error (network OK)
+    - **Red / off** — no network
   - Long-press the WiFi icon to manually reload
 - Enables ADB over TCP on port 5555 automatically (connect via `adb connect <ip>:5555`)
 - Keeps the screen on permanently
@@ -242,10 +243,11 @@ Android/
 │   └── src/
 │       └── main/
 │           ├── java/com/oddbirdout/android/
-│           │   ├── MainActivity.kt               # WebView + kiosk lock + indicator
+│           │   ├── MainActivity.kt               # WebView + kiosk lock + indicators
 │           │   ├── BootReceiver.kt                # Auto-launch on device boot
 │           │   └── KioskDeviceAdminReceiver.kt    # Device-owner + keyguard disable
 │           ├── res/
+│           │   ├── drawable/                       # Vector icons (battery, wifi)
 │           │   ├── values/
 │           │   │   ├── themes.xml                 # Fullscreen theme
 │           │   │   └── strings.xml
