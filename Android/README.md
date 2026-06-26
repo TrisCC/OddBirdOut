@@ -12,10 +12,17 @@ WebView wrapper that loads the OddBirdOut web game in a locked-down kiosk enviro
 - Auto-launches on boot via `BOOT_COMPLETED` receiver
 - Auto-reloads the page every 10 seconds while WiFi is connected
 - Manually reload on long-press of the connection indicator
-- Shows a connection indicator in the top-right corner:
-  - **Yellow** — page loading / refreshing
-  - **Green** — page loaded successfully
-  - **Red** — page failed to load or no network
+- Shows status icons in the top-right corner:
+  - **Battery** (left) — with lightning bolt while charging:
+    - **Green** — charging or >80%
+    - **Yellow** — 35%–80%
+    - **Red** — <35%
+  - **WiFi** (right) — classic arcs + dot icon:
+    - **Green** — page loaded, network connected
+    - **Yellow** — page loading / refreshing
+    - **Red** — page failed to load or no network
+  - Long-press the WiFi icon to manually reload
+- Enables ADB over TCP on port 5555 automatically (connect via `adb connect <ip>:5555`)
 - Keeps the screen on permanently
 - Locked to landscape orientation
 

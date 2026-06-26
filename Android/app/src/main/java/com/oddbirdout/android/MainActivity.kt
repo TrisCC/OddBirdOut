@@ -2,14 +2,17 @@ package com.oddbirdout.android
 
 import android.annotation.SuppressLint
 import android.app.admin.DevicePolicyManager
+import android.content.BroadcastReceiver
 import android.content.ComponentName
 import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.graphics.Color
-import android.graphics.drawable.GradientDrawable
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
 import android.net.NetworkRequest
+import android.os.BatteryManager
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -18,7 +21,6 @@ import android.view.Gravity
 import android.view.KeyEvent
 import android.view.View
 import android.view.ViewGroup
-import android.view.WindowInsets
 import android.view.WindowManager
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceError
@@ -26,6 +28,7 @@ import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.FrameLayout
+import android.widget.LinearLayout
 import androidx.activity.ComponentActivity
 import androidx.activity.addCallback
 import androidx.core.view.ViewCompat
@@ -39,15 +42,14 @@ import androidx.core.view.WindowInsetsControllerCompat
  * The activity disables the lock screen, hides system bars, pins itself in
  * lock-task mode, and blocks back/home/recents so players cannot leave.
  *
- * A small colored circle in the top-right corner indicates page load state:
- * green = loaded, yellow = refreshing, red = error. Long-press it to manually
- * reload the page.
- */
+ * Status icons in the top-right corner: a battery indicator (left) and a WiFi
+ * connectivity icon (right). Long-press the WiFi icon to manually reload. */
 class MainActivity : ComponentActivity() {
 
     private lateinit var webView: WebView
-    private lateinit var indicator: View
-    private lateinit var indicatorHitbox: FrameLayout
+    private lateinit var wifiView: WifiIndicatorView
+    private lateinit var batteryView: BatteryIndicatorView
+    private var batteryReceiver: BroadcastReceiver? = null
     private var isPageLoaded = false
     private var isNetworkAvailable = false
     private val handler = Handler(Looper.getMainLooper())
@@ -58,7 +60,7 @@ class MainActivity : ComponentActivity() {
      *  but if progress somehow never reaches 100, this forces the indicator to
      *  resolve based on the current isPageLoaded value. */
     private val loadWatchdog = Runnable {
-        updateIndicator()
+        updateWifiState()
     }
 
     /** Periodic task that auto-recovers: if the page is in an error state and
@@ -110,14 +112,16 @@ class MainActivity : ComponentActivity() {
             FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
         )
 
-        // Connection indicator (14dp circle inside a 48dp touch hitbox, top-right)
-        indicator = createIndicator()
-        indicatorHitbox = createIndicatorHitbox()
-        val indicatorParams = FrameLayout.LayoutParams(dp(48), dp(48)).apply {
+        // Status icons (battery left, wifi right, top-right corner)
+        val statusBar = createStatusBar()
+        val statusBarParams = FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        ).apply {
             gravity = Gravity.TOP or Gravity.END
             setMargins(0, dp(16), dp(16), 0)
         }
-        container.addView(indicatorHitbox, indicatorParams)
+        container.addView(statusBar, statusBarParams)
 
         setContentView(container)
 
@@ -126,6 +130,7 @@ class MainActivity : ComponentActivity() {
 
         webView.loadUrl(getTargetUrl())
         startNetworkMonitor()
+        startBatteryMonitor()
         handler.postDelayed(refreshRunnable, refreshIntervalMs)
         requestLockTask()
     }
@@ -135,6 +140,7 @@ class MainActivity : ComponentActivity() {
         super.onDestroy()
         handler.removeCallbacks(refreshRunnable)
         handler.removeCallbacks(loadWatchdog)
+        batteryReceiver?.let { unregisterReceiver(it) }
     }
 
     /** Re-hides system bars on resume and re-enters lock-task in case the
@@ -199,10 +205,10 @@ class MainActivity : ComponentActivity() {
             override fun onProgressChanged(view: WebView, newProgress: Int) {
                 if (newProgress >= 100) {
                     isPageLoaded = true
-                    updateIndicator()
+                    updateWifiState()
                 } else {
                     isPageLoaded = false
-                    setIndicatorRefreshing()
+                    setWifiRefreshing()
                 }
             }
         }
@@ -212,13 +218,13 @@ class MainActivity : ComponentActivity() {
             /** Page load started — reset loaded flag and show yellow. */
             override fun onPageStarted(view: WebView, url: String, favicon: android.graphics.Bitmap?) {
                 isPageLoaded = false
-                setIndicatorRefreshing()
+                setWifiRefreshing()
             }
 
             /** Final success safety net in case onProgressChanged stalls. */
             override fun onPageFinished(view: WebView, url: String) {
                 isPageLoaded = true
-                updateIndicator()
+                updateWifiState()
             }
 
             /** Legacy error callback — show red. */
@@ -230,7 +236,7 @@ class MainActivity : ComponentActivity() {
                 failingUrl: String
             ) {
                 isPageLoaded = false
-                updateIndicator()
+                updateWifiState()
             }
 
             /** Modern error callback — only react to main-frame failures. */
@@ -241,7 +247,7 @@ class MainActivity : ComponentActivity() {
             ) {
                 if (request.isForMainFrame) {
                     isPageLoaded = false
-                    updateIndicator()
+                    updateWifiState()
                 }
             }
 
@@ -254,61 +260,54 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    // ── Connection indicator (top-right colored circle) ──────────────
+    // ── Status bar (battery + wifi indicators) ───────────────────────
 
-    /** Small non-focusable colored circle in the top-right corner.
-     *  Green = page loaded, red = error, yellow = loading.
-     *  The actual touch target is a larger surrounding FrameLayout. */
-    private fun createIndicator(): View = View(this).apply {
-        setBg(COLOR_OFFLINE)
-        visibility = View.VISIBLE
-        isClickable = false
-        isFocusable = false
-        importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
-    }
+    private fun createStatusBar(): LinearLayout = LinearLayout(this).apply {
+        orientation = LinearLayout.HORIZONTAL
+        gravity = Gravity.CENTER_VERTICAL
 
-    /** Transparent 48dp x 48dp FrameLayout with the indicator anchored at
-     *  its top-right corner. This keeps the visible circle at the same 16dp
-     *  screen offset while expanding the touch hitbox inward/downward. */
-    private fun createIndicatorHitbox(): FrameLayout = FrameLayout(this).apply {
-        setBackgroundColor(Color.TRANSPARENT)
-        addView(
-            indicator,
-            FrameLayout.LayoutParams(dp(14), dp(14)).apply {
-                gravity = Gravity.TOP or Gravity.END
+        batteryView = BatteryIndicatorView(context).apply {
+            layoutParams = LinearLayout.LayoutParams(dp(48), dp(48))
+        }
+        addView(batteryView)
+
+        wifiView = WifiIndicatorView(context).apply {
+            layoutParams = LinearLayout.LayoutParams(dp(48), dp(48))
+            setOnLongClickListener {
+                isPageLoaded = false
+                setWifiRefreshing()
+                handler.removeCallbacks(loadWatchdog)
+                handler.postDelayed(loadWatchdog, 15_000L)
+                webView.loadUrl(getTargetUrl())
+                true
             }
-        )
-        isClickable = true
-        isLongClickable = true
-        setOnLongClickListener {
-            isPageLoaded = false
-            setIndicatorRefreshing()
-            handler.removeCallbacks(loadWatchdog)
-            handler.postDelayed(loadWatchdog, 15_000L)
-            webView.loadUrl(getTargetUrl())
-            true
         }
+        addView(wifiView)
     }
 
-    /** Sets the indicator to green (page loaded) or red (error) based on
-     *  the current value of isPageLoaded. */
-    private fun updateIndicator() {
-        val color = if (isPageLoaded) COLOR_ONLINE else COLOR_OFFLINE
-        indicator.setBg(color)
+    private fun updateWifiState() {
+        if (isPageLoaded) wifiView.setOnline() else wifiView.setOffline()
     }
 
-    /** Sets the indicator to yellow (page currently loading/refreshing). */
-    private fun setIndicatorRefreshing() {
-        indicator.setBg(COLOR_REFRESHING)
+    private fun setWifiRefreshing() {
+        wifiView.setRefreshing()
     }
 
-    /** Applies a fresh oval GradientDrawable with the given fill color.
-     *  Creates a new drawable each time to avoid stale-render issues. */
-    private fun View.setBg(color: Int) {
-        background = GradientDrawable().apply {
-            shape = GradientDrawable.OVAL
-            setColor(color)
+    private fun startBatteryMonitor() {
+        val filter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
+        val receiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context, intent: Intent) {
+                val level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
+                val scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, 100)
+                val status = intent.getIntExtra(BatteryManager.EXTRA_STATUS, BatteryManager.BATTERY_STATUS_UNKNOWN)
+                val pct = if (scale > 0) (level * 100 / scale) else 50
+                val charging = status == BatteryManager.BATTERY_STATUS_CHARGING ||
+                    status == BatteryManager.BATTERY_STATUS_FULL
+                batteryView.setBatteryState(pct, charging)
+            }
         }
+        batteryReceiver = receiver
+        registerReceiver(receiver, filter)
     }
 
     // ── Device-owner policies ─────────────────────────────────────────
@@ -324,6 +323,29 @@ class MainActivity : ComponentActivity() {
             dpm.setKeyguardDisabled(admin, true)
             dpm.setStatusBarDisabled(admin, true)
             dpm.setLockTaskPackages(admin, arrayOf(packageName))
+        } catch (_: Exception) {}
+
+        enableAdbOverTcp()
+    }
+
+    /** Enables ADB over TCP on port 5555 so any machine on the same WiFi
+     *  network can connect with `adb connect <ip>:5555`.
+     *
+     *  Writes the necessary global settings (device owner can do this) then
+     *  attempts to restart adbd in TCP mode. The restart may fail silently
+     *  on locked-down devices — in that case fall back to a one-time USB
+     *  connection to run `adb tcpip 5555`. */
+    private fun enableAdbOverTcp() {
+        try {
+            Settings.Global.putInt(contentResolver, "adb_enabled", 1)
+            Settings.Global.putInt(contentResolver, "adb_wifi_enabled", 1)
+            Settings.Global.putInt(contentResolver, "development_settings_enabled", 1)
+
+            Runtime.getRuntime().exec(arrayOf("setprop", "service.adb.tcp.port", "5555"))
+            Thread.sleep(200)
+            Runtime.getRuntime().exec(arrayOf("stop", "adbd"))
+            Thread.sleep(200)
+            Runtime.getRuntime().exec(arrayOf("start", "adbd"))
         } catch (_: Exception) {}
     }
 
@@ -358,6 +380,7 @@ class MainActivity : ComponentActivity() {
         connectivityManager.registerNetworkCallback(request, object : ConnectivityManager.NetworkCallback() {
             override fun onAvailable(network: Network) {
                 isNetworkAvailable = true
+                updateWifiState()
                 if (!isPageLoaded) {
                     runOnUiThread { webView.loadUrl(getTargetUrl()) }
                 }
@@ -365,6 +388,7 @@ class MainActivity : ComponentActivity() {
 
             override fun onLost(network: Network) {
                 isNetworkAvailable = false
+                runOnUiThread { updateWifiState() }
             }
         })
     }
@@ -401,8 +425,5 @@ class MainActivity : ComponentActivity() {
 
     companion object {
         const val DEFAULT_URL = "http://localhost:3000"
-        const val COLOR_ONLINE = 0xFF4CAF50.toInt()
-        const val COLOR_OFFLINE = 0xFFF44336.toInt()
-        const val COLOR_REFRESHING = 0xFFFFC107.toInt()
     }
 }
