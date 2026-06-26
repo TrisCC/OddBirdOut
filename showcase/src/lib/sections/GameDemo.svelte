@@ -2,7 +2,7 @@
   import SpriteAnim from "../SpriteAnim.svelte";
   let { visible } = $props();
   let currentSlide = $state(0);
-  let eggs = $state(0);
+
   const base = import.meta.env.BASE_URL;
 
   const slides = [
@@ -40,12 +40,155 @@
     currentSlide = (currentSlide - 1 + slides.length) % slides.length;
   }
 
-  function addEgg() {
-    if (eggs < 12) eggs++;
+  const LEFT = "left";
+  const YOU = "you";
+  const RIGHT = "right";
+
+  let round = $state(0);
+  let scores = $state({ [LEFT]: 0, [YOU]: 0, [RIGHT]: 0 });
+  let phase = $state("idle");
+
+  let yourTarget = $state(null);
+  let leftTarget = $state(null);
+  let rightTarget = $state(null);
+
+  let flyingHearts = $state([]);
+  let deltaPopups = $state([]);
+  let resultText = $state("");
+  let ostrichReact = $state({});
+
+  const PLAYERS = [LEFT, YOU, RIGHT];
+  const NAMES = { [LEFT]: "Player C", [YOU]: "Player A (You)", [RIGHT]: "Player B" };
+  const COLORS = { [LEFT]: "blue", [YOU]: "orange", [RIGHT]: "green" };
+  const posMap = {
+    [LEFT]: { x: 15, y: 18 },
+    [YOU]: { x: 50, y: 55 },
+    [RIGHT]: { x: 85, y: 18 },
+  };
+
+  let nextHeartId = 0;
+  let nextDeltaId = 0;
+  let resultTimer = null;
+
+  function shareWith(target) {
+    if (phase === "animating") return;
+    if (resultTimer) { clearTimeout(resultTimer); resultTimer = null; }
+    yourTarget = target;
+    phase = "animating";
+    executeRound();
   }
 
-  function resetEggs() {
-    eggs = 0;
+  async function executeRound() {
+    leftTarget = Math.random() < 0.5 ? YOU : RIGHT;
+    rightTarget = Math.random() < 0.5 ? YOU : LEFT;
+
+    await delay(400);
+
+    await animateHeart(YOU, yourTarget);
+    await delay(500);
+
+    await animateHeart(LEFT, leftTarget);
+    await delay(500);
+
+    await animateHeart(RIGHT, rightTarget);
+    await delay(600);
+
+    const shareTarget = { [LEFT]: leftTarget, [YOU]: yourTarget, [RIGHT]: rightTarget };
+
+    const mutualPair = PLAYERS.find(
+      (p) => shareTarget[p] && shareTarget[shareTarget[p]] === p
+    );
+
+    const deltas = { [LEFT]: 0, [YOU]: 0, [RIGHT]: 0 };
+    if (mutualPair) {
+      deltas[mutualPair] += 1;
+      deltas[shareTarget[mutualPair]] += 1;
+    } else {
+      for (const p of PLAYERS) deltas[p] += 1;
+    }
+
+    for (const p of PLAYERS) {
+      if (deltas[p] > 0) {
+        const id = nextDeltaId++;
+        deltaPopups = [...deltaPopups, { id, player: p, value: deltas[p] }];
+      }
+    }
+
+    const newScores = { ...scores };
+    for (const p of PLAYERS) newScores[p] += deltas[p];
+    scores = newScores;
+    round++;
+
+    if (mutualPair) {
+      const other = shareTarget[mutualPair];
+      resultText = `${NAMES[mutualPair]} + ${NAMES[other]} shared — both get +1`;
+    } else {
+      resultText = "No mutual pair — everyone gets +1";
+    }
+
+    phase = "result";
+
+    resultTimer = setTimeout(() => {
+      deltaPopups = [];
+      yourTarget = null;
+      leftTarget = null;
+      rightTarget = null;
+      resultText = "";
+      ostrichReact = {};
+      phase = "idle";
+      resultTimer = null;
+    }, 3000);
+  }
+
+  function animateHeart(from, to) {
+    return new Promise((resolve) => {
+      const id = nextHeartId++;
+      flyingHearts = [...flyingHearts, { id, from, to, state: "fly" }];
+
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          flyingHearts = flyingHearts.map((h) =>
+            h.id === id ? { ...h, state: "fly-active" } : h
+          );
+        });
+      });
+
+      setTimeout(() => {
+        ostrichReact = { ...ostrichReact, [to]: true };
+        setTimeout(() => {
+          ostrichReact = { ...ostrichReact, [to]: false };
+        }, 200);
+      }, 550);
+
+      setTimeout(() => {
+        flyingHearts = flyingHearts.map((h) =>
+          h.id === id ? { ...h, state: "burst" } : h
+        );
+      }, 650);
+
+      setTimeout(() => {
+        flyingHearts = flyingHearts.filter((h) => h.id !== id);
+        resolve();
+      }, 1000);
+    });
+  }
+
+  function delay(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  function resetGame() {
+    if (resultTimer) { clearTimeout(resultTimer); resultTimer = null; }
+    round = 0;
+    scores = { [LEFT]: 0, [YOU]: 0, [RIGHT]: 0 };
+    phase = "idle";
+    yourTarget = null;
+    leftTarget = null;
+    rightTarget = null;
+    flyingHearts = [];
+    deltaPopups = [];
+    resultText = "";
+    ostrichReact = {};
   }
 </script>
 
@@ -98,68 +241,147 @@
     </div>
 
     <aside class="egg-counter pixel-card">
-      <div class="ostrich-row" aria-hidden="true">
-        <SpriteAnim
-          src="{base}assets/sprites/ostrich blue.png"
-          frames={3}
-          fps={4}
-          alt=""
-          class="mini-ostrich"
-        />
-        <SpriteAnim
-          src="{base}assets/sprites/ostrich green.png"
-          frames={3}
-          fps={4}
-          alt=""
-          class="mini-ostrich"
-        />
-        <SpriteAnim
-          src="{base}assets/sprites/ostrich orange.png"
-          frames={3}
-          fps={4}
-          alt=""
-          class="mini-ostrich"
-        />
-      </div>
-
       <h3>Egg Counter</h3>
-      <p class="counter-label">How it works:</p>
       <p class="counter-desc">
         If two players <strong>share with each other</strong>, they each gain +1
         egg. If nobody forms a mutual pair,
         <strong>everyone gets +1</strong>.
       </p>
 
-      <div class="counter-display">
-        <span class="egg-count">{eggs}</span>
-        <span class="egg-label">eggs</span>
-      </div>
+      <div class="game-stage">
+        {#if flyingHearts.length > 0}
+          <div class="fx-layer hearts-layer" aria-hidden="true">
+            {#each flyingHearts as heart (heart.id)}
+              <div
+                class="heart-proj"
+                class:fly-active={heart.state === 'fly-active'}
+                class:burst={heart.state === 'burst'}
+                style="
+                  --fx-x: {posMap[heart.from].x}%;
+                  --fx-y: {posMap[heart.from].y}%;
+                  --to-x: {posMap[heart.to].x}%;
+                  --to-y: {posMap[heart.to].y}%;
+                "
+              >
+                <SpriteAnim
+                  src="{base}assets/sprites/heart.png"
+                  frames={4}
+                  fps={8}
+                  alt=""
+                  class="heart-img"
+                />
+              </div>
+            {/each}
+          </div>
+        {/if}
 
-      <div class="counter-actions">
-        <button class="pixel-btn" onclick={addEgg}>
-          <SpriteAnim
-            src="{base}assets/sprites/1egg.png"
-            frames={4}
-            fps={6}
-            alt=""
-            class="btn-egg"
-          />
-          Share (+1)
-        </button>
-        <button class="pixel-btn reset" onclick={resetEggs}> Reset </button>
-      </div>
+        {#if deltaPopups.length > 0}
+          <div class="fx-layer deltas-layer" aria-hidden="true">
+            {#each deltaPopups as popup (popup.id)}
+              <div
+                class="delta-pop"
+                style="
+                  --fx-x: {posMap[popup.player].x}%;
+                  --fx-y: {posMap[popup.player].y}%;
+                "
+              >
+                +{popup.value}
+              </div>
+            {/each}
+          </div>
+        {/if}
 
-      <div class="decorative-eggs" aria-hidden="true">
-        {#each Array(eggs > 6 ? 6 : eggs) as _}
-          <SpriteAnim
-            src="{base}assets/sprites/1egg.png"
-            frames={4}
-            fps={6}
-            alt=""
-            class="float-egg"
-            style="animation-delay: {Math.random() * 2}s"
-          />
-        {/each}
+        <div class="birds-top">
+          <div class="bird-slot">
+            <SpriteAnim
+              src="{base}assets/sprites/ostrich {COLORS[LEFT]}.png"
+              frames={3}
+              fps={4}
+              alt=""
+              class="bird-sprite {ostrichReact[LEFT] ? 'react-shake' : ''}"
+            />
+            <div class="bird-label">{NAMES[LEFT]}</div>
+            {#if scores[LEFT] > 0 || phase === 'result'}
+              <div class="bird-score">
+                <SpriteAnim src="{base}assets/sprites/1egg.png" frames={4} fps={6} alt="" class="score-egg" />
+                <span class="score-num">{scores[LEFT]}</span>
+              </div>
+            {/if}
+          </div>
+
+          <div class="bird-slot">
+            <SpriteAnim
+              src="{base}assets/sprites/ostrich {COLORS[RIGHT]}.png"
+              frames={3}
+              fps={4}
+              alt=""
+              class="bird-sprite {ostrichReact[RIGHT] ? 'react-shake' : ''}"
+            />
+            <div class="bird-label">{NAMES[RIGHT]}</div>
+            {#if scores[RIGHT] > 0 || phase === 'result'}
+              <div class="bird-score">
+                <SpriteAnim src="{base}assets/sprites/1egg.png" frames={4} fps={6} alt="" class="score-egg" />
+                <span class="score-num">{scores[RIGHT]}</span>
+              </div>
+            {/if}
+          </div>
+        </div>
+
+        <div class="center-row">
+          {#if phase === 'idle' || phase === 'result'}
+            <button class="pixel-btn pair-btn" onclick={() => shareWith(LEFT)}>
+              Pair
+            </button>
+          {:else}
+            <div class="pair-btn-spacer"></div>
+          {/if}
+
+          <div class="bird-slot is-you">
+            <SpriteAnim
+              src="{base}assets/sprites/ostrich {COLORS[YOU]}.png"
+              frames={3}
+              fps={4}
+              alt=""
+              class="bird-sprite {ostrichReact[YOU] ? 'react-shake' : ''}"
+            />
+            <div class="bird-label">{NAMES[YOU]}</div>
+            {#if scores[YOU] > 0 || phase === 'result'}
+              <div class="bird-score">
+                <SpriteAnim src="{base}assets/sprites/1egg.png" frames={4} fps={6} alt="" class="score-egg" />
+                <span class="score-num">{scores[YOU]}</span>
+              </div>
+            {/if}
+          </div>
+
+          {#if phase === 'idle' || phase === 'result'}
+            <button class="pixel-btn pair-btn" onclick={() => shareWith(RIGHT)}>
+              Pair
+            </button>
+          {:else}
+            <div class="pair-btn-spacer"></div>
+          {/if}
+        </div>
+
+        {#if phase === 'animating'}
+          <div class="phase-label">Sharing...</div>
+        {/if}
+
+        {#if phase === 'result'}
+          <div class="phase-label result-label">{resultText}</div>
+        {/if}
+
+        <div class="game-footer">
+          {#if round > 0}
+            <span class="round-badge">Round {round}</span>
+          {/if}
+          <button
+            class="pixel-btn reset-btn"
+            onclick={resetGame}
+            disabled={phase === 'animating'}
+          >
+            Reset
+          </button>
+        </div>
       </div>
     </aside>
   </div>
@@ -189,6 +411,8 @@
   </div>
 </section>
 
+
+
 <style>
   .content-section {
     opacity: 0;
@@ -209,7 +433,7 @@
 
   .demo-layout {
     display: grid;
-    grid-template-columns: 1.4fr 1fr;
+    grid-template-columns: 1fr 1fr;
     gap: 40px;
     align-items: start;
     margin-bottom: 48px;
@@ -297,62 +521,104 @@
     text-align: center;
   }
 
-  .ostrich-row {
-    display: flex;
-    justify-content: center;
-    gap: 12px;
-    margin-bottom: 20px;
-  }
-
-  :global(.mini-ostrich) {
-    width: 50px;
-    height: 50px;
-    animation: bob 2s ease-in-out infinite;
-  }
-
-  :global(.mini-ostrich:nth-child(2)) {
-    animation-delay: 0.3s;
-  }
-  :global(.mini-ostrich:nth-child(3)) {
-    animation-delay: 0.6s;
-  }
-
-  .counter-label {
-    font-family: var(--pixel);
-    font-size: 12px;
-    color: var(--text-dim);
-    margin-bottom: 8px;
-  }
-
   .counter-desc {
     font-size: 14px;
     line-height: 1.6;
-    margin-bottom: 24px;
-  }
-
-  .counter-display {
     margin-bottom: 20px;
   }
 
-  .egg-count {
-    font-family: var(--pixel);
-    font-size: 56px;
-    color: var(--gold);
-    display: block;
-    text-shadow: 3px 3px 0px rgba(0, 0, 0, 0.5);
+  .game-stage {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px 0 8px;
+    min-height: 260px;
   }
 
-  .egg-label {
+  .fx-layer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 5;
+    overflow: hidden;
+  }
+
+  .birds-top {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    margin-bottom: 16px;
+  }
+
+  .bird-slot {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .bird-slot.is-you {
+  }
+
+  .center-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-top: auto;
+    margin-bottom: 12px;
+  }
+
+  .pair-btn-spacer {
+    width: 90px;
+  }
+
+  :global(.bird-sprite) {
+    width: 60px;
+    height: 60px;
+  }
+
+  .bird-slot.is-you :global(.bird-sprite) {
+    width: 76px;
+    height: 76px;
+  }
+
+  :global(.bird-sprite.react-shake) {
+    animation: shake 200ms ease-in-out;
+  }
+
+  .bird-label {
     font-family: var(--pixel);
-    font-size: 14px;
+    font-size: 9px;
     color: var(--text-dim);
   }
 
-  .counter-actions {
+  .bird-slot.is-you .bird-label {
+    color: var(--gold);
+    font-size: 10px;
+  }
+
+  .bird-score {
     display: flex;
-    gap: 12px;
-    justify-content: center;
-    margin-bottom: 16px;
+    align-items: center;
+    gap: 2px;
+    animation: score-in 300ms ease-out;
+  }
+
+  :global(.score-egg) {
+    width: 18px;
+    height: 18px;
+  }
+
+  .score-num {
+    font-family: var(--pixel);
+    font-size: 14px;
+    color: var(--gold);
+  }
+
+  .bird-slot.is-you .score-num {
+    font-size: 16px;
   }
 
   .pixel-btn {
@@ -375,27 +641,92 @@
     box-shadow: 1px 1px 0px rgba(0, 0, 0, 0.4);
   }
 
-  .pixel-btn.reset {
+  .pixel-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .pair-btn {
+    min-width: 90px;
+    justify-content: center;
+  }
+
+  :global(.btn-heart) {
+    width: 18px;
+    height: 18px;
+  }
+
+  .reset-btn {
     background: var(--bg-card);
     border-color: var(--text-dim);
   }
 
-  :global(.btn-egg) {
-    width: 20px;
-    height: 20px;
+  .phase-label {
+    font-family: var(--pixel);
+    font-size: 11px;
+    color: var(--text-dim);
+    margin: 16px 0 8px;
+    min-height: 18px;
   }
 
-  .decorative-eggs {
+  .result-label {
+    color: var(--gold);
+  }
+
+  .game-footer {
     display: flex;
     justify-content: center;
-    gap: 8px;
-    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px;
+    margin-top: 8px;
   }
 
-  :global(.float-egg) {
-    width: 24px;
-    height: 24px;
-    animation: bob 2s ease-in-out infinite;
+  .round-badge {
+    font-family: var(--pixel);
+    font-size: 11px;
+    color: var(--gold);
+    background: var(--bg-deeper);
+    border: 2px solid var(--gold);
+    padding: 4px 10px;
+  }
+
+  .heart-proj {
+    position: absolute;
+    width: 28px;
+    height: 28px;
+    left: calc(var(--fx-x) - 14px);
+    top: calc(var(--fx-y) - 14px);
+    transition:
+      left 600ms cubic-bezier(0.4, 0, 0.6, 1),
+      top 600ms cubic-bezier(0.4, 0, 0.6, 1);
+    opacity: 1;
+    z-index: 6;
+  }
+
+  .heart-proj.fly-active {
+    left: calc(var(--to-x) - 14px);
+    top: calc(var(--to-y) - 14px);
+  }
+
+  .heart-proj.burst {
+    animation: burst 400ms ease-out forwards;
+  }
+
+  :global(.heart-proj .heart-img) {
+    width: 28px;
+    height: 28px;
+  }
+
+  .delta-pop {
+    position: absolute;
+    left: calc(var(--fx-x) - 16px);
+    top: calc(var(--fx-y) + 20px);
+    font-family: var(--pixel);
+    font-size: 16px;
+    color: #44ff88;
+    text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.6);
+    animation: float-up 1.4s ease-out forwards;
+    z-index: 7;
   }
 
   :global(.divider-heart) {
@@ -411,9 +742,67 @@
     animation-delay: 0.6s;
   }
 
+  @keyframes shake {
+    0%,
+    100% {
+      transform: translateX(0);
+    }
+    25% {
+      transform: translateX(-6px);
+    }
+    75% {
+      transform: translateX(6px);
+    }
+  }
+
+  @keyframes burst {
+    0% {
+      transform: scale(1);
+      opacity: 1;
+    }
+    50% {
+      transform: scale(1.8);
+      opacity: 0.6;
+    }
+    100% {
+      transform: scale(2.4);
+      opacity: 0;
+    }
+  }
+
+  @keyframes float-up {
+    0% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(-48px);
+    }
+  }
+
+  @keyframes score-in {
+    0% {
+      opacity: 0;
+      transform: scale(0.5);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
   @media (max-width: 768px) {
     .demo-layout {
       grid-template-columns: 1fr;
+    }
+    :global(.bird-sprite) {
+      width: 48px;
+      height: 48px;
+    }
+    .bird-slot.is-you :global(.bird-sprite) {
+      width: 60px;
+      height: 60px;
     }
   }
 </style>

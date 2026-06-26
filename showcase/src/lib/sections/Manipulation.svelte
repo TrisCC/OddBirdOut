@@ -91,7 +91,7 @@
           <h3>The Reveal</h3>
           <p>{@html truth.desc}</p>
           <p class="statement">
-            <em>"You were left out of the flock — but so was everyone else."</em>
+            <em>"You were left out of the flock, but so was everyone else."</em>
           </p>
         </div>
       </div>
