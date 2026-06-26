@@ -42,14 +42,27 @@ Boot → Start → Lobby → Game (12 rounds) → GameOver → Reveal
 - Optional DMX-controlled RGB lighting that changes color per game phase.
 - Spectators observe from outside the installation.
 
+## Repository Layout
+
+```
+docs/                   # Specification documents
+OddBirdOut/             # Phaser 3 frontend (the game)
+server/                 # Node.js/Socket.IO backend
+Android/                # Android kiosk app (Kotlin + Compose WebView)
+dmx_node/               # DMX lighting bridge (UDP → DMX512 hardware)
+showcase/               # Svelte marketing landing page
+```
+
 ## Tech Stack
 
 | Layer | Technology |
 |-------|-----------|
 | Backend | Node.js, Express.js, Socket.IO |
 | Frontend | Phaser 3.88.2 (ES modules, vanilla JS) |
+| Android App | Kotlin, Jetpack Compose, WebView, DevicePolicyManager |
+| Showcase Site | Svelte 5, Vite, vanilla CSS (pixel-art) |
 | Font | Press Start 2P (pixel-art webfont) |
-| Clients | Android tablets via Fully Kiosk Browser |
+| Clients | Android tablets via Fully Kiosk Browser or custom Kiosk APK |
 | Assets | Programmatically generated placeholder sprites (swappable for real pixel art) |
 | Lighting | DMX512 via serial or remote UDP forwarder |
 | Persistence | In-memory state + JSON file dumps per session |
@@ -114,8 +127,55 @@ A real-time Socket.IO dashboard showing:
 
 Enable `DEBUG_MODE: true` in `server/config.js` to disable the round timer — rounds only advance once all players have acted.
 
-## Configuration
+## Android Kiosk App
 
+The `Android/` directory contains a Kotlin WebView app that replaces Fully Kiosk Browser on the three player tablets. It locks the devices into a fullscreen, always-on experience:
+
+- **Fullscreen WebView** — hides system bars, blocks back/home gestures
+- **Auto-launch on boot** — `BootReceiver.kt` starts the app when tablets power on
+- **Device-owner pinning** — `KioskDeviceAdminReceiver.kt` enables lock-task mode, disables lock screen and status bar
+- **Colored status dot** — green/yellow/red indicator for page load state
+- **Auto-refresh** — reconnects on WiFi disconnect (10s retry)
+- **Configurable target URL** — per-player URL set via `Settings.Global.oddbirdout_url`
+
+See [`Android/README.md`](Android/README.md) for ADB deployment, device-owner setup, and URL configuration per tablet.
+
+## DMX Lighting Bridge
+
+The `dmx_node/` directory is a standalone UDP-to-DMX bridge. The game server sends lighting commands via UDP, and this bridge forwards them to physical DMX512 hardware:
+
+- Listens on **UDP port 5120** for 512-byte DMX universe data
+- Forwards to **uDMX USB**, **Enttec Open DMX serial**, or a **mock logger**
+- Backend selection in `dmx_node/config.js` (`udmx` | `serial` | `mock`)
+
+Start it alongside the game server:
+```bash
+node dmx_node/index.js
+```
+
+Enable `DMX_ENABLED: true` in `server/config.js` for the game server to send lighting events.
+
+## Showcase Website
+
+The `showcase/` directory is a scroll-driven marketing landing page built with Svelte 5 + Vite. It narrates the OddBirdOut concept through animated, pixel-art styled sections:
+
+- **Hero** — title and tagline
+- **Cyber Ostracism** — explains the concept
+- **Game Demo** — walkthrough of gameplay
+- **Manipulation** — reveals the system's deception
+- **Conclusion + Footer**
+
+Key features: IntersectionObserver scroll-reveal animations, reusable sprite-sheet animator component, Press Start 2P webfont, dark earthy pixel-art palette.
+
+Build and run:
+```bash
+cd showcase
+npm install
+npm run dev      # dev server
+npm run build    # static output to dist/
+```
+
+## Configuration
 All tunable parameters live in `server/config.js`:
 
 | Key | Default | Description |

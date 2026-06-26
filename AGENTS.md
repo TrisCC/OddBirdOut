@@ -54,6 +54,36 @@ server/                        # Backend
     OstracismEngine.js         # Fabrication algorithm
     RoundResolver.js           # Round lifecycle + admin callback hooks
   data/sessions/               # Saved game results
+
+Android/                        # Android kiosk app
+  app/src/main/java/.../
+    MainActivity.kt             # Fullscreen WebView host, kiosk lockdown
+    KioskDeviceAdminReceiver.kt # Device-admin for lock-task pinning
+    BootReceiver.kt             # Auto-launch on boot
+    ui/theme/                   # Material3 Compose theme
+  app/src/main/AndroidManifest.xml
+  app/build.gradle.kts
+  build.gradle.kts
+  settings.gradle.kts
+  README.md                     # ADB deploy + device-owner setup guide
+
+dmx_node/                       # DMX lighting bridge (UDP → hardware)
+  index.js                      # UDP listener (port 5120), forwards to uDMX/serial/mock
+  config.js                     # Backend selection (udmx | serial | mock)
+  package.json
+
+showcase/                       # Scroll-driven marketing landing page
+  src/
+    App.svelte                  # Root — IntersectionObserver sections
+    main.js                     # Svelte entry point
+    app.css                     # Pixel-art global styles
+    lib/
+      SpriteAnim.svelte         # Reusable sprite-sheet animator
+      sections/                 # Hero, CyberOstracism, GameDemo, Manipulation, Conclusion, Footer
+  index.html
+  package.json
+  vite.config.js
+  svelte.config.js
 ```
 
 ## Key Conventions
