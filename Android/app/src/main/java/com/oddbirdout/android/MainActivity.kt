@@ -131,6 +131,7 @@ class MainActivity : ComponentActivity() {
         webView.loadUrl(getTargetUrl())
         startNetworkMonitor()
         startBatteryMonitor()
+        setDeviceName()
         handler.postDelayed(refreshRunnable, refreshIntervalMs)
         requestLockTask()
     }
@@ -359,6 +360,40 @@ class MainActivity : ComponentActivity() {
             if (stored.isNullOrBlank()) DEFAULT_URL else stored
         } catch (e: Exception) {
             DEFAULT_URL
+        }
+    }
+
+    /** Sets the device's network hostname. Extracts the player role and a
+     *  unique device suffix to produce names like "OddBirdOut-A-8f32".
+     *
+     *  Falls back to "{domain}-{id}" when the URL has no player= param,
+     *  or "UNSET-{id}" when no URL has been configured. */
+    @SuppressLint("HardwareIds")
+    private fun setDeviceName() {
+        try {
+            val id = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
+                ?.takeLast(4) ?: "0000"
+            val url = getTargetUrl()
+
+            val name = when {
+                url.isBlank() || url == DEFAULT_URL -> "UNSET-$id"
+                else -> {
+                    val m = Regex("[?&]player=([A-C])").find(url)
+                    if (m != null) "OddBirdOut-${m.groupValues[1]}-$id"
+                    else "${extractDomain(url)}-$id"
+                }
+            }
+
+            Settings.Global.putString(contentResolver, "device_name", name)
+            Runtime.getRuntime().exec(arrayOf("cmd", "deviceid", "name", name))
+        } catch (_: Exception) {}
+    }
+
+    private fun extractDomain(url: String): String {
+        return try {
+            java.net.URI(url).host ?: "UNKNOWN"
+        } catch (_: Exception) {
+            "UNKNOWN"
         }
     }
 
