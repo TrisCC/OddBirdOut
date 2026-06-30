@@ -1,0 +1,861 @@
+{
+  "sessionId": "21614408-6867-4b28-8a47-bbfe849b07d9",
+  "startedAt": "2026-06-25T08:29:06.436Z",
+  "config": {
+    "totalRounds": 12,
+    "roundDurationMs": 10000,
+    "phase1Rounds": 6,
+    "startingEggs": 0
+  },
+  "rounds": [
+    {
+      "round": 1,
+      "phase": "trust",
+      "trueActions": [
+        {
+          "player": "C",
+          "action": "share",
+          "target": "A"
+        },
+        {
+          "player": "A",
+          "action": "share",
+          "target": "B"
+        },
+        {
+          "player": "B",
+          "action": "share",
+          "target": "C"
+        }
+      ],
+      "trueScores": {
+        "A": 1,
+        "B": 1,
+        "C": 1
+      },
+      "trueDeltas": {
+        "A": 1,
+        "B": 1,
+        "C": 1
+      },
+      "illusions": {}
+    },
+    {
+      "round": 2,
+      "phase": "trust",
+      "trueActions": [
+        {
+          "player": "C",
+          "action": "share",
+          "target": "A"
+        },
+        {
+          "player": "A",
+          "action": "share",
+          "target": "C"
+        },
+        {
+          "player": "B",
+          "action": "share",
+          "target": "A"
+        }
+      ],
+      "trueScores": {
+        "A": 2,
+        "B": 1,
+        "C": 2
+      },
+      "trueDeltas": {
+        "A": 1,
+        "B": 0,
+        "C": 1
+      },
+      "illusions": {}
+    },
+    {
+      "round": 3,
+      "phase": "trust",
+      "trueActions": [
+        {
+          "player": "A",
+          "action": "share",
+          "target": "C"
+        },
+        {
+          "player": "C",
+          "action": "share",
+          "target": "A"
+        },
+        {
+          "player": "B",
+          "action": "share",
+          "target": "A"
+        }
+      ],
+      "trueScores": {
+        "A": 3,
+        "B": 1,
+        "C": 3
+      },
+      "trueDeltas": {
+        "A": 1,
+        "B": 0,
+        "C": 1
+      },
+      "illusions": {}
+    },
+    {
+      "round": 4,
+      "phase": "trust",
+      "trueActions": [
+        {
+          "player": "C",
+          "action": "share",
+          "target": "A"
+        },
+        {
+          "player": "B",
+          "action": "share",
+          "target": "C"
+        },
+        {
+          "player": "A",
+          "action": "share",
+          "target": "C"
+        }
+      ],
+      "trueScores": {
+        "A": 4,
+        "B": 1,
+        "C": 4
+      },
+      "trueDeltas": {
+        "A": 1,
+        "B": 0,
+        "C": 1
+      },
+      "illusions": {}
+    },
+    {
+      "round": 5,
+      "phase": "trust",
+      "trueActions": [
+        {
+          "player": "C",
+          "action": "share",
+          "target": "A"
+        },
+        {
+          "player": "A",
+          "action": "share",
+          "target": "C"
+        },
+        {
+          "player": "B",
+          "action": "share",
+          "target": "C"
+        }
+      ],
+      "trueScores": {
+        "A": 5,
+        "B": 1,
+        "C": 5
+      },
+      "trueDeltas": {
+        "A": 1,
+        "B": 0,
+        "C": 1
+      },
+      "illusions": {}
+    },
+    {
+      "round": 6,
+      "phase": "trust",
+      "trueActions": [
+        {
+          "player": "C",
+          "action": "share",
+          "target": "A"
+        },
+        {
+          "player": "B",
+          "action": "share",
+          "target": "A"
+        },
+        {
+          "player": "A",
+          "action": "share",
+          "target": "C"
+        }
+      ],
+      "trueScores": {
+        "A": 6,
+        "B": 1,
+        "C": 6
+      },
+      "trueDeltas": {
+        "A": 1,
+        "B": 0,
+        "C": 1
+      },
+      "illusions": {}
+    },
+    {
+      "round": 7,
+      "phase": "ostracism",
+      "trueActions": [
+        {
+          "player": "C",
+          "action": "share",
+          "target": "A"
+        },
+        {
+          "player": "A",
+          "action": "share",
+          "target": "C"
+        },
+        {
+          "player": "B",
+          "action": "share",
+          "target": "C"
+        }
+      ],
+      "trueScores": {
+        "A": 7,
+        "B": 1,
+        "C": 7
+      },
+      "trueDeltas": {
+        "A": 1,
+        "B": 0,
+        "C": 1
+      },
+      "illusions": {
+        "A": {
+          "actions": [
+            {
+              "player": "B",
+              "action": "share",
+              "target": "C"
+            },
+            {
+              "player": "C",
+              "action": "share",
+              "target": "B"
+            },
+            {
+              "player": "You",
+              "action": "share",
+              "target": "C"
+            }
+          ],
+          "scores": {
+            "You": 6,
+            "B": 2,
+            "C": 7
+          },
+          "illusionScoreAfter": 6
+        },
+        "B": {
+          "actions": [
+            {
+              "player": "A",
+              "action": "share",
+              "target": "C"
+            },
+            {
+              "player": "C",
+              "action": "share",
+              "target": "A"
+            },
+            {
+              "player": "You",
+              "action": "share",
+              "target": "C"
+            }
+          ],
+          "scores": {
+            "A": 7,
+            "You": 1,
+            "C": 7
+          },
+          "illusionScoreAfter": 1
+        },
+        "C": {
+          "actions": [
+            {
+              "player": "A",
+              "action": "share",
+              "target": "B"
+            },
+            {
+              "player": "B",
+              "action": "share",
+              "target": "A"
+            },
+            {
+              "player": "You",
+              "action": "share",
+              "target": "A"
+            }
+          ],
+          "scores": {
+            "A": 7,
+            "B": 2,
+            "You": 6
+          },
+          "illusionScoreAfter": 6
+        }
+      }
+    },
+    {
+      "round": 8,
+      "phase": "ostracism",
+      "trueActions": [
+        {
+          "player": "C",
+          "action": "share",
+          "target": "A"
+        },
+        {
+          "player": "A",
+          "action": "share",
+          "target": "C"
+        },
+        {
+          "player": "B",
+          "action": "share",
+          "target": "C"
+        }
+      ],
+      "trueScores": {
+        "A": 8,
+        "B": 1,
+        "C": 8
+      },
+      "trueDeltas": {
+        "A": 1,
+        "B": 0,
+        "C": 1
+      },
+      "illusions": {
+        "A": {
+          "actions": [
+            {
+              "player": "B",
+              "action": "share",
+              "target": "C"
+            },
+            {
+              "player": "C",
+              "action": "share",
+              "target": "B"
+            },
+            {
+              "player": "You",
+              "action": "share",
+              "target": "C"
+            }
+          ],
+          "scores": {
+            "You": 6,
+            "B": 2,
+            "C": 8
+          },
+          "illusionScoreAfter": 6
+        },
+        "B": {
+          "actions": [
+            {
+              "player": "A",
+              "action": "share",
+              "target": "C"
+            },
+            {
+              "player": "C",
+              "action": "share",
+              "target": "A"
+            },
+            {
+              "player": "You",
+              "action": "share",
+              "target": "C"
+            }
+          ],
+          "scores": {
+            "A": 8,
+            "You": 1,
+            "C": 8
+          },
+          "illusionScoreAfter": 1
+        },
+        "C": {
+          "actions": [
+            {
+              "player": "A",
+              "action": "share",
+              "target": "B"
+            },
+            {
+              "player": "B",
+              "action": "share",
+              "target": "A"
+            },
+            {
+              "player": "You",
+              "action": "share",
+              "target": "A"
+            }
+          ],
+          "scores": {
+            "A": 8,
+            "B": 2,
+            "You": 6
+          },
+          "illusionScoreAfter": 6
+        }
+      }
+    },
+    {
+      "round": 9,
+      "phase": "ostracism",
+      "trueActions": [
+        {
+          "player": "C",
+          "action": "share",
+          "target": "B"
+        },
+        {
+          "player": "A",
+          "action": "share",
+          "target": "B"
+        },
+        {
+          "player": "B",
+          "action": "share",
+          "target": "A"
+        }
+      ],
+      "trueScores": {
+        "A": 9,
+        "B": 2,
+        "C": 8
+      },
+      "trueDeltas": {
+        "A": 1,
+        "B": 1,
+        "C": 0
+      },
+      "illusions": {
+        "A": {
+          "actions": [
+            {
+              "player": "B",
+              "action": "share",
+              "target": "C"
+            },
+            {
+              "player": "C",
+              "action": "share",
+              "target": "B"
+            },
+            {
+              "player": "You",
+              "action": "share",
+              "target": "B"
+            }
+          ],
+          "scores": {
+            "You": 6,
+            "B": 2,
+            "C": 9
+          },
+          "illusionScoreAfter": 6
+        },
+        "B": {
+          "actions": [
+            {
+              "player": "A",
+              "action": "share",
+              "target": "C"
+            },
+            {
+              "player": "C",
+              "action": "share",
+              "target": "A"
+            },
+            {
+              "player": "You",
+              "action": "share",
+              "target": "A"
+            }
+          ],
+          "scores": {
+            "A": 9,
+            "You": 1,
+            "C": 9
+          },
+          "illusionScoreAfter": 1
+        },
+        "C": {
+          "actions": [
+            {
+              "player": "A",
+              "action": "share",
+              "target": "B"
+            },
+            {
+              "player": "B",
+              "action": "share",
+              "target": "A"
+            },
+            {
+              "player": "You",
+              "action": "share",
+              "target": "B"
+            }
+          ],
+          "scores": {
+            "A": 9,
+            "B": 2,
+            "You": 6
+          },
+          "illusionScoreAfter": 6
+        }
+      }
+    },
+    {
+      "round": 10,
+      "phase": "ostracism",
+      "trueActions": [
+        {
+          "player": "C",
+          "action": "share",
+          "target": "B"
+        },
+        {
+          "player": "A",
+          "action": "share",
+          "target": "B"
+        },
+        {
+          "player": "B",
+          "action": "share",
+          "target": "C"
+        }
+      ],
+      "trueScores": {
+        "A": 9,
+        "B": 3,
+        "C": 9
+      },
+      "trueDeltas": {
+        "A": 0,
+        "B": 1,
+        "C": 1
+      },
+      "illusions": {
+        "A": {
+          "actions": [
+            {
+              "player": "B",
+              "action": "share",
+              "target": "C"
+            },
+            {
+              "player": "C",
+              "action": "share",
+              "target": "B"
+            },
+            {
+              "player": "You",
+              "action": "share",
+              "target": "B"
+            }
+          ],
+          "scores": {
+            "You": 6,
+            "B": 3,
+            "C": 9
+          },
+          "illusionScoreAfter": 6
+        },
+        "B": {
+          "actions": [
+            {
+              "player": "A",
+              "action": "share",
+              "target": "C"
+            },
+            {
+              "player": "C",
+              "action": "share",
+              "target": "A"
+            },
+            {
+              "player": "You",
+              "action": "share",
+              "target": "C"
+            }
+          ],
+          "scores": {
+            "A": 10,
+            "You": 1,
+            "C": 9
+          },
+          "illusionScoreAfter": 1
+        },
+        "C": {
+          "actions": [
+            {
+              "player": "A",
+              "action": "share",
+              "target": "B"
+            },
+            {
+              "player": "B",
+              "action": "share",
+              "target": "A"
+            },
+            {
+              "player": "You",
+              "action": "share",
+              "target": "B"
+            }
+          ],
+          "scores": {
+            "A": 10,
+            "B": 3,
+            "You": 6
+          },
+          "illusionScoreAfter": 6
+        }
+      }
+    },
+    {
+      "round": 11,
+      "phase": "ostracism",
+      "trueActions": [
+        {
+          "player": "A",
+          "action": "share",
+          "target": "C"
+        },
+        {
+          "player": "C",
+          "action": "share",
+          "target": "B"
+        },
+        {
+          "player": "B",
+          "action": "share",
+          "target": "C"
+        }
+      ],
+      "trueScores": {
+        "A": 9,
+        "B": 4,
+        "C": 10
+      },
+      "trueDeltas": {
+        "A": 0,
+        "B": 1,
+        "C": 1
+      },
+      "illusions": {
+        "A": {
+          "actions": [
+            {
+              "player": "B",
+              "action": "share",
+              "target": "C"
+            },
+            {
+              "player": "C",
+              "action": "share",
+              "target": "B"
+            },
+            {
+              "player": "You",
+              "action": "share",
+              "target": "C"
+            }
+          ],
+          "scores": {
+            "You": 6,
+            "B": 4,
+            "C": 10
+          },
+          "illusionScoreAfter": 6
+        },
+        "B": {
+          "actions": [
+            {
+              "player": "A",
+              "action": "share",
+              "target": "C"
+            },
+            {
+              "player": "C",
+              "action": "share",
+              "target": "A"
+            },
+            {
+              "player": "You",
+              "action": "share",
+              "target": "C"
+            }
+          ],
+          "scores": {
+            "A": 10,
+            "You": 1,
+            "C": 10
+          },
+          "illusionScoreAfter": 1
+        },
+        "C": {
+          "actions": [
+            {
+              "player": "A",
+              "action": "share",
+              "target": "B"
+            },
+            {
+              "player": "B",
+              "action": "share",
+              "target": "A"
+            },
+            {
+              "player": "You",
+              "action": "share",
+              "target": "B"
+            }
+          ],
+          "scores": {
+            "A": 10,
+            "B": 4,
+            "You": 6
+          },
+          "illusionScoreAfter": 6
+        }
+      }
+    },
+    {
+      "round": 12,
+      "phase": "ostracism",
+      "trueActions": [
+        {
+          "player": "C",
+          "action": "share",
+          "target": "B"
+        },
+        {
+          "player": "A",
+          "action": "share",
+          "target": "C"
+        },
+        {
+          "player": "B",
+          "action": "hide",
+          "target": null
+        }
+      ],
+      "trueScores": {
+        "A": 10,
+        "B": 4,
+        "C": 11
+      },
+      "trueDeltas": {
+        "A": 1,
+        "B": 0,
+        "C": 1
+      },
+      "illusions": {
+        "A": {
+          "actions": [
+            {
+              "player": "B",
+              "action": "share",
+              "target": "C"
+            },
+            {
+              "player": "C",
+              "action": "share",
+              "target": "B"
+            },
+            {
+              "player": "You",
+              "action": "share",
+              "target": "C"
+            }
+          ],
+          "scores": {
+            "You": 0,
+            "B": 5,
+            "C": 11
+          },
+          "illusionScoreAfter": 0
+        },
+        "B": {
+          "actions": [
+            {
+              "player": "A",
+              "action": "share",
+              "target": "C"
+            },
+            {
+              "player": "C",
+              "action": "share",
+              "target": "A"
+            },
+            {
+              "player": "You",
+              "action": "hide",
+              "target": null
+            }
+          ],
+          "scores": {
+            "A": 10,
+            "You": 0,
+            "C": 11
+          },
+          "illusionScoreAfter": 0
+        },
+        "C": {
+          "actions": [
+            {
+              "player": "A",
+              "action": "share",
+              "target": "B"
+            },
+            {
+              "player": "B",
+              "action": "share",
+              "target": "A"
+            },
+            {
+              "player": "You",
+              "action": "share",
+              "target": "B"
+            }
+          ],
+          "scores": {
+            "A": 10,
+            "B": 5,
+            "You": 0
+          },
+          "illusionScoreAfter": 0
+        }
+      }
+    }
+  ],
+  "endedAt": "2026-06-25T08:31:31.330Z",
+  "finalScores": {
+    "A": 10,
+    "B": 4,
+    "C": 11
+  },
+  "winner": [
+    "C"
+  ]
+}

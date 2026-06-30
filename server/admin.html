@@ -741,8 +741,11 @@ socket.on('adminState', (data) => {
     } else {
         playMusic();
     }
-    // Game was reset — clear the ended flag
-    if (data.state !== 'playing') gameEnded = false;
+    if (data.state !== 'playing') {
+        gameEnded = false;
+        gameOverMode = false;
+        gameStarted = false;
+    }
     if (inLobby && data.allReady) {
         resetStartBtn(btnStart, 'START GAME', '#4CAF50');
         btnStart.classList.remove('hidden');
@@ -877,6 +880,7 @@ btnConfirmYes.addEventListener('click', () => {
     wantGameMusic = false;
     gameOverMode = false;
     gameStarted = false;
+    gameEnded = false;
     musicContext = null;
     lobbyAudio.pause();
     lobbyAudio.currentTime = 0;
