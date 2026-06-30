@@ -1,6 +1,5 @@
 */node_modules/
 /node_modules/
-server/data/sessions/
 Android/.idea/
 Android/app/release/baselineProfiles
 Android/app/release/output-metadata.json
