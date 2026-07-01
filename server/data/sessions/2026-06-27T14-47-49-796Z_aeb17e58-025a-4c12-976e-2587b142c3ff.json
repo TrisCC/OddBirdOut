@@ -1,6 +1,6 @@
 {
   "sessionId": "aeb17e58-025a-4c12-976e-2587b142c3ff",
-  "startedAt": "2026-06-27T12:45:43.598Z",
+  "startedAt": "2026-06-27T14:45:43.598Z",
   "config": {
     "totalRounds": 12,
     "roundDurationMs": 10000,
@@ -849,7 +849,7 @@
       }
     }
   ],
-  "endedAt": "2026-06-27T12:47:49.794Z",
+  "endedAt": "2026-06-27T14:47:49.794Z",
   "finalScores": {
     "A": 6,
     "B": 10,
