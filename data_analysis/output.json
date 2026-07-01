@@ -1,0 +1,1759 @@
+{
+  "meta": {
+    "total_sessions": 56,
+    "analysis_timestamp": "2026-07-01T21:39:39.927360+00:00",
+    "source_directory": "C:\\Users\\Tristan\\Documents\\Universiteit\\S2E\\OddBirdOut\\server\\data\\sessions"
+  },
+  "section1_session_overview": {
+    "description": "Session-level metadata and aggregate overview",
+    "total_sessions": 56,
+    "sessions_per_day": {
+      "2026-06-25": 11,
+      "2026-06-27": 22,
+      "2026-06-28": 23
+    },
+    "duration_stats": {
+      "mean_seconds": 142.60646428571428,
+      "median_seconds": 139.687,
+      "min_seconds": 116.199,
+      "max_seconds": 171.066,
+      "std_seconds": 14.322468459886332
+    },
+    "round_count_stats": {
+      "mean": 12.0,
+      "min": 12,
+      "max": 12,
+      "incomplete_sessions": []
+    },
+    "per_session": [
+      {
+        "sessionId": "4ae24fe2-5d6d-417c-a9d1-04429c5d46bd",
+        "date": "2026-06-25",
+        "startedAt": "2026-06-25T17:20:35.909Z",
+        "endedAt": "2026-06-25T17:23:01.780Z",
+        "duration_seconds": 145.871,
+        "roundCount": 12,
+        "finalScores": {
+          "A": 10,
+          "B": 8,
+          "C": 10
+        },
+        "winner": [
+          "A",
+          "C"
+        ]
+      },
+      {
+        "sessionId": "a1e2d3e4-28aa-49f1-bed3-313dd83b23db",
+        "date": "2026-06-25",
+        "startedAt": "2026-06-25T17:30:05.025Z",
+        "endedAt": "2026-06-25T17:32:19.796Z",
+        "duration_seconds": 134.771,
+        "roundCount": 12,
+        "finalScores": {
+          "A": 8,
+          "B": 9,
+          "C": 8
+        },
+        "winner": [
+          "B"
+        ]
+      },
+      {
+        "sessionId": "366600f9-5047-4b32-9f71-082680a23860",
+        "date": "2026-06-25",
+        "startedAt": "2026-06-25T17:36:25.771Z",
+        "endedAt": "2026-06-25T17:38:45.365Z",
+        "duration_seconds": 139.594,
+        "roundCount": 12,
+        "finalScores": {
+          "A": 10,
+          "B": 9,
+          "C": 8
+        },
+        "winner": [
+          "A"
+        ]
+      },
+      {
+        "sessionId": "0e847083-0713-4adc-b1ae-4ce4adb5df04",
+        "date": "2026-06-25",
+        "startedAt": "2026-06-25T17:47:29.626Z",
+        "endedAt": "2026-06-25T17:50:09.015Z",
+        "duration_seconds": 159.389,
+        "roundCount": 12,
+        "finalScores": {
+          "A": 12,
+          "B": 8,
+          "C": 9
+        },
+        "winner": [
+          "A"
+        ]
+      },
+      {
+        "sessionId": "50ed6a77-1b73-4c2c-aa8f-a9f495d1265b",
+        "date": "2026-06-25",
+        "startedAt": "2026-06-25T17:58:38.544Z",
+        "endedAt": "2026-06-25T18:01:10.841Z",
+        "duration_seconds": 152.297,
+        "roundCount": 12,
+        "finalScores": {
+          "A": 10,
+          "B": 8,
+          "C": 7
+        },
+        "winner": [
+          "A"
+        ]
+      },
+      {
+        "sessionId": "028716e6-7133-4862-b1b5-db9138c0e9aa",
+        "date": "2026-06-25",
+        "startedAt": "2026-06-25T18:05:17.085Z",
+        "endedAt": "2026-06-25T18:07:33.644Z",
+        "duration_seconds": 136.559,
+        "roundCount": 12,
+        "finalScores": {
+          "A": 11,
+          "B": 7,
+          "C": 8
+        },
+        "winner": [
+          "A"
+        ]
+      },
+      {
+        "sessionId": "5e4c67d7-fc9e-4bc5-b0b9-b71f936320e6",
+        "date": "2026-06-25",
+        "startedAt": "2026-06-25T18:10:03.640Z",
+        "endedAt": "2026-06-25T18:12:44.753Z",
+        "duration_seconds": 161.113,
+        "roundCount": 12,
+        "finalScores": {
+          "A": 7,
+          "B": 9,
+          "C": 9
+        },
+        "winner": [
+          "B",
+          "C"
+        ]
+      },
+      {
+        "sessionId": "f7352e50-a307-4dc6-bee4-b307d6007d00",
+        "date": "2026-06-25",
+        "startedAt": "2026-06-25T18:35:03.243Z",
+        "endedAt": "2026-06-25T18:37:23.023Z",
+        "duration_seconds": 139.78,
+        "roundCount": 12,
+        "finalScores": {
+          "A": 8,
+          "B": 9,
+          "C": 9
+        },
+        "winner": [
+          "B",
+          "C"
+        ]
+      },
+      {
+        "sessionId": "cfa14766-0db3-4e4d-8a84-ca983043b568",
+        "date": "2026-06-25",
+        "startedAt": "2026-06-25T18:41:25.797Z",
+        "endedAt": "2026-06-25T18:43:37.667Z",
+        "duration_seconds": 131.87,
+        "roundCount": 12,
+        "finalScores": {
+          "A": 9,
+          "B": 7,
+          "C": 8
+        },
+        "winner": [
+          "A"
+        ]
+      },
+      {
+        "sessionId": "ab72ce9d-21aa-4143-9335-42046b3567d7",
+        "date": "2026-06-25",
+        "startedAt": "2026-06-25T18:55:17.021Z",
+        "endedAt": "2026-06-25T18:58:07.900Z",
+        "duration_seconds": 170.879,
+        "roundCount": 12,
+        "finalScores": {
+          "A": 10,
+          "B": 7,
+          "C": 9
+        },
+        "winner": [
+          "A"
+        ]
+      },
+      {
+        "sessionId": "860f6d32-873a-4f49-8b03-95145af4b06b",
+        "date": "2026-06-25",
+        "startedAt": "2026-06-25T19:09:59.939Z",
+        "endedAt": "2026-06-25T19:12:17.815Z",
+        "duration_seconds": 137.876,
+        "roundCount": 12,
+        "finalScores": {
+          "A": 9,
+          "B": 10,
+          "C": 9
+        },
+        "winner": [
+          "B"
+        ]
+      },
+      {
+        "sessionId": "adf67947-f0d2-432b-b506-5578f560f4c0",
+        "date": "2026-06-27",
+        "startedAt": "2026-06-27T12:37:27.188Z",
+        "endedAt": "2026-06-27T12:40:05.354Z",
+        "duration_seconds": 158.166,
+        "roundCount": 12,
+        "finalScores": {
+          "A": 7,
+          "B": 8,
+          "C": 10
+        },
+        "winner": [
+          "C"
+        ]
+      },
+      {
+        "sessionId": "d605fad9-3c18-4364-9896-815a1b5a41d8",
+        "date": "2026-06-27",
+        "startedAt": "2026-06-27T13:04:51.345Z",
+        "endedAt": "2026-06-27T13:07:07.785Z",
+        "duration_seconds": 136.44,
+        "roundCount": 12,
+        "finalScores": {
+          "A": 8,
+          "B": 12,
+          "C": 7
+        },
+        "winner": [
+          "B"
+        ]
+      },
+      {
+        "sessionId": "930a2367-815c-4596-9b37-c89d24b6a0f0",
+        "date": "2026-06-27",
+        "startedAt": "2026-06-27T13:33:51.774Z",
+        "endedAt": "2026-06-27T13:36:25.007Z",
+        "duration_seconds": 153.233,
+        "roundCount": 12,
+        "finalScores": {
+          "A": 8,
+          "B": 9,
+          "C": 10
+        },
+        "winner": [
+          "C"
+        ]
+      },
+      {
+        "sessionId": "05792aa5-53af-449a-9db3-1b52f372d67d",
+        "date": "2026-06-27",
+        "startedAt": "2026-06-27T13:47:05.720Z",
+        "endedAt": "2026-06-27T13:49:56.786Z",
+        "duration_seconds": 171.066,
+        "roundCount": 12,
+        "finalScores": {
+          "A": 7,
+          "B": 9,
+          "C": 6
+        },
+        "winner": [
+          "B"
+        ]
+      },
+      {
+        "sessionId": "9675e8b4-9b22-494b-b7ef-9a85cfb31352",
+        "date": "2026-06-27",
+        "startedAt": "2026-06-27T13:57:18.550Z",
+        "endedAt": "2026-06-27T13:59:36.726Z",
+        "duration_seconds": 138.176,
+        "roundCount": 12,
+        "finalScores": {
+          "A": 10,
+          "B": 10,
+          "C": 8
+        },
+        "winner": [
+          "A",
+          "B"
+        ]
+      },
+      {
+        "sessionId": "975f54e4-cd07-4b9a-9e52-05411016b53d",
+        "date": "2026-06-27",
+        "startedAt": "2026-06-27T14:36:19.174Z",
+        "endedAt": "2026-06-27T14:38:24.806Z",
+        "duration_seconds": 125.632,
+        "roundCount": 12,
+        "finalScores": {
+          "A": 9,
+          "B": 8,
+          "C": 7
+        },
+        "winner": [
+          "A"
+        ]
+      },
+      {
+        "sessionId": "aeb17e58-025a-4c12-976e-2587b142c3ff",
+        "date": "2026-06-27",
+        "startedAt": "2026-06-27T14:45:43.598Z",
+        "endedAt": "2026-06-27T14:47:49.794Z",
+        "duration_seconds": 126.196,
+        "roundCount": 12,
+        "finalScores": {
+          "A": 6,
+          "B": 10,
+          "C": 11
+        },
+        "winner": [
+          "C"
+        ]
+      },
+      {
+        "sessionId": "b0328b81-1c18-4884-9502-284cb0db2643",
+        "date": "2026-06-27",
+        "startedAt": "2026-06-27T15:08:25.692Z",
+        "endedAt": "2026-06-27T15:11:00.763Z",
+        "duration_seconds": 155.071,
+        "roundCount": 12,
+        "finalScores": {
+          "A": 8,
+          "B": 9,
+          "C": 8
+        },
+        "winner": [
+          "B"
+        ]
+      },
+      {
+        "sessionId": "56bb9ba2-2d3c-476b-849c-1b4b0ad5536d",
+        "date": "2026-06-27",
+        "startedAt": "2026-06-27T15:33:24.413Z",
+        "endedAt": "2026-06-27T15:35:41.245Z",
+        "duration_seconds": 136.832,
+        "roundCount": 12,
+        "finalScores": {
+          "A": 9,
+          "B": 8,
+          "C": 9
+        },
+        "winner": [
+          "A",
+          "C"
+        ]
+      },
+      {
+        "sessionId": "d0cea9b7-793e-427d-9172-5202a5db1ca4",
+        "date": "2026-06-27",
+        "startedAt": "2026-06-27T15:50:22.796Z",
+        "endedAt": "2026-06-27T15:52:37.932Z",
+        "duration_seconds": 135.136,
+        "roundCount": 12,
+        "finalScores": {
+          "A": 8,
+          "B": 10,
+          "C": 7
+        },
+        "winner": [
+          "B"
+        ]
+      },
+      {
+        "sessionId": "da37206d-f6e4-4d9a-bc0f-19a6bfebaea1",
+        "date": "2026-06-27",
+        "startedAt": "2026-06-27T15:55:54.893Z",
+        "endedAt": "2026-06-27T15:58:05.897Z",
+        "duration_seconds": 131.004,
+        "roundCount": 12,
+        "finalScores": {
+          "A": 9,
+          "B": 11,
+          "C": 9
+        },
+        "winner": [
+          "B"
+        ]
+      },
+      {
+        "sessionId": "ba93b496-86f1-4309-a838-b2e0e919f7c7",
+        "date": "2026-06-27",
+        "startedAt": "2026-06-27T16:00:05.263Z",
+        "endedAt": "2026-06-27T16:02:35.145Z",
+        "duration_seconds": 149.882,
+        "roundCount": 12,
+        "finalScores": {
+          "A": 9,
+          "B": 8,
+          "C": 10
+        },
+        "winner": [
+          "C"
+        ]
+      },
+      {
+        "sessionId": "9d44b4ba-abb7-4323-bcd1-0271fbf36392",
+        "date": "2026-06-27",
+        "startedAt": "2026-06-27T16:08:52.376Z",
+        "endedAt": "2026-06-27T16:10:57.713Z",
+        "duration_seconds": 125.337,
+        "roundCount": 12,
+        "finalScores": {
+          "A": 11,
+          "B": 9,
+          "C": 8
+        },
+        "winner": [
+          "A"
+        ]
+      },
+      {
+        "sessionId": "f571447b-a443-4254-b4f1-aa9eddc8a0c2",
+        "date": "2026-06-27",
+        "startedAt": "2026-06-27T16:17:39.890Z",
+        "endedAt": "2026-06-27T16:20:04.366Z",
+        "duration_seconds": 144.476,
+        "roundCount": 12,
+        "finalScores": {
+          "A": 11,
+          "B": 8,
+          "C": 7
+        },
+        "winner": [
+          "A"
+        ]
+      },
+      {
+        "sessionId": "64279a96-5301-4340-a3b7-8c8bd849629a",
+        "date": "2026-06-27",
+        "startedAt": "2026-06-27T16:39:43.847Z",
+        "endedAt": "2026-06-27T16:42:14.061Z",
+        "duration_seconds": 150.214,
+        "roundCount": 12,
+        "finalScores": {
+          "A": 10,
+          "B": 8,
+          "C": 8
+        },
+        "winner": [
+          "A"
+        ]
+      },
+      {
+        "sessionId": "376a42c5-97a5-48c3-b638-0d3bdbacb196",
+        "date": "2026-06-27",
+        "startedAt": "2026-06-27T16:47:26.659Z",
+        "endedAt": "2026-06-27T16:50:13.969Z",
+        "duration_seconds": 167.31,
+        "roundCount": 12,
+        "finalScores": {
+          "A": 7,
+          "B": 9,
+          "C": 11
+        },
+        "winner": [
+          "C"
+        ]
+      },
+      {
+        "sessionId": "a168c820-d351-4c2c-b7a7-e0fc80271e7e",
+        "date": "2026-06-27",
+        "startedAt": "2026-06-27T16:56:09.662Z",
+        "endedAt": "2026-06-27T16:58:26.313Z",
+        "duration_seconds": 136.651,
+        "roundCount": 12,
+        "finalScores": {
+          "A": 12,
+          "B": 8,
+          "C": 9
+        },
+        "winner": [
+          "A"
+        ]
+      },
+      {
+        "sessionId": "fb421546-87db-4674-8858-e0fae9a5ae5d",
+        "date": "2026-06-27",
+        "startedAt": "2026-06-27T17:04:08.860Z",
+        "endedAt": "2026-06-27T17:06:51.500Z",
+        "duration_seconds": 162.64,
+        "roundCount": 12,
+        "finalScores": {
+          "A": 10,
+          "B": 6,
+          "C": 10
+        },
+        "winner": [
+          "A",
+          "C"
+        ]
+      },
+      {
+        "sessionId": "107afa18-f200-43b7-b438-14ae3eb3b13f",
+        "date": "2026-06-27",
+        "startedAt": "2026-06-27T17:11:12.780Z",
+        "endedAt": "2026-06-27T17:13:14.979Z",
+        "duration_seconds": 122.199,
+        "roundCount": 12,
+        "finalScores": {
+          "A": 9,
+          "B": 10,
+          "C": 8
+        },
+        "winner": [
+          "B"
+        ]
+      },
+      {
+        "sessionId": "a7561e39-d237-40d2-8212-0eb571c65f75",
+        "date": "2026-06-27",
+        "startedAt": "2026-06-27T17:17:43.658Z",
+        "endedAt": "2026-06-27T17:20:13.829Z",
+        "duration_seconds": 150.171,
+        "roundCount": 12,
+        "finalScores": {
+          "A": 8,
+          "B": 9,
+          "C": 8
+        },
+        "winner": [
+          "B"
+        ]
+      },
+      {
+        "sessionId": "bf65ae17-faa3-4359-ac2e-77f190bb65c6",
+        "date": "2026-06-27",
+        "startedAt": "2026-06-27T17:26:19.609Z",
+        "endedAt": "2026-06-27T17:28:31.483Z",
+        "duration_seconds": 131.874,
+        "roundCount": 12,
+        "finalScores": {
+          "A": 8,
+          "B": 9,
+          "C": 9
+        },
+        "winner": [
+          "B",
+          "C"
+        ]
+      },
+      {
+        "sessionId": "5817bdef-372b-4c90-be6b-eb9b933470bc",
+        "date": "2026-06-27",
+        "startedAt": "2026-06-27T18:01:39.245Z",
+        "endedAt": "2026-06-27T18:03:47.959Z",
+        "duration_seconds": 128.714,
+        "roundCount": 12,
+        "finalScores": {
+          "A": 9,
+          "B": 10,
+          "C": 8
+        },
+        "winner": [
+          "B"
+        ]
+      },
+      {
+        "sessionId": "7a0f32a9-4bf6-4895-aba2-4c6ed090284a",
+        "date": "2026-06-28",
+        "startedAt": "2026-06-28T12:29:52.574Z",
+        "endedAt": "2026-06-28T12:32:04.294Z",
+        "duration_seconds": 131.72,
+        "roundCount": 12,
+        "finalScores": {
+          "A": 6,
+          "B": 10,
+          "C": 10
+        },
+        "winner": [
+          "B",
+          "C"
+        ]
+      },
+      {
+        "sessionId": "7ffad1e9-0b14-4638-9abd-998d01b9f0d8",
+        "date": "2026-06-28",
+        "startedAt": "2026-06-28T12:53:52.508Z",
+        "endedAt": "2026-06-28T12:56:12.027Z",
+        "duration_seconds": 139.519,
+        "roundCount": 12,
+        "finalScores": {
+          "A": 11,
+          "B": 8,
+          "C": 7
+        },
+        "winner": [
+          "A"
+        ]
+      },
+      {
+        "sessionId": "cee1f38f-42a6-4c92-8f19-8a1ec836d72f",
+        "date": "2026-06-28",
+        "startedAt": "2026-06-28T13:27:46.761Z",
+        "endedAt": "2026-06-28T13:30:27.065Z",
+        "duration_seconds": 160.304,
+        "roundCount": 12,
+        "finalScores": {
+          "A": 9,
+          "B": 7,
+          "C": 12
+        },
+        "winner": [
+          "C"
+        ]
+      },
+      {
+        "sessionId": "e183b6bb-712b-49b8-82d2-bfdcea3ecb74",
+        "date": "2026-06-28",
+        "startedAt": "2026-06-28T13:49:43.687Z",
+        "endedAt": "2026-06-28T13:51:47.832Z",
+        "duration_seconds": 124.145,
+        "roundCount": 12,
+        "finalScores": {
+          "A": 9,
+          "B": 9,
+          "C": 9
+        },
+        "winner": [
+          "A",
+          "B",
+          "C"
+        ]
+      },
+      {
+        "sessionId": "b502e5d9-470c-4e3a-abb2-c2e30ce6b9a7",
+        "date": "2026-06-28",
+        "startedAt": "2026-06-28T14:06:15.347Z",
+        "endedAt": "2026-06-28T14:08:42.097Z",
+        "duration_seconds": 146.75,
+        "roundCount": 12,
+        "finalScores": {
+          "A": 8,
+          "B": 10,
+          "C": 8
+        },
+        "winner": [
+          "B"
+        ]
+      },
+      {
+        "sessionId": "138b793e-6b18-4939-ad0c-cdd3019ebbac",
+        "date": "2026-06-28",
+        "startedAt": "2026-06-28T14:12:52.146Z",
+        "endedAt": "2026-06-28T14:14:50.899Z",
+        "duration_seconds": 118.753,
+        "roundCount": 12,
+        "finalScores": {
+          "A": 7,
+          "B": 8,
+          "C": 9
+        },
+        "winner": [
+          "C"
+        ]
+      },
+      {
+        "sessionId": "4168555e-4e6b-406e-99ca-5107aeacb323",
+        "date": "2026-06-28",
+        "startedAt": "2026-06-28T14:18:46.823Z",
+        "endedAt": "2026-06-28T14:21:17.406Z",
+        "duration_seconds": 150.583,
+        "roundCount": 12,
+        "finalScores": {
+          "A": 10,
+          "B": 8,
+          "C": 9
+        },
+        "winner": [
+          "A"
+        ]
+      },
+      {
+        "sessionId": "f8d42940-0883-48a5-820d-ee6803209089",
+        "date": "2026-06-28",
+        "startedAt": "2026-06-28T14:27:06.346Z",
+        "endedAt": "2026-06-28T14:29:47.779Z",
+        "duration_seconds": 161.433,
+        "roundCount": 12,
+        "finalScores": {
+          "A": 11,
+          "B": 9,
+          "C": 4
+        },
+        "winner": [
+          "A"
+        ]
+      },
+      {
+        "sessionId": "76ce1712-ecde-4bda-adc8-52460d60bf70",
+        "date": "2026-06-28",
+        "startedAt": "2026-06-28T14:32:13.381Z",
+        "endedAt": "2026-06-28T14:34:54.183Z",
+        "duration_seconds": 160.802,
+        "roundCount": 12,
+        "finalScores": {
+          "A": 9,
+          "B": 8,
+          "C": 10
+        },
+        "winner": [
+          "C"
+        ]
+      },
+      {
+        "sessionId": "0fcc6d73-ce7d-40d7-9485-2d2dffc5c108",
+        "date": "2026-06-28",
+        "startedAt": "2026-06-28T14:42:21.379Z",
+        "endedAt": "2026-06-28T14:45:11.413Z",
+        "duration_seconds": 170.034,
+        "roundCount": 12,
+        "finalScores": {
+          "A": 10,
+          "B": 7,
+          "C": 8
+        },
+        "winner": [
+          "A"
+        ]
+      },
+      {
+        "sessionId": "c5cb9956-b6ec-4639-9505-3928d019e0c2",
+        "date": "2026-06-28",
+        "startedAt": "2026-06-28T14:52:58.519Z",
+        "endedAt": "2026-06-28T14:55:31.593Z",
+        "duration_seconds": 153.074,
+        "roundCount": 12,
+        "finalScores": {
+          "A": 10,
+          "B": 8,
+          "C": 10
+        },
+        "winner": [
+          "A",
+          "C"
+        ]
+      },
+      {
+        "sessionId": "369d41ae-2177-4759-a91b-94aa57fb2859",
+        "date": "2026-06-28",
+        "startedAt": "2026-06-28T15:07:30.090Z",
+        "endedAt": "2026-06-28T15:09:50.943Z",
+        "duration_seconds": 140.853,
+        "roundCount": 12,
+        "finalScores": {
+          "A": 8,
+          "B": 9,
+          "C": 8
+        },
+        "winner": [
+          "B"
+        ]
+      },
+      {
+        "sessionId": "81b7e497-483d-460f-bc59-9334309c19ca",
+        "date": "2026-06-28",
+        "startedAt": "2026-06-28T15:18:06.955Z",
+        "endedAt": "2026-06-28T15:20:13.639Z",
+        "duration_seconds": 126.684,
+        "roundCount": 12,
+        "finalScores": {
+          "A": 8,
+          "B": 8,
+          "C": 8
+        },
+        "winner": [
+          "A",
+          "B",
+          "C"
+        ]
+      },
+      {
+        "sessionId": "a698a259-5f4f-4e90-8819-9e6868932b85",
+        "date": "2026-06-28",
+        "startedAt": "2026-06-28T15:36:45.795Z",
+        "endedAt": "2026-06-28T15:39:01.445Z",
+        "duration_seconds": 135.65,
+        "roundCount": 12,
+        "finalScores": {
+          "A": 9,
+          "B": 10,
+          "C": 8
+        },
+        "winner": [
+          "B"
+        ]
+      },
+      {
+        "sessionId": "ed5cfd7d-e630-427e-b634-4b2120535ae8",
+        "date": "2026-06-28",
+        "startedAt": "2026-06-28T15:44:51.148Z",
+        "endedAt": "2026-06-28T15:46:58.555Z",
+        "duration_seconds": 127.407,
+        "roundCount": 12,
+        "finalScores": {
+          "A": 7,
+          "B": 10,
+          "C": 9
+        },
+        "winner": [
+          "B"
+        ]
+      },
+      {
+        "sessionId": "01a62c49-468a-4fcc-97f2-11dcece8f69f",
+        "date": "2026-06-28",
+        "startedAt": "2026-06-28T15:50:07.387Z",
+        "endedAt": "2026-06-28T15:52:14.548Z",
+        "duration_seconds": 127.161,
+        "roundCount": 12,
+        "finalScores": {
+          "A": 10,
+          "B": 10,
+          "C": 10
+        },
+        "winner": [
+          "A",
+          "B",
+          "C"
+        ]
+      },
+      {
+        "sessionId": "62b74ec0-558d-4687-bb17-1bc53ae361aa",
+        "date": "2026-06-28",
+        "startedAt": "2026-06-28T16:11:11.222Z",
+        "endedAt": "2026-06-28T16:13:49.974Z",
+        "duration_seconds": 158.752,
+        "roundCount": 12,
+        "finalScores": {
+          "A": 9,
+          "B": 9,
+          "C": 7
+        },
+        "winner": [
+          "A",
+          "B"
+        ]
+      },
+      {
+        "sessionId": "f4d3ea0d-011d-44ff-8580-e733858567de",
+        "date": "2026-06-28",
+        "startedAt": "2026-06-28T16:26:45.185Z",
+        "endedAt": "2026-06-28T16:28:52.133Z",
+        "duration_seconds": 126.948,
+        "roundCount": 12,
+        "finalScores": {
+          "A": 10,
+          "B": 10,
+          "C": 6
+        },
+        "winner": [
+          "A",
+          "B"
+        ]
+      },
+      {
+        "sessionId": "02287c49-a5ad-484b-8fd7-6f87a7db6c8c",
+        "date": "2026-06-28",
+        "startedAt": "2026-06-28T16:49:30.146Z",
+        "endedAt": "2026-06-28T16:51:51.074Z",
+        "duration_seconds": 140.928,
+        "roundCount": 12,
+        "finalScores": {
+          "A": 10,
+          "B": 8,
+          "C": 8
+        },
+        "winner": [
+          "A"
+        ]
+      },
+      {
+        "sessionId": "9fbeb290-825f-4033-8506-1efd00e1da89",
+        "date": "2026-06-28",
+        "startedAt": "2026-06-28T16:55:50.655Z",
+        "endedAt": "2026-06-28T16:58:18.494Z",
+        "duration_seconds": 147.839,
+        "roundCount": 12,
+        "finalScores": {
+          "A": 8,
+          "B": 11,
+          "C": 8
+        },
+        "winner": [
+          "B"
+        ]
+      },
+      {
+        "sessionId": "b7b2d923-eef3-4131-a945-ee376ab1932b",
+        "date": "2026-06-28",
+        "startedAt": "2026-06-28T17:07:56.776Z",
+        "endedAt": "2026-06-28T17:10:02.464Z",
+        "duration_seconds": 125.688,
+        "roundCount": 12,
+        "finalScores": {
+          "A": 10,
+          "B": 8,
+          "C": 9
+        },
+        "winner": [
+          "A"
+        ]
+      },
+      {
+        "sessionId": "89aecbde-bf8e-40c9-b335-33d1b0efc516",
+        "date": "2026-06-28",
+        "startedAt": "2026-06-28T17:23:16.972Z",
+        "endedAt": "2026-06-28T17:25:45.289Z",
+        "duration_seconds": 148.317,
+        "roundCount": 12,
+        "finalScores": {
+          "A": 8,
+          "B": 9,
+          "C": 9
+        },
+        "winner": [
+          "B",
+          "C"
+        ]
+      },
+      {
+        "sessionId": "e139d955-5cc0-4e21-b9c1-85b0c439977e",
+        "date": "2026-06-28",
+        "startedAt": "2026-06-28T17:49:24.449Z",
+        "endedAt": "2026-06-28T17:51:20.648Z",
+        "duration_seconds": 116.199,
+        "roundCount": 12,
+        "finalScores": {
+          "A": 11,
+          "B": 8,
+          "C": 8
+        },
+        "winner": [
+          "A"
+        ]
+      }
+    ]
+  },
+  "section2_daily_aggregates": {
+    "description": "Per-day aggregates across all sessions",
+    "days": [
+      {
+        "date": "2026-06-25",
+        "session_count": 11,
+        "total_actions": 396,
+        "share_count": 384,
+        "hide_count": 12,
+        "hide_rate": 0.0303,
+        "winner_counts": {
+          "A": 7,
+          "C": 3,
+          "B": 4
+        },
+        "tie_games": 3,
+        "avg_final_score_by_role": {
+          "A": {
+            "mean": 9.454545454545455,
+            "median": 10.0,
+            "min": 7,
+            "max": 12,
+            "std": 1.4396969378057567
+          },
+          "B": {
+            "mean": 8.272727272727273,
+            "median": 8.0,
+            "min": 7,
+            "max": 10,
+            "std": 1.009049958219026
+          },
+          "C": {
+            "mean": 8.545454545454545,
+            "median": 9.0,
+            "min": 7,
+            "max": 10,
+            "std": 0.8201995322647245
+          }
+        }
+      },
+      {
+        "date": "2026-06-27",
+        "session_count": 22,
+        "total_actions": 792,
+        "share_count": 764,
+        "hide_count": 28,
+        "hide_rate": 0.0354,
+        "winner_counts": {
+          "C": 8,
+          "B": 10,
+          "A": 8
+        },
+        "tie_games": 4,
+        "avg_final_score_by_role": {
+          "A": {
+            "mean": 8.772727272727273,
+            "median": 9.0,
+            "min": 6,
+            "max": 12,
+            "std": 1.4778303975702638
+          },
+          "B": {
+            "mean": 9.0,
+            "median": 9.0,
+            "min": 6,
+            "max": 12,
+            "std": 1.2724180205607036
+          },
+          "C": {
+            "mean": 8.545454545454545,
+            "median": 8.0,
+            "min": 6,
+            "max": 11,
+            "std": 1.3706888336846839
+          }
+        }
+      },
+      {
+        "date": "2026-06-28",
+        "session_count": 23,
+        "total_actions": 828,
+        "share_count": 797,
+        "hide_count": 31,
+        "hide_rate": 0.0374,
+        "winner_counts": {
+          "B": 12,
+          "C": 9,
+          "A": 13
+        },
+        "tie_games": 8,
+        "avg_final_score_by_role": {
+          "A": {
+            "mean": 9.043478260869565,
+            "median": 9.0,
+            "min": 6,
+            "max": 11,
+            "std": 1.3644266484686463
+          },
+          "B": {
+            "mean": 8.782608695652174,
+            "median": 9.0,
+            "min": 7,
+            "max": 11,
+            "std": 1.085295173051194
+          },
+          "C": {
+            "mean": 8.434782608695652,
+            "median": 8.0,
+            "min": 4,
+            "max": 12,
+            "std": 1.590485544975088
+          }
+        }
+      }
+    ]
+  },
+  "section3_round_by_round": {
+    "description": "Aggregate stats per round (1-12)",
+    "rounds": [
+      {
+        "round": 1,
+        "phase": "trust",
+        "session_count": 56,
+        "action_counts": {
+          "share": 161,
+          "hide": 7
+        },
+        "mutual_pair_count": 36,
+        "no_mutual_count": 20,
+        "hide_present_count": 6,
+        "score_stats": {
+          "A": {
+            "mean_score_after": 0.79,
+            "mean_delta": 0.79
+          },
+          "B": {
+            "mean_score_after": 0.66,
+            "mean_delta": 0.66
+          },
+          "C": {
+            "mean_score_after": 0.8,
+            "mean_delta": 0.8
+          }
+        }
+      },
+      {
+        "round": 2,
+        "phase": "trust",
+        "session_count": 56,
+        "action_counts": {
+          "share": 160,
+          "hide": 8
+        },
+        "mutual_pair_count": 39,
+        "no_mutual_count": 17,
+        "hide_present_count": 8,
+        "score_stats": {
+          "A": {
+            "mean_score_after": 1.62,
+            "mean_delta": 0.84
+          },
+          "B": {
+            "mean_score_after": 1.46,
+            "mean_delta": 0.8
+          },
+          "C": {
+            "mean_score_after": 1.36,
+            "mean_delta": 0.55
+          }
+        }
+      },
+      {
+        "round": 3,
+        "phase": "trust",
+        "session_count": 56,
+        "action_counts": {
+          "share": 164,
+          "hide": 4
+        },
+        "mutual_pair_count": 40,
+        "no_mutual_count": 16,
+        "hide_present_count": 4,
+        "score_stats": {
+          "A": {
+            "mean_score_after": 2.38,
+            "mean_delta": 0.75
+          },
+          "B": {
+            "mean_score_after": 2.21,
+            "mean_delta": 0.75
+          },
+          "C": {
+            "mean_score_after": 2.09,
+            "mean_delta": 0.73
+          }
+        }
+      },
+      {
+        "round": 4,
+        "phase": "trust",
+        "session_count": 56,
+        "action_counts": {
+          "share": 160,
+          "hide": 8
+        },
+        "mutual_pair_count": 40,
+        "no_mutual_count": 16,
+        "hide_present_count": 7,
+        "score_stats": {
+          "A": {
+            "mean_score_after": 3.07,
+            "mean_delta": 0.7
+          },
+          "B": {
+            "mean_score_after": 2.95,
+            "mean_delta": 0.73
+          },
+          "C": {
+            "mean_score_after": 2.84,
+            "mean_delta": 0.75
+          }
+        }
+      },
+      {
+        "round": 5,
+        "phase": "trust",
+        "session_count": 56,
+        "action_counts": {
+          "share": 166,
+          "hide": 2
+        },
+        "mutual_pair_count": 41,
+        "no_mutual_count": 15,
+        "hide_present_count": 2,
+        "score_stats": {
+          "A": {
+            "mean_score_after": 3.84,
+            "mean_delta": 0.77
+          },
+          "B": {
+            "mean_score_after": 3.62,
+            "mean_delta": 0.68
+          },
+          "C": {
+            "mean_score_after": 3.64,
+            "mean_delta": 0.8
+          }
+        }
+      },
+      {
+        "round": 6,
+        "phase": "trust",
+        "session_count": 56,
+        "action_counts": {
+          "share": 168
+        },
+        "mutual_pair_count": 48,
+        "no_mutual_count": 8,
+        "hide_present_count": 0,
+        "score_stats": {
+          "A": {
+            "mean_score_after": 4.66,
+            "mean_delta": 0.82
+          },
+          "B": {
+            "mean_score_after": 4.34,
+            "mean_delta": 0.71
+          },
+          "C": {
+            "mean_score_after": 4.25,
+            "mean_delta": 0.61
+          }
+        }
+      },
+      {
+        "round": 7,
+        "phase": "ostracism",
+        "session_count": 56,
+        "action_counts": {
+          "share": 168
+        },
+        "mutual_pair_count": 41,
+        "no_mutual_count": 15,
+        "hide_present_count": 0,
+        "score_stats": {
+          "A": {
+            "mean_score_after": 5.36,
+            "mean_delta": 0.7
+          },
+          "B": {
+            "mean_score_after": 5.18,
+            "mean_delta": 0.84
+          },
+          "C": {
+            "mean_score_after": 4.98,
+            "mean_delta": 0.73
+          }
+        }
+      },
+      {
+        "round": 8,
+        "phase": "ostracism",
+        "session_count": 56,
+        "action_counts": {
+          "share": 165,
+          "hide": 3
+        },
+        "mutual_pair_count": 42,
+        "no_mutual_count": 14,
+        "hide_present_count": 3,
+        "score_stats": {
+          "A": {
+            "mean_score_after": 6.07,
+            "mean_delta": 0.71
+          },
+          "B": {
+            "mean_score_after": 5.95,
+            "mean_delta": 0.77
+          },
+          "C": {
+            "mean_score_after": 5.7,
+            "mean_delta": 0.71
+          }
+        }
+      },
+      {
+        "round": 9,
+        "phase": "ostracism",
+        "session_count": 56,
+        "action_counts": {
+          "share": 163,
+          "hide": 5
+        },
+        "mutual_pair_count": 43,
+        "no_mutual_count": 13,
+        "hide_present_count": 5,
+        "score_stats": {
+          "A": {
+            "mean_score_after": 6.88,
+            "mean_delta": 0.8
+          },
+          "B": {
+            "mean_score_after": 6.62,
+            "mean_delta": 0.68
+          },
+          "C": {
+            "mean_score_after": 6.36,
+            "mean_delta": 0.66
+          }
+        }
+      },
+      {
+        "round": 10,
+        "phase": "ostracism",
+        "session_count": 56,
+        "action_counts": {
+          "share": 161,
+          "hide": 7
+        },
+        "mutual_pair_count": 39,
+        "no_mutual_count": 17,
+        "hide_present_count": 7,
+        "score_stats": {
+          "A": {
+            "mean_score_after": 7.59,
+            "mean_delta": 0.71
+          },
+          "B": {
+            "mean_score_after": 7.38,
+            "mean_delta": 0.75
+          },
+          "C": {
+            "mean_score_after": 7.11,
+            "mean_delta": 0.75
+          }
+        }
+      },
+      {
+        "round": 11,
+        "phase": "ostracism",
+        "session_count": 56,
+        "action_counts": {
+          "share": 155,
+          "hide": 13
+        },
+        "mutual_pair_count": 39,
+        "no_mutual_count": 17,
+        "hide_present_count": 12,
+        "score_stats": {
+          "A": {
+            "mean_score_after": 8.36,
+            "mean_delta": 0.77
+          },
+          "B": {
+            "mean_score_after": 7.96,
+            "mean_delta": 0.59
+          },
+          "C": {
+            "mean_score_after": 7.84,
+            "mean_delta": 0.73
+          }
+        }
+      },
+      {
+        "round": 12,
+        "phase": "ostracism",
+        "session_count": 56,
+        "action_counts": {
+          "share": 154,
+          "hide": 14
+        },
+        "mutual_pair_count": 38,
+        "no_mutual_count": 18,
+        "hide_present_count": 11,
+        "score_stats": {
+          "A": {
+            "mean_score_after": 9.02,
+            "mean_delta": 0.66
+          },
+          "B": {
+            "mean_score_after": 8.77,
+            "mean_delta": 0.8
+          },
+          "C": {
+            "mean_score_after": 8.5,
+            "mean_delta": 0.66
+          }
+        }
+      }
+    ]
+  },
+  "section4_trust_phase": {
+    "description": "True action analysis for trust phase",
+    "rounds": [
+      {
+        "round": 1,
+        "session_count": 56,
+        "action_counts": {
+          "share": 161,
+          "hide": 7
+        },
+        "mutual_pair_count": 36,
+        "no_mutual_count": 20,
+        "hide_present_count": 6
+      },
+      {
+        "round": 2,
+        "session_count": 56,
+        "action_counts": {
+          "share": 160,
+          "hide": 8
+        },
+        "mutual_pair_count": 39,
+        "no_mutual_count": 17,
+        "hide_present_count": 8
+      },
+      {
+        "round": 3,
+        "session_count": 56,
+        "action_counts": {
+          "share": 164,
+          "hide": 4
+        },
+        "mutual_pair_count": 40,
+        "no_mutual_count": 16,
+        "hide_present_count": 4
+      },
+      {
+        "round": 4,
+        "session_count": 56,
+        "action_counts": {
+          "share": 160,
+          "hide": 8
+        },
+        "mutual_pair_count": 40,
+        "no_mutual_count": 16,
+        "hide_present_count": 7
+      },
+      {
+        "round": 5,
+        "session_count": 56,
+        "action_counts": {
+          "share": 166,
+          "hide": 2
+        },
+        "mutual_pair_count": 41,
+        "no_mutual_count": 15,
+        "hide_present_count": 2
+      },
+      {
+        "round": 6,
+        "session_count": 56,
+        "action_counts": {
+          "share": 168
+        },
+        "mutual_pair_count": 48,
+        "no_mutual_count": 8,
+        "hide_present_count": 0
+      }
+    ],
+    "share_direction_counts": {
+      "A→B": 171,
+      "A→C": 155,
+      "B→A": 157,
+      "B→C": 170,
+      "C→A": 169,
+      "C→B": 157
+    }
+  },
+  "section5_ostracism_phase": {
+    "description": "True action analysis for ostracism phase",
+    "rounds": [
+      {
+        "round": 7,
+        "session_count": 56,
+        "action_counts": {
+          "share": 168
+        },
+        "mutual_pair_count": 41,
+        "no_mutual_count": 15,
+        "hide_present_count": 0
+      },
+      {
+        "round": 8,
+        "session_count": 56,
+        "action_counts": {
+          "share": 165,
+          "hide": 3
+        },
+        "mutual_pair_count": 42,
+        "no_mutual_count": 14,
+        "hide_present_count": 3
+      },
+      {
+        "round": 9,
+        "session_count": 56,
+        "action_counts": {
+          "share": 163,
+          "hide": 5
+        },
+        "mutual_pair_count": 43,
+        "no_mutual_count": 13,
+        "hide_present_count": 5
+      },
+      {
+        "round": 10,
+        "session_count": 56,
+        "action_counts": {
+          "share": 161,
+          "hide": 7
+        },
+        "mutual_pair_count": 39,
+        "no_mutual_count": 17,
+        "hide_present_count": 7
+      },
+      {
+        "round": 11,
+        "session_count": 56,
+        "action_counts": {
+          "share": 155,
+          "hide": 13
+        },
+        "mutual_pair_count": 39,
+        "no_mutual_count": 17,
+        "hide_present_count": 12
+      },
+      {
+        "round": 12,
+        "session_count": 56,
+        "action_counts": {
+          "share": 154,
+          "hide": 14
+        },
+        "mutual_pair_count": 38,
+        "no_mutual_count": 18,
+        "hide_present_count": 11
+      }
+    ],
+    "share_direction_counts": {
+      "A→B": 169,
+      "A→C": 152,
+      "B→A": 152,
+      "B→C": 171,
+      "C→A": 174,
+      "C→B": 148
+    },
+    "illusion_per_round": {
+      "round_7": {
+        "mean_illusion_score": 4.42,
+        "mean_score_gap": 0.76,
+        "max_score_gap": 1.0
+      },
+      "round_8": {
+        "mean_illusion_score": 4.42,
+        "mean_score_gap": 1.49,
+        "max_score_gap": 2.0
+      },
+      "round_9": {
+        "mean_illusion_score": 4.42,
+        "mean_score_gap": 2.2,
+        "max_score_gap": 3.0
+      },
+      "round_10": {
+        "mean_illusion_score": 4.42,
+        "mean_score_gap": 2.94,
+        "max_score_gap": 4.0
+      },
+      "round_11": {
+        "mean_illusion_score": 4.42,
+        "mean_score_gap": 3.64,
+        "max_score_gap": 5.0
+      },
+      "round_12": {
+        "mean_illusion_score": 0.0,
+        "mean_score_gap": 8.76,
+        "max_score_gap": 12.0
+      }
+    }
+  },
+  "section6_lie_metrics": {
+    "description": "Ostracism manipulation — metrics on fabricated views",
+    "per_player": [
+      {
+        "player": "A",
+        "total_illusion_rounds": 336,
+        "rounds_with_gap_gt_0": 314,
+        "mean_score_gap": 3.33,
+        "median_score_gap": 2.0,
+        "max_score_gap": 12.0,
+        "cumulative_gap": 1118.0
+      },
+      {
+        "player": "B",
+        "total_illusion_rounds": 336,
+        "rounds_with_gap_gt_0": 325,
+        "mean_score_gap": 3.36,
+        "median_score_gap": 3.0,
+        "max_score_gap": 12.0,
+        "cumulative_gap": 1129.0
+      },
+      {
+        "player": "C",
+        "total_illusion_rounds": 336,
+        "rounds_with_gap_gt_0": 316,
+        "mean_score_gap": 3.21,
+        "median_score_gap": 2.0,
+        "max_score_gap": 12.0,
+        "cumulative_gap": 1077.0
+      }
+    ],
+    "round_12_zeroing": {
+      "total_illusions": 168,
+      "illusions_with_score_zero": 168,
+      "all_zeroed": true
+    },
+    "hide_reflection_count": 42,
+    "note": "Hide actions are truthfully reflected in illusions per OstracismEngine.js:58"
+  },
+  "section7_action_decisions": {
+    "description": "Player action decision patterns",
+    "share_direction_counts": {
+      "A→B": 340,
+      "A→C": 307,
+      "B→A": 309,
+      "B→C": 341,
+      "C→A": 343,
+      "C→B": 305
+    },
+    "reciprocity_per_pair": {
+      "A-B": 176,
+      "A-C": 162,
+      "B-C": 148
+    },
+    "hide_by_phase": {
+      "ostracism": 42,
+      "trust": 29
+    },
+    "hide_by_player": {
+      "A": 25,
+      "B": 22,
+      "C": 24
+    },
+    "first_mover_counts": {
+      "B": 240,
+      "A": 197,
+      "C": 235
+    }
+  },
+  "section8_player_role_analysis": {
+    "description": "Aggregated stats per player role (A/B/C)",
+    "roles": [
+      {
+        "player": "A",
+        "total_actions": 672,
+        "share_count": 647,
+        "hide_count": 25,
+        "avg_final_score": 9.02,
+        "median_final_score": 9.0,
+        "win_count": 28,
+        "win_rate": 0.5,
+        "total_illusion_rounds": 336,
+        "avg_score_gap": 3.33
+      },
+      {
+        "player": "B",
+        "total_actions": 672,
+        "share_count": 650,
+        "hide_count": 22,
+        "avg_final_score": 8.77,
+        "median_final_score": 9.0,
+        "win_count": 26,
+        "win_rate": 0.4643,
+        "total_illusion_rounds": 336,
+        "avg_score_gap": 3.36
+      },
+      {
+        "player": "C",
+        "total_actions": 672,
+        "share_count": 648,
+        "hide_count": 24,
+        "avg_final_score": 8.5,
+        "median_final_score": 8.0,
+        "win_count": 20,
+        "win_rate": 0.3571,
+        "total_illusion_rounds": 336,
+        "avg_score_gap": 3.21
+      }
+    ]
+  },
+  "section9_scoring_distribution": {
+    "description": "Final score distributions",
+    "histogram": {
+      "0-2": 0,
+      "3-4": 1,
+      "5-6": 23,
+      "7-8": 95,
+      "9-10": 45,
+      "11+": 4
+    },
+    "per_player": {
+      "A": {
+        "mean": 9.02,
+        "median": 9.0,
+        "std": 1.42,
+        "min": 6,
+        "max": 12
+      },
+      "B": {
+        "mean": 8.77,
+        "median": 9.0,
+        "std": 1.16,
+        "min": 6,
+        "max": 12
+      },
+      "C": {
+        "mean": 8.5,
+        "median": 8.0,
+        "std": 1.36,
+        "min": 4,
+        "max": 12
+      }
+    },
+    "tie_count": 15,
+    "tie_rate": 0.2679
+  },
+  "section10_mutual_pair_dynamics": {
+    "description": "Mutual pair formation dynamics",
+    "pair_frequencies": {
+      "A-B": 176,
+      "A-C": 162,
+      "B-C": 148
+    },
+    "trust_phase": {
+      "total_rounds": 336,
+      "mutual_pair_rounds": 244,
+      "mutual_rate": 0.7262
+    },
+    "ostracism_phase": {
+      "total_rounds": 336,
+      "mutual_pair_rounds": 242,
+      "mutual_rate": 0.7202
+    }
+  },
+  "section11_session_engagement": {
+    "description": "Session duration and engagement patterns",
+    "duration_histogram": {
+      "<2m": 2,
+      "2-2.5m": 35,
+      "2.5-3m": 19,
+      "3-3.5m": 0,
+      "3.5-4m": 0,
+      "4-5m": 0,
+      "5m+": 0
+    },
+    "duration_seconds_stats": {
+      "mean": 142.6,
+      "median": 139.7
+    },
+    "inter_session_gap_minutes": {
+      "mean": 14.2,
+      "median": 10.6,
+      "min": 4.2,
+      "max": 39.0
+    }
+  },
+  "charts": {
+    "daily_sessions": "C:\\Users\\Tristan\\Documents\\Universiteit\\S2E\\OddBirdOut\\data_analysis\\charts\\daily_sessions.png",
+    "round_scores": "C:\\Users\\Tristan\\Documents\\Universiteit\\S2E\\OddBirdOut\\data_analysis\\charts\\round_scores.png",
+    "final_score_distribution": "C:\\Users\\Tristan\\Documents\\Universiteit\\S2E\\OddBirdOut\\data_analysis\\charts\\final_score_distribution.png",
+    "score_gap_per_round": "C:\\Users\\Tristan\\Documents\\Universiteit\\S2E\\OddBirdOut\\data_analysis\\charts\\score_gap_per_round.png",
+    "action_heatmap": "C:\\Users\\Tristan\\Documents\\Universiteit\\S2E\\OddBirdOut\\data_analysis\\charts\\action_heatmap.png",
+    "mutual_pair_pie": "C:\\Users\\Tristan\\Documents\\Universiteit\\S2E\\OddBirdOut\\data_analysis\\charts\\mutual_pair_pie.png",
+    "duration_histogram": "C:\\Users\\Tristan\\Documents\\Universiteit\\S2E\\OddBirdOut\\data_analysis\\charts\\duration_histogram.png"
+  }
+}
