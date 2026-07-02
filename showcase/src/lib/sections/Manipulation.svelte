@@ -1,5 +1,5 @@
 <script>
-  import SpriteAnim from '../SpriteAnim.svelte';
+  import SpriteAnim from "../SpriteAnim.svelte";
   let { visible } = $props();
   let revealActive = $state(false);
   const base = import.meta.env.BASE_URL;
@@ -10,9 +10,9 @@
       label: "Player A sees:",
       desc: "B and C ally together against A.",
       color: "#4CAF50",
-      ally1: "green",
+      ally1: "blue",
       ally2: "orange",
-      leftout: "blue",
+      leftout: "green",
     },
     {
       id: "B",
@@ -43,8 +43,9 @@
   <h2>The Catch: How We Manipulate the Game</h2>
 
   <p class="section-intro">
-    After round 6, the server <strong>stops broadcasting the true actions</strong>.
-    Instead, it generates a tailored reality for each player in which the
+    After round 6, the server <strong
+      >stops broadcasting the true actions</strong
+    >. Instead, it generates a tailored reality for each player in which the
     <em>other two players</em> appear to cooperate exclusively and reject the
     one watching. Every player privately believes <strong>they</strong> are the odd
     bird out.
@@ -59,11 +60,36 @@
         <h3>{ill.label}</h3>
         <p>{ill.desc}</p>
         <div class="mini-scene" aria-hidden="true">
-          <SpriteAnim src="{base}assets/sprites/ostrich {ill.ally1}.png" frames={3} fps={4} alt="" class="scene-ostrich scene-ostrich--ally" />
-          <SpriteAnim src="{base}assets/sprites/heart.png" frames={4} fps={6} alt="" class="scene-heart" />
-          <SpriteAnim src="{base}assets/sprites/ostrich {ill.ally2}.png" frames={3} fps={4} alt="" class="scene-ostrich scene-ostrich--ally" />
-          <div class="scene-gap"></div>
-          <SpriteAnim src="{base}assets/sprites/ostrich {ill.leftout}.png" frames={3} fps={4} alt="" class="scene-ostrich scene-ostrich--leftout" />
+          <div class="scene-top-row">
+            <SpriteAnim
+              src="{base}assets/sprites/ostrich {ill.ally1}.png"
+              frames={3}
+              fps={4}
+              alt=""
+              class="scene-ostrich scene-ostrich--ally"
+            />
+            <SpriteAnim
+              src="{base}assets/sprites/heart.png"
+              frames={4}
+              fps={6}
+              alt=""
+              class="scene-heart"
+            />
+            <SpriteAnim
+              src="{base}assets/sprites/ostrich {ill.ally2}.png"
+              frames={3}
+              fps={4}
+              alt=""
+              class="scene-ostrich scene-ostrich--ally"
+            />
+          </div>
+          <SpriteAnim
+            src="{base}assets/sprites/ostrich {ill.leftout}.png"
+            frames={3}
+            fps={4}
+            alt=""
+            class="scene-ostrich scene-ostrich--leftout"
+          />
         </div>
       </div>
     {/each}
@@ -90,9 +116,6 @@
         <div class="truth-text">
           <h3>The Reveal</h3>
           <p>{@html truth.desc}</p>
-          <p class="statement">
-            <em>"You were left out of the flock, but so was everyone else."</em>
-          </p>
         </div>
       </div>
     {/if}
@@ -103,7 +126,7 @@
     <p>
       The painful feeling of being the odd one out was produced by the
       <strong>interface</strong>, not by any real social decision. All three
-      players felt singled out — which is only possible if the exclusion was
+      players felt singled out, which is only possible if the exclusion was
       never really about them as individuals. The installation invites visitors
       to reconsider moments of feeling ignored online: how many were genuine
       rejections, and how many were gaps in meaning they filled in themselves?
@@ -111,17 +134,47 @@
   </div>
 
   <div class="decorative-divider bottom-divider" aria-hidden="true">
-    <SpriteAnim src="{base}assets/sprites/blue ostrich in sand.png" frames={6} fps={6} alt="" class="scene-sand" />
-    <SpriteAnim src="{base}assets/sprites/red ostrich in sand.png" frames={6} fps={6} alt="" class="scene-sand" />
-    <SpriteAnim src="{base}assets/sprites/green ostrich in sand.png" frames={6} fps={6} alt="" class="scene-sand" />
+    <SpriteAnim
+      src="{base}assets/sprites/blue ostrich in sand.png"
+      frames={6}
+      fps={6}
+      alt=""
+      class="scene-sand"
+    />
+    <SpriteAnim
+      src="{base}assets/sprites/red ostrich in sand.png"
+      frames={6}
+      fps={6}
+      alt=""
+      class="scene-sand"
+    />
+    <SpriteAnim
+      src="{base}assets/sprites/green ostrich in sand.png"
+      frames={6}
+      fps={6}
+      alt=""
+      class="scene-sand"
+    />
   </div>
 </section>
 
 <style>
-  .content-section { opacity: 0; transform: translateY(30px); transition: opacity 0.8s ease-out, transform 0.8s ease-out; }
-  .content-section.visible { opacity: 1; transform: translateY(0); }
+  .content-section {
+    opacity: 0;
+    transform: translateY(30px);
+    transition:
+      opacity 0.8s ease-out,
+      transform 0.8s ease-out;
+  }
+  .content-section.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
 
-  .section-intro { max-width: 800px; margin-bottom: 48px; }
+  .section-intro {
+    max-width: 800px;
+    margin-bottom: 48px;
+  }
 
   .illusion-grid {
     display: grid;
@@ -149,23 +202,41 @@
     box-shadow: var(--shadow-pixel);
   }
 
-  .illusion-card h3 { font-size: 13px; color: var(--text-h); margin-bottom: 12px; }
+  .illusion-card h3 {
+    font-size: 13px;
+    color: var(--text-h);
+    margin-bottom: 12px;
+  }
 
-  .illusion-card p { font-size: 14px; }
+  .illusion-card p {
+    font-size: 14px;
+  }
 
   .mini-scene {
     margin-top: 16px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 6px;
+    gap: 12px;
+  }
+
+  .scene-top-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
 
   :global(.scene-ostrich) {
     width: 48px;
     height: 48px;
   }
+  :global(.scene-top-row .scene-ostrich--ally) {
+    width: 40px;
+    height: 40px;
+  }
   :global(.scene-ostrich--leftout) {
+    width: 56px;
+    height: 56px;
     opacity: 0.4;
     filter: grayscale(0.5);
     animation: bob 2.5s ease-in-out infinite;
@@ -173,17 +244,20 @@
   :global(.scene-ostrich--ally) {
     animation: bob 2s ease-in-out infinite;
   }
-  :global(.scene-ostrich--ally:nth-child(2)) { animation-delay: 0.3s; }
+  :global(.scene-top-row .scene-ostrich--ally:last-child) {
+    animation-delay: 0.3s;
+  }
 
   :global(.scene-heart) {
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
     opacity: 0.7;
   }
 
-  .scene-gap { height: 12px; }
-
-  .reveal-section { text-align: center; margin-bottom: 48px; }
+  .reveal-section {
+    text-align: center;
+    margin-bottom: 48px;
+  }
 
   .reveal-btn {
     font-family: var(--pixel);
@@ -194,10 +268,14 @@
     padding: 20px 48px;
     cursor: pointer;
     box-shadow: var(--shadow-pixel);
-    transition: transform 0.1s, background 0.3s;
+    transition:
+      transform 0.1s,
+      background 0.3s;
   }
 
-  .reveal-btn:hover:not(:disabled) { background: #388e3c; }
+  .reveal-btn:hover:not(:disabled) {
+    background: #388e3c;
+  }
 
   .reveal-btn:active:not(:disabled) {
     transform: translate(2px, 2px);
@@ -220,11 +298,19 @@
     border-top: 6px solid var(--gold);
   }
 
-  .reveal-screenshot img { width: 100%; border: 3px solid var(--bg-deeper); }
+  .reveal-screenshot img {
+    width: 100%;
+    border: 3px solid var(--bg-deeper);
+  }
 
-  .truth-text h3 { font-size: 16px; color: var(--gold); }
+  .truth-text h3 {
+    font-size: 16px;
+    color: var(--gold);
+  }
 
-  .truth-text p { font-size: 15px; }
+  .truth-text p {
+    font-size: 15px;
+  }
 
   .statement {
     color: var(--gold);
@@ -235,20 +321,42 @@
   }
 
   @keyframes revealEnter {
-    from { opacity: 0; transform: translateY(20px); }
-    to   { opacity: 1; transform: translateY(0); }
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
-  .reveal-enter { animation: revealEnter 0.6s ease-out; }
+  .reveal-enter {
+    animation: revealEnter 0.6s ease-out;
+  }
 
-  .statement-block { text-align: center; max-width: 750px; margin: 0 auto; }
+  .statement-block {
+    text-align: center;
+    max-width: 750px;
+    margin: 0 auto;
+  }
 
-  .statement-title { font-size: 32px; color: var(--gold); margin-bottom: 24px; }
+  .statement-title {
+    font-size: 32px;
+    color: var(--gold);
+    margin-bottom: 24px;
+  }
 
   @media (max-width: 768px) {
-    .illusion-grid { grid-template-columns: 1fr; }
-    .truth-card { grid-template-columns: 1fr; }
-    .statement-title { font-size: 22px; }
+    .illusion-grid {
+      grid-template-columns: 1fr;
+    }
+    .truth-card {
+      grid-template-columns: 1fr;
+    }
+    .statement-title {
+      font-size: 22px;
+    }
   }
   .bottom-divider {
     margin-top: 48px;
@@ -260,7 +368,13 @@
     height: 60px;
     animation: bob 2s ease-in-out infinite;
   }
-  :global(.scene-sand:nth-child(1)) { animation-delay: 0s; }
-  :global(.scene-sand:nth-child(2)) { animation-delay: 0.4s; }
-  :global(.scene-sand:nth-child(3)) { animation-delay: 0.8s; }
+  :global(.scene-sand:nth-child(1)) {
+    animation-delay: 0s;
+  }
+  :global(.scene-sand:nth-child(2)) {
+    animation-delay: 0.4s;
+  }
+  :global(.scene-sand:nth-child(3)) {
+    animation-delay: 0.8s;
+  }
 </style>
